@@ -1,0 +1,11 @@
+{
+  "provides": "clang",
+  "targets": {
+    "linux-x86": {
+      "linked-libraries": [ "clang" ],
+    },
+    "linux-x64": {
+      "linked-libraries": [ "clang" ],
+    },
+  }
+}

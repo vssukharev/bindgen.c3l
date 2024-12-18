@@ -1,0 +1,14 @@
+{
+  "output": "build",
+
+  "dependency-search-paths": [ ".", "./deps" ],
+  "dependencies": [ "bindgen" ],
+  "sources": [ "bindgen.c3l/**" ],
+
+  "targets": {
+    "hello": {
+      "type": "executable",
+      "sources": [ "examples/hello.c3" ],
+    },
+  },
+}

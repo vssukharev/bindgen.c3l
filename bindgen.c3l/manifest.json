@@ -1,0 +1,11 @@
+{
+  "provides" : "bindgen",
+  "targets" : {
+    "linux-x86" : { 
+      "dependencies": [ "clang" ],
+    },
+    "linux-x64" : {
+      "dependencies": [ "clang" ],
+    },
+  }
+}
