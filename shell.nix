@@ -2,7 +2,7 @@
   mkShell,
   libclang,
   c3c,
-}:
+}: 
 mkShell {
   buildInputs = [
     c3c

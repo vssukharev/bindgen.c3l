@@ -1,8 +1,9 @@
 
 import bindgen;
 
-fn void main()
+fn void! main()
 {
-  bg::hello();
+  BGTransCallbacks cb = {null, null, null, null};
+  bg::translateHeader("./examples/dummy.h", &cb)!;
 }
 
