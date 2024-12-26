@@ -5,7 +5,7 @@ C bindings generation library for C3 language.
 
 # Usage
 
-1. Copy `bindgen.c3l` directory and each `.c3l` from `deps` to the dependency directory of your c3 project.
+1. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
 2. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
 ```json
 {

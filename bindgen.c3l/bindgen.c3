@@ -9,10 +9,12 @@ fault BGParseError
   INVALID_ARGUMENTS,
 }
 
-def BGFuncTransFn = fn String ();
-def BGTypeTransFn = fn String ();
-def BGVarTransFn = fn String ();
-def BGConstTransFn = fn String ();
+// All transformation functions must return to string, 
+// allocated on a heap as free method will be invoked later.
+def BGFuncTransFn = fn String (String old);
+def BGTypeTransFn = fn String (String old);
+def BGVarTransFn = fn String (String old);
+def BGConstTransFn = fn String (String old);
 
 struct BGTransCallbacks
 {
@@ -40,9 +42,14 @@ fn void! translateHeader(
   String header_name,
   BGTransCallbacks* callbacks)
 {
-  log("Translate %s", header_name);
+  log("Translating %s", header_name);
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
+
+  if (callbacks.function == null) warning("Function translation will not be performed as pointer is null");
+  if (callbacks.variable == null) warning("Variable translation will not be performed as pointer is null");
+  if (callbacks.type == null) warning("Type translation will not be performed as pointer is null");
+  if (callbacks.constant == null) warning("Constant translation will not be performed as pointer is null");
 
   CXTranslationUnit tu;
   processErrCode(

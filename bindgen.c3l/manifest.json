@@ -2,11 +2,11 @@
   "provides" : "bindgen",
   "targets" : {
     "linux-x86" : { 
-      "dependencies" : [ "clang" ],
+      "linked-libraries" : [ "clang" ],
       "sources" : [ "**" ]
     },
     "linux-x64" : {
-      "dependencies" : [ "clang" ],
+      "linked-libraries" : [ "clang" ],
       "sources" : [ "**" ]
     },
   }

@@ -4,11 +4,18 @@ import clang, std::io;
 
 const ANSI_RED = "\e[31m";
 const ANSI_GREEN = "\e[32m";
+const ANSI_YELLOW = "\e[33m";
 const ANSI_NONE = "\e[0m";
 
 macro log(String str = "", ...) 
 {
   io::eprintf("%s[%s]%s : ", ANSI_GREEN, $$FUNC, ANSI_NONE);
+  io::eprintfn(str, $vasplat);
+} 
+
+macro warning(String str = "", ...) 
+{
+  io::eprintf("%sWARNING%s : ", ANSI_YELLOW, ANSI_NONE);
   io::eprintfn(str, $vasplat);
 } 
 

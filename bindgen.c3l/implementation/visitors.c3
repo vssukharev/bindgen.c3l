@@ -1,6 +1,6 @@
 
 module bindgen::bg @private;
-import clang;
+import clang, std::io;
 
 struct VisitDataGlobal
 {
@@ -9,8 +9,10 @@ struct VisitDataGlobal
 
 struct VisitDataFunc
 {
-  BGVarTransFn fn_var;
-  BGTypeTransFn fn_type;
+  BGVarTransFn var_fn;
+  BGTypeTransFn type_fn;
+  BGFuncTransFn func_fn;
+  String func_name;
 }
 
 <*
@@ -39,18 +41,21 @@ fn CXChildVisitResult visitorGlobal(
   // so skip them
   if (cursor_cxfile == null) return clang::CHILD_VISIT_CONTINUE;
 
+  log("(%s) : %s", cursor_kind_name, cursor_name);
+
   // Handle function declaration
   if (cursor_kind == clang::CURSOR_FUNCTION_DECL)
   {
     cursor_name = getFuncName(cursor_name);
     VisitDataFunc visit_data_func = {
-      .fn_var = visit_data.trans_callbacks.variable, 
-      .fn_type = visit_data.trans_callbacks.type, 
+      .var_fn = visit_data.trans_callbacks.variable, 
+      .type_fn = visit_data.trans_callbacks.type,
+      .func_fn = visit_data.trans_callbacks.function,
+      .func_name = cursor_name,
     };
     clang::visitChildren(cursor, &visitorFunc, (CXClientData) &visit_data_func);
+    io::printfn("fn void %s() @extern(\"%s\");", visit_data_func.func_name, cursor_name);
   }
-
-  log("(%s) : %s", cursor_kind_name, cursor_name);
 
   return clang::CHILD_VISIT_CONTINUE;
 }
@@ -78,7 +83,9 @@ fn CXChildVisitResult visitorFunc(
   // if (visit_data.fn_var != null) visit_data.fn_var(cursor_name);
   // if (visit_data.fn_type != null) visit_data.fn_type(cursor_type_name);
 
-  log("%s %s", cursor_type_name, cursor_name);
+  if (visit_data.func_fn != null) visit_data.func_name = visit_data.func_fn(visit_data.func_name);
+
+  log("%s [%s]", cursor_name, cursor_type_name);
 
   return clang::CHILD_VISIT_CONTINUE;
 }
