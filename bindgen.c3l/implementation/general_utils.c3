@@ -35,5 +35,3 @@ macro void! processErrCode(CXErrorCode code)
   }
 }
 
-macro String getStringCursor(CXString str) => clang::getCString(str).str_view();
-

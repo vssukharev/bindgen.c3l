@@ -46,10 +46,10 @@ fn void! translateHeader(
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
 
-  if (callbacks.function == null) warning("Function translation will not be performed as pointer is null");
-  if (callbacks.variable == null) warning("Variable translation will not be performed as pointer is null");
-  if (callbacks.type == null) warning("Type translation will not be performed as pointer is null");
-  if (callbacks.constant == null) warning("Constant translation will not be performed as pointer is null");
+  if (callbacks.function == null) warning("Function translation will not be performed as function pointer is null");
+  if (callbacks.variable == null) warning("Variable translation will not be performed as function pointer is null");
+  if (callbacks.type == null) warning("Type translation will not be performed as function pointer is null");
+  if (callbacks.constant == null) warning("Constant translation will not be performed as function pointer is null");
 
   CXTranslationUnit tu;
   processErrCode(
@@ -62,6 +62,6 @@ fn void! translateHeader(
   )!;
   
   CXCursor cursor = clang::getTranslationUnitCursor(tu);
-  VisitDataGlobal visit_data = {callbacks};
+  GlobalVisitData visit_data = {callbacks};
   clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
 }

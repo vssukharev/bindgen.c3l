@@ -18,4 +18,4 @@ typedef struct {
   double bb;
 } AnotherStruct;
 
-ATTRIB void g(struct S asd);
+ATTRIB void g(struct SomeStruct asd);
