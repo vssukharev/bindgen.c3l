@@ -15,11 +15,11 @@ macro log(String str = "", ...)
 
 macro warning(String str = "", ...) 
 {
-  io::eprintf("%sWARNING%s : ", ANSI_YELLOW, ANSI_NONE);
+  io::eprintf("%swarning%s : ", ANSI_YELLOW, ANSI_NONE);
   io::eprintfn(str, $vasplat);
 } 
 
-macro void! processErrCode(CXErrorCode code)
+macro void! CXErrorCode.check(code)
 {
   switch (code)
   {
@@ -34,4 +34,7 @@ macro void! processErrCode(CXErrorCode code)
       return BGParseError.INVALID_ARGUMENTS?;
   }
 }
+
+macro String CXString.toString(self) => clang::getCString(self).str_view();
+macro String String.normType(self) => self.strip("struct ");
 

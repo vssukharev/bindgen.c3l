@@ -1,6 +1,6 @@
 
 module bindgen::bg @public;
-import clang;
+import clang, std::collections::map, std::io;
 
 fault BGParseError
 {
@@ -11,17 +11,14 @@ fault BGParseError
 
 // All transformation functions must return to string, 
 // allocated on a heap as free method will be invoked later.
-def BGFuncTransFn = fn String (String old);
-def BGTypeTransFn = fn String (String old);
-def BGVarTransFn = fn String (String old);
-def BGConstTransFn = fn String (String old);
+def BGTransFn = fn String (String old, Allocator alloc = allocator::heap());
 
 struct BGTransCallbacks
 {
-  BGFuncTransFn function;
-  BGTypeTransFn type;
-  BGVarTransFn variable;
-  BGConstTransFn constant;
+  BGTransFn func;
+  BGTransFn type;
+  BGTransFn variable;
+  BGTransFn constant;
 }
 
 // TODO: implement macro translation
@@ -37,31 +34,56 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
 // | clang::TRANSLATION_UNIT_SINGLE_FILE_PARSE
 ;
 
-// TODO: add support for custom compilation flags
+<* 
+ TODO: add support for custom compilation flags
+ @param output_name "if stdout, write to stdout; otherwise, write to file on privided path"
+*>
 fn void! translateHeader(
   String header_name,
-  BGTransCallbacks* callbacks)
+  String output_name,
+  BGTransCallbacks callbacks)
 {
   log("Translating %s", header_name);
+  log("Writing to %s", output_name);
+  
+  File out;
+  switch (output_name) 
+  {
+    case "stdout":
+      out = *io::stdout();
+    default:
+      out = file::open(output_name, "w")!;
+  }
+  defer (void) out.close();
+  
+
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
 
-  if (callbacks.function == null) warning("Function translation will not be performed as function pointer is null");
+  if (callbacks.func == null) warning("Function translation will not be performed as function pointer is null");
   if (callbacks.variable == null) warning("Variable translation will not be performed as function pointer is null");
   if (callbacks.type == null) warning("Type translation will not be performed as function pointer is null");
   if (callbacks.constant == null) warning("Constant translation will not be performed as function pointer is null");
 
   CXTranslationUnit tu;
-  processErrCode(
-    clang::parseTranslationUnit2(
-      index, 
-      (ZString)header_name, 
-      null, 0, null, 0, 
-      TRANSLATION_UNIT_PARSE_FLAGS, &tu
-    )
-  )!;
+
+  clang::parseTranslationUnit2(
+    index, 
+    (ZString)header_name, 
+    null, 0, null, 0, 
+    TRANSLATION_UNIT_PARSE_FLAGS, &tu
+  ).check()!;
   
   CXCursor cursor = clang::getTranslationUnitCursor(tu);
-  GlobalVisitData visit_data = {callbacks};
+
+  GlobalVisitData visit_data = {
+    .types_table = map::new(<String, String>)(),
+    .out = &out,
+    .trans_fns = callbacks,
+  };
+
+  defer visit_data.types_table.free();
+
   clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
 }
+

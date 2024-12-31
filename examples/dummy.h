@@ -3,9 +3,9 @@
 #define MACRO_VAL   1 /* -> const MACRO_VAL = 1; */
 #define MACRO_FUN(base) base##t // unchanged
 
-int MyFunc(float first, double second);
+int MyFunc(float firstCase, int second_case);
 
-typedef int(*fnPtr)(double a, float b, int);
+typedef int(*fnPtr)(int a, float b, int);
 
 #define ATTRIB inline
 
@@ -18,4 +18,4 @@ typedef struct {
   double bb;
 } AnotherStruct;
 
-ATTRIB void g(struct SomeStruct asd);
+ATTRIB void g(struct SomeStruct ASD);
