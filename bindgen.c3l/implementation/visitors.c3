@@ -27,7 +27,8 @@ fn CXChildVisitResult visitorGlobal(
 
   switch (cursor_kind)
   {
-    case clang::CURSOR_FUNCTION_DECL: writeTransFunc(vd, cursor);
+    case clang::CURSOR_FUNCTION_DECL: writeFuncTrans(vd, cursor, &visitorFunc);
+    case clang::CURSOR_STRUCT_DECL: writeStructTrans(vd, cursor, &visitorStruct);
   }
 
   return clang::CHILD_VISIT_CONTINUE;
@@ -62,11 +63,18 @@ fn CXChildVisitResult visitorStruct(
 
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
-  String name = cursor_spell.toString().trans(vd.g.trans_fns.variable);
+  String original_name = cursor_spell.toString();
 
   CXString cursor_type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
   defer clang::disposeString(cursor_type_spell);
-  String original_type_name = cursor_type_spell.toString().normType().copy();
+  String original_type_name = cursor_type_spell.toString().normType();
+
+  String translated_name = original_name.trans(vd.g.trans_fns.variable);
+  String translated_type_name = original_type_name.transCached(vd.g.trans_fns.type, &vd.g.types_table);
+
+  log("%s [%s]", translated_name, translated_type_name);
+
+  vd.fields.push({translated_type_name, translated_name});
 
   return clang::CHILD_VISIT_CONTINUE;
 }

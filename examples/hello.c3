@@ -4,9 +4,10 @@ import std::ascii, std::io;
 
 fn String lowerize(String str)
 {
-  if (str.len == 0) return str;
-  str[0] = str[0].to_lower();
-  return str;
+  String str2 = str.copy();
+  if (str.len == 0) return str2;
+  str2[0] = str[0].to_lower();
+  return str2;
 }
 
 fn String translateType(String str)
@@ -17,7 +18,7 @@ fn String translateType(String str)
     case "short": return "CShort";
   }
 
-  return str;
+  return str.copy();
 }
 
 fn String camelToSnake(String str)
@@ -52,18 +53,20 @@ fn String camelToSnake(String str)
 
 fn String translateConstant(String str, Allocator alloc = allocator::heap())
 {
-  return str;
+  return str.copy();
 }
 
 
-fn void! main()
+fn void! main(String[] args)
 {
+  String out = args.len > 1 ? args[1] : "stdout";
+  
   BGTransCallbacks cb = {
     .func = &lowerize,
     .type = &translateType,
     .variable = &camelToSnake,
   };
 
-  bg::translateHeader("./examples/dummy.h", "stdout", cb)!;
+  bg::translateHeader("./examples/dummy.h", out, cb)!;
 }
 
