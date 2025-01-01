@@ -11,7 +11,7 @@ fault BGParseError
 
 // All transformation functions must return to string, 
 // allocated on a heap as free method will be invoked later.
-def BGTransFn = fn String (String old, Allocator alloc = allocator::heap());
+def BGTransFn = fn String (String old);
 
 struct BGTransCallbacks
 {

@@ -15,7 +15,7 @@ macro log(String str = "", ...)
 
 macro warning(String str = "", ...) 
 {
-  io::eprintf("%swarning%s : ", ANSI_YELLOW, ANSI_NONE);
+  io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);
   io::eprintfn(str, $vasplat);
 } 
 
@@ -35,6 +35,9 @@ macro void! CXErrorCode.check(code)
   }
 }
 
-macro String CXString.toString(self) => clang::getCString(self).str_view();
-macro String String.normType(self) => self.strip("struct ");
+macro String CXString.toString(self) => 
+  clang::getCString(self).str_view();
+
+macro String String.normType(self) => 
+  self.strip("struct ");
 

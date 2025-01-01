@@ -2,26 +2,25 @@
 import bindgen;
 import std::ascii, std::io;
 
-fn String lowerize(String str, Allocator alloc = allocator::heap())
+fn String lowerize(String str)
 {
   if (str.len == 0) return str;
-  String str2 = str.copy(alloc);
-  str2[0] = str[0].to_lower();
-  return str2;
+  str[0] = str[0].to_lower();
+  return str;
 }
 
-fn String translateType(String str, Allocator alloc = allocator::heap())
+fn String translateType(String str)
 {
   switch (str)
   {
-    case "int": return "CInt".copy();
-    case "short": return "CShort".copy();
+    case "int": return "CInt";
+    case "short": return "CShort";
   }
 
-  return str.copy();
+  return str;
 }
 
-fn String camelToSnake(String str, Allocator alloc = allocator::heap())
+fn String camelToSnake(String str)
 {
   @pool() {
     String buffer = (String) mem::temp_alloc_array(char, str.len + str.len / 2 + 1);
@@ -64,6 +63,7 @@ fn void! main()
     .type = &translateType,
     .variable = &camelToSnake,
   };
+
   bg::translateHeader("./examples/dummy.h", "stdout", cb)!;
 }
 

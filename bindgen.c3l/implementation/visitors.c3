@@ -50,8 +50,6 @@ fn CXChildVisitResult visitorFunc(
 
   vd.params.push({translated_type_name, translated_name});
 
-  log("%s [%s]", translated_name, translated_type_name);
-
   return clang::CHILD_VISIT_CONTINUE;
 }
 

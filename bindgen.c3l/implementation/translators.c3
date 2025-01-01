@@ -2,7 +2,21 @@
 module bindgen::bg @private;
 import std::io, clang;
 
-macro String String.transCached(val, BGTransFn fun, TransTable* table, Allocator alloc = allocator::heap())
+<*
+ Tranlsates 'self' string and returns the new 
+ translated one (or copy of original string).
+*>
+macro String String.trans(self, BGTransFn fun)
+{
+  return fun != null ? fun(self) : self.copy();
+}
+
+<*
+ Tranlsates 'self' string, returns the new 
+ translated one (or copy of original string)
+ and caches it into translation table.
+*>
+macro String String.transCached(val, BGTransFn fun, TransTable* table)
 {
   String translated;
   
@@ -12,21 +26,16 @@ macro String String.transCached(val, BGTransFn fun, TransTable* table, Allocator
   } 
   else 
   {
-    translated = val.trans(fun, alloc);
+    translated = val.trans(fun);
     table.set(val, translated);
   }
 
   return translated;
 }
 
-macro String String.trans(self, BGTransFn fun, Allocator alloc = allocator::heap()) => 
-  fun != null ? fun(self, alloc) : self.copy();
-
 <*
  Translates functions and writes it to 'out'
-
  @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL "Cursor must point to function declaration"
-
  @returns "Number of bytes written"
 *>
 fn usz! writeTransFunc(
@@ -55,10 +64,10 @@ fn usz! writeTransFunc(
 
     String translated_name = original_name.trans(vd.trans_fns.func);
   
+    // Print everything
     acc += io::fprintf(vd.out, "fn %s %s(", ret_type, translated_name)!;
     foreach (i, p : vd_func.params) 
     {
-      log("%s", p.type);
       acc += io::fprintf(vd.out, "%s %s", p.type, p.name)!;
       if (i < vd_func.params.len()-1) acc += io::fprint(vd.out, ", ")!;
     }
