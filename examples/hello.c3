@@ -10,6 +10,14 @@ fn String lowerize(String str)
   return str2;
 }
 
+fn String capitalize(String str)
+{
+  String str2 = str.copy();
+  if (str.len == 0) return str2;
+  str2[0] = str[0].to_upper();
+  return str2;
+}
+
 fn String translateType(String str)
 {
   switch (str)
@@ -18,11 +26,13 @@ fn String translateType(String str)
     case "short": return "CShort";
   }
 
-  return str.copy();
+  return capitalize(str);
 }
 
 fn String camelToSnake(String str)
 {
+  if (str.len == 0) return str.copy();
+
   @pool() {
     String buffer = (String) mem::temp_alloc_array(char, str.len + str.len / 2 + 1);
 

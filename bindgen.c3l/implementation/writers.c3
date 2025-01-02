@@ -56,12 +56,21 @@ fn usz! writeStruct(
  @returns "Number of bytes written"
 *>
 fn usz! writeFuncTypedef(
-  File* out) 
+  File* out,
+  VarDecl[] params,
+  String return_type,
+  String translated_name) 
   @maydiscard
 {
   usz acc;
 
-  acc += io::fprintfn(out, "This is function typedef")!;
+  acc += io::fprintfn(out, "def %s = fn %s(", translated_name, return_type)!;
+  foreach (i, p : params) 
+  {
+    acc += io::fprintf(out, "  %s %s", p.type, p.name)!;
+    if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
+  }
+  acc += io::fprintn(out, ");")!;
   
   return acc;
 }
@@ -72,12 +81,14 @@ fn usz! writeFuncTypedef(
  @returns "Number of bytes written"
 *>
 fn usz! writeAliasTypedef(
-  File* out)
+  File* out,
+  String translated_name,
+  String underlying_name) 
   @maydiscard
 {
   usz acc;
   
-  acc += io::fprintfn(out, "This is aliasing typedef")!;
+  acc += io::fprintfn(out, "def %s = %s;", translated_name, underlying_name)!;
 
   return acc;
 }

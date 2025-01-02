@@ -28,18 +28,9 @@ fn CXChildVisitResult visitorGlobal(
 
   switch (cursor_kind)
   {
-    case clang::CURSOR_FUNCTION_DECL: transFunc(vd, cursor, &visitorFunc);
-    case clang::CURSOR_STRUCT_DECL: transStruct(vd, cursor, &visitorStruct);
-    case clang::CURSOR_TYPEDEF_DECL: transTypedef(vd, cursor, &visitorTypedef);
-      //  
-      // CXType base_type = clang::getTypedefDeclUnderlyingType(cursor);
-      // if (base_type.kind == clang::TYPE_POINTER)
-      // {
-      //   CXString cursor_tk_spell = clang::getTypeKindSpelling(clang::getPointeeType(base_type).kind);
-      //   defer clang::disposeString(cursor_tk_spell);
-      //   String type_kind = cursor_tk_spell.toString();
-      //   log("Type Kind : %s", type_kind);
-      // }
+    case clang::CURSOR_FUNCTION_DECL: transFunc(vd, cursor);
+    case clang::CURSOR_STRUCT_DECL: transStruct(vd, cursor);
+    case clang::CURSOR_TYPEDEF_DECL: transTypedef(vd, cursor);
   }
 
   return clang::CHILD_VISIT_CONTINUE;
