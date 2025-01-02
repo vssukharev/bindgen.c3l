@@ -6888,7 +6888,10 @@ fn CXSourceLocation getTokenLocation(
 /**
  * Retrieve a source range that covers the given token.
  */
-fn CXSourceRange clang_getTokenExtent(CXTranslationUnit, CXToken);
+fn CXSourceRange getTokenExtent(
+  CXTranslationUnit tu,
+  CXToken token)
+@extern("clang_getTokenExtent");
 
 /**
  * Tokenize the source code described by the given range into raw

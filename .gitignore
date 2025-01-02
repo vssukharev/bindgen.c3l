@@ -2,7 +2,8 @@
 build/
 
 *.h
-*.c3i
+/*.c3i
+examples/*.c3i
 
 !examples/*.h
 

@@ -1,29 +1,6 @@
 
-module bindgen::bg @public;
+module bindgen::bg;
 import clang, std::collections::map, std::io;
-
-fault BGParseError
-{
-  FAILURE, 
-  CRASHED, 
-  INVALID_ARGUMENTS,
-}
-
-// All transformation functions must return to string, 
-// allocated on a heap as free method will be invoked later.
-def BGTransFn = fn String (String old);
-
-struct BGTransCallbacks
-{
-  BGTransFn func;
-  BGTransFn type;
-  BGTransFn variable;
-  BGTransFn constant;
-}
-
-// TODO: implement macro translation
-// def BGMacroTransFn = fn BGEntity ();
-// def BGMacroFuncTransFn = fn BGEntity ();
 
 // TODO: add support for custom TRANSLATION_UNIT_PARSE_FLAGS
 const TRANSLATION_UNIT_PARSE_FLAGS =
@@ -85,5 +62,28 @@ fn void! translateHeader(
   defer visit_data.types_table.free();
 
   clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
+}
+
+struct BGTransCallbacks
+{
+  BGTransFn func;
+  BGTransFn type;
+  BGTransFn variable;
+  BGTransFn constant;
+}
+
+// All transformation functions must return to string, 
+// allocated on a heap as free method will be invoked later.
+def BGTransFn = fn String (String old);
+
+// TODO: implement macro translation
+// def BGMacroTransFn = fn String ();
+// def BGMacroFuncTransFn = fn String ();
+
+fault BGParseError
+{
+  FAILURE, 
+  CRASHED, 
+  INVALID_ARGUMENTS,
 }
 

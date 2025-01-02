@@ -11,6 +11,7 @@ macro String String.trans(self, BGTransFn fun)
   return fun != null ? fun(self) : self.copy();
 }
 
+
 <*
  Tranlsates 'self' string, returns the new 
  translated one (or copy of original string)
@@ -23,30 +24,28 @@ macro String String.transCached(val, BGTransFn fun, TransTable* table)
   if (try cached = (*table)[val]) 
   {
     translated = cached;
-    log("Was set: %s", translated);
   } 
   else 
   {
     translated = val.trans(fun);
     table.set(val, translated);
-    log("New set: %s", translated);
   }
 
   return translated;
 }
 
+
 <*
- Translates functions and writes it to 'out'
+ Translates functions and writes it to 'vd.out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL "Cursor must point to function declaration"
  @returns "Number of bytes written"
 *>
-fn usz! writeFuncTrans(
+fn usz! transFunc(
   GlobalVisitData* vd,
   CXCursor cursor,
-  CXCursorVisitor visitor) @maydiscard
+  CXCursorVisitor visitor) 
+@maydiscard
 {
-  usz acc;
-
   @pool() {
     FuncVisitData vd_func = {
       .g = vd,
@@ -59,39 +58,34 @@ fn usz! writeFuncTrans(
     
     CXString cursor_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(cursor_spell);
-    String original_name = cursor_spell.toString();
+    String orig_name = cursor_spell.toString();
 
     CXString ret_type_spelling = clang::getTypeSpelling(clang::getCursorResultType(cursor));
     defer clang::disposeString(ret_type_spelling);
     String ret_type = ret_type_spelling.toString().normType();
-
-    String translated_name = original_name.trans(vd.trans_fns.func);
-  
-    // Print everything
-    acc += io::fprintfn(vd.out, "fn %s %s(", ret_type, translated_name)!;
-    foreach (i, p : vd_func.params) 
-    {
-      acc += io::fprintf(vd.out, "  %s %s", p.type, p.name)!;
-      if (i < vd_func.params.len()-1) acc += io::fprintn(vd.out, ", ")!;
-    }
-    acc += io::fprintf(vd.out, "\n) @extern(\"%s\");\n", original_name)!;
+ 
+    return writeFunc(
+      vd.out, 
+      vd_func.params.array_view(), 
+      ret_type, 
+      orig_name, 
+      orig_name.trans(vd.trans_fns.func)
+    );
   };
-
-  return acc;
 }
+
 
 <*
  Translates structure declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
  @returns "Number of bytes written"
 *>
-fn usz! writeStructTrans(
+fn usz! transStruct(
   GlobalVisitData* vd,
   CXCursor cursor,
-  CXCursorVisitor visitor) @maydiscard
+  CXCursorVisitor visitor) 
+@maydiscard
 {
-  usz acc;
-
   @pool() {
     StructVisitData vd_struct = {
       .g = vd,
@@ -105,17 +99,39 @@ fn usz! writeStructTrans(
     CXString cursor_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(cursor_spell);
 
-    String translated_name = cursor_spell.toString().trans(vd.trans_fns.type);
-  
-    // Print everything
-    acc += io::fprintfn(vd.out, "struct %s {", translated_name)!;
-    foreach (p : vd_struct.fields) 
-    {
-      acc += io::fprintfn(vd.out, "  %s %s;", p.type, p.name)!;
-    }
-    acc += io::fprintfn(vd.out, "}")!;
+    return writeStruct(
+      vd.out,
+      vd_struct.fields.array_view(),
+      cursor_spell.toString().trans(vd.trans_fns.type) 
+    );
   };
+}
 
-  return acc;
+
+<*
+ Translates alias declaration and writes it to 'out'
+ @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL "Cursor must point to typedef declaration"
+ @returns "Number of bytes written"
+*>
+fn usz! transTypedef(
+  GlobalVisitData* vd,
+  CXCursor cursor,
+  CXCursorVisitor visitor) @maydiscard
+{
+  @pool() {
+    TypedefVisitData vd_typedef = {
+      .g = vd,
+    };
+  
+    // Translate function parameters and store them into vd_struct.fields
+    clang::visitChildren(cursor, visitor, (CXClientData) &vd_typedef);
+    
+    CXString cursor_spell = clang::getCursorSpelling(cursor);
+    defer clang::disposeString(cursor_spell);
+
+    String trans_name = cursor_spell.toString().trans(vd.trans_fns.type);
+  
+    return writeFuncTypedef(vd.out);
+  };
 }
 

@@ -34,3 +34,8 @@ struct StructVisitData
   GlobalVisitData* g;
 }
 
+struct TypedefVisitData
+{
+  GlobalVisitData* g;
+}
+

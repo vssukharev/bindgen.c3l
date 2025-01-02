@@ -2,38 +2,6 @@
 module bindgen::bg @private;
 import clang, std::io, std::collections::list;
 
-fn CXChildVisitResult visitorGlobal(
-  CXCursor cursor, 
-  CXCursor parent, 
-  CXClientData client_data)
-{
-  GlobalVisitData* vd = (GlobalVisitData*) client_data;
-
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-
-  CXCursorKind cursor_kind = clang::getCursorKind(cursor);
-  CXString cursor_kind_spell = clang::getCursorKindSpelling(cursor_kind);
-  defer clang::disposeString(cursor_kind_spell);
-
-  CXFile cursor_file;
-  clang::getExpansionLocation(clang::getCursorLocation(cursor), &cursor_file, null, null, null);
-
-  // If we can't find file, definition is included 
-  // by compiler so skip it
-  if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
-
-  log("(%s) : %s", cursor_kind_spell.toString(), cursor_spell.toString());
-
-  switch (cursor_kind)
-  {
-    case clang::CURSOR_FUNCTION_DECL: writeFuncTrans(vd, cursor, &visitorFunc);
-    case clang::CURSOR_STRUCT_DECL: writeStructTrans(vd, cursor, &visitorStruct);
-  }
-
-  return clang::CHILD_VISIT_CONTINUE;
-}
-
 fn CXChildVisitResult visitorFunc(
   CXCursor cursor, 
   CXCursor parent, 
@@ -54,6 +22,7 @@ fn CXChildVisitResult visitorFunc(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+
 fn CXChildVisitResult visitorStruct(
   CXCursor cursor, 
   CXCursor parent, 
@@ -72,11 +41,49 @@ fn CXChildVisitResult visitorStruct(
   String translated_name = original_name.trans(vd.g.trans_fns.variable);
   String translated_type_name = original_type_name.transCached(vd.g.trans_fns.type, &vd.g.types_table);
 
-  log("%s [%s]", translated_name, translated_type_name);
-
   vd.fields.push({translated_type_name, translated_name});
 
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+
+<*
+ This visitor is used only in case of declaring function 
+ pointers types, e.g. `typedef int(*fnPtr)(double a, double b)`
+*>
+fn CXChildVisitResult visitorTypedef(
+  CXCursor cursor, 
+  CXCursor parent, 
+  CXClientData client_data)
+{
+  TypedefVisitData* vd = (TypedefVisitData*) client_data;
+
+  CXString cursor_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(cursor_spell);
+  String original_name = cursor_spell.toString();
+
+  CXType cxtype = clang::getCursorType(cursor);
+
+  CXString cursor_type_spell = clang::getTypeSpelling(cxtype);
+  defer clang::disposeString(cursor_type_spell);
+  String original_type_name = cursor_type_spell.toString().normType();
+
+  CXString cursor_kind_spell = clang::getCursorKindSpelling(clang::getCursorKind(cursor));
+  defer clang::disposeString(cursor_kind_spell);
+  String kind = cursor_kind_spell.toString();
+
+  CXString cursor_tk_spell = clang::getTypeKindSpelling(cxtype.kind);
+  defer clang::disposeString(cursor_tk_spell);
+  String type_kind = cursor_tk_spell.toString();
+
+  // log("name : %s", original_name);
+  // log("type name : %s", original_type_name);
+  // log("cursor kind : %s", kind);
+  // log("type kind : %s", type_kind);
+  
+  // String translated_name = original_name.trans(vd.g.trans_fns.variable);
+  // String translated_type_name = original_type_name.transCached(vd.g.trans_fns.type, &vd.g.types_table);
+
+  return clang::CHILD_VISIT_CONTINUE;
+}
 
