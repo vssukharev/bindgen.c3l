@@ -32,6 +32,7 @@ fn CXChildVisitResult visitorGlobal(
     case clang::CURSOR_STRUCT_DECL: transStruct(vd, cursor);
     case clang::CURSOR_TYPEDEF_DECL: transTypedef(vd, cursor);
     case clang::CURSOR_VAR_DECL: transConst(vd, cursor);
+    // TODO: make non-const global variables translation
   }
 
   return clang::CHILD_VISIT_CONTINUE;

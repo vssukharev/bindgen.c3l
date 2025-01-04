@@ -22,16 +22,19 @@ fn usz! transConst(
   String name = cursor_spell.toString().transCached(vd.trans_fns.constant, &vd.consts_table); 
   String type_name = cursor_type_spell.toString().normType().transCached(vd.trans_fns.variable, &vd.types_table);
 
-  ConstVisitData vd_const = {
-    .g = vd,
+  @pool()
+  {
+    ConstVisitData vd_const = {
+      .g = vd,
+    };
+
+    vd_const.val.temp_init(10);
+
+    // Visit rhs of var declaration and translate 
+    // there everything, that is identifier
+    clang::visitChildren(cursor, &visitorConst, (CXClientData) &vd_const);
+
+    return writeConst(vd.out, type_name, name, vd_const.val.str_view());
   };
-
-  vd_const.val.new_init(10);
-
-  // Visit rhs of var declaration and translate 
-  // there everything, that is identifier
-  clang::visitChildren(cursor, &visitorConst, (CXClientData) &vd_const);
-
-  return writeConst(vd.out, type_name, name, vd_const.val.str_view());
 }
 

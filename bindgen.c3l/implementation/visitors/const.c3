@@ -15,18 +15,32 @@ fn CXChildVisitResult visitorConst(
 
   CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
   CXSourceRange sr = clang::getCursorExtent(cursor);
+  
+  // Behaviour of clang::getCursorExtent is a bit broken. If some macro
+  // is expanded under the following cursor, beginning of the given range
+  // will point to the macro definition. Apparently, clang::getExpansionLocation
+  // fixes that bug. I love libclang :)
+  {
+    CXSourceLocation sl_begin = clang::getRangeStart(sr);    
+    CXSourceLocation sl_end = clang::getRangeEnd(sr);
+    CXFile file; CUInt offset; 
+    clang::getExpansionLocation(sl_begin, &file, null, null, &offset);
+    sl_begin = clang::getLocationForOffset(tu, file, offset); 
+    sr = clang::getRange(sl_begin, sl_end);
+  }
+
   CXToken* tokens;
   uint tokens_len;
   
   clang::tokenize(tu, sr, &tokens, &tokens_len);
   defer clang::disposeTokens(tu, tokens, tokens_len);
   
-  for (uint i; i < tokens_len; ++i)
+  foreach (t : tokens[:tokens_len])
   {
-    CXString token_spell = clang::getTokenSpelling(tu, tokens[i]);
+    CXString token_spell = clang::getTokenSpelling(tu, t);
     defer clang::disposeString(token_spell);
     String token_str = token_spell.toString();
-    CXTokenKind token_kind = clang::getTokenKind(tokens[i]);
+    CXTokenKind token_kind = clang::getTokenKind(t);
 
     // TODO: get rid of mem leak
     String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
@@ -34,8 +48,6 @@ fn CXChildVisitResult visitorConst(
       : token_str.copy();
     
     vd.val.append(trans_token_str);
-
-    // log("%s", token_str, indent: 1);
   }
  
   return clang::CHILD_VISIT_BREAK;
