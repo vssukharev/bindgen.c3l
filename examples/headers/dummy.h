@@ -1,6 +1,7 @@
 // -> module dummy;
 
-#define MACRO_VAL   1 /* -> const MACRO_VAL = 1; */
+#define MACRO_VAL   1           // const MACRO_VAL = 1;
+#define ONE_MORE_MACRO MACRO_VAL + 1 // const ONE_MORE_MACRO = MACRO_VAL + 1
 #define MACRO_FUN(base) base##t // unchanged
 
 int MyFunc(float firstCase, int second_case);

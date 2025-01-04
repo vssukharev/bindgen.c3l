@@ -8,9 +8,9 @@ import std::io, clang;
 *>
 fn usz! writeFuncTypedef(
   File* out,
-  VarDecl[] params,
+  String translated_name,
   String return_type,
-  String translated_name) 
+  VarDecl[] params)
 @maydiscard
 {
   usz acc;

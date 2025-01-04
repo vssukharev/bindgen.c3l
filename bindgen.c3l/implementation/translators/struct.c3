@@ -21,15 +21,13 @@ fn usz! transStruct(
   
     // Translate function parameters and store them into vd_struct.fields
     clang::visitChildren(cursor, &visitorStruct, (CXClientData) &vd_struct);
-    
-    CXString cursor_spell = clang::getCursorSpelling(cursor);
-    defer clang::disposeString(cursor_spell);
-
-    return writeStruct(
-      vd.out,
-      vd_struct.fields.array_view(),
-      cursor_spell.toString().trans(vd.trans_fns.type) 
-    );
+ 
+    @pool()
+    {
+      CXType type = clang::getCursorType(cursor);
+      String type_name = type.ttrans(vd.trans_fns.type, &vd.types_table);
+      return writeStruct(vd.out, vd_struct.fields.array_view(), type_name);
+    };
   };
 }
 

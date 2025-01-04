@@ -35,7 +35,11 @@ fn String translateType(String str)
     case "int": return "CInt";
     case "unsigned": return "CUInt";
     case "unsigned int": return "CUInt";
+    case "long long": return "CLongLong";
     case "short": return "CShort";
+    case "char": return "CChar";
+    case "double": return "double";
+    case "float": return "float";
   }
 
   return capitalizeFirst(str);

@@ -16,19 +16,17 @@ fn usz! transConst(
   defer clang::disposeString(cursor_spell);
   
   CXType cursor_type = clang::getCursorType(cursor);
-  CXString cursor_type_spell = clang::getTypeSpelling(cursor_type);
-  defer clang::disposeString(cursor_type_spell);
-
-  String name = cursor_spell.toString().transCached(vd.trans_fns.constant, &vd.consts_table); 
-  String type_name = cursor_type_spell.toString().normType().transCached(vd.trans_fns.variable, &vd.types_table);
 
   @pool()
   {
+    String name = cursor_spell.toString().transCached(vd.trans_fns.constant, &vd.consts_table); 
+    String type_name = cursor_type.ttrans(vd.trans_fns.type, &vd.types_table);
+
     ConstVisitData vd_const = {
       .g = vd,
     };
 
-    vd_const.val.temp_init(10);
+    vd_const.val.temp_init();
 
     // Visit rhs of var declaration and translate 
     // there everything, that is identifier

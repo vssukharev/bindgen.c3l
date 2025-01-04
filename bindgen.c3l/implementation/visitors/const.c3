@@ -42,7 +42,7 @@ fn CXChildVisitResult visitorConst(
     String token_str = token_spell.toString();
     CXTokenKind token_kind = clang::getTokenKind(t);
 
-    // TODO: get rid of mem leak
+    // TODO: get rid of memory leak
     String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
       ? token_str.transCached(vd.g.trans_fns.constant, &vd.g.consts_table)
       : token_str.copy();

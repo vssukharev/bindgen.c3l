@@ -12,52 +12,38 @@ fn usz! transTypedef(
   CXCursor cursor) 
 @maydiscard
 {
-  CXType base_type = clang::getTypedefDeclUnderlyingType(cursor);
-
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-  String base_name = cursor_spell.toString().normType().transCached(vd.trans_fns.type, &vd.types_table);
-
-  // Translate pointer to function
-  if (base_type.kind == clang::TYPE_POINTER && clang::getPointeeType(base_type).kind == clang::TYPE_FUNCTION_PROTO)
-  {
-    @pool()
-    {
-      CXType pointee_type = clang::getPointeeType(base_type);
-
-      FuncVisitData vd_func = {
-        .g = vd,
-      };
-
-      vd_func.params.temp_init(4);
-      
-      // Translate function parameters and store them into vd_struct.fields
-      clang::visitChildren(cursor, &visitorFunc, (CXClientData) &vd_func);
-
-      CXString ret_type_spelling = clang::getTypeSpelling(clang::getResultType(pointee_type));
-      defer clang::disposeString(ret_type_spelling);
-      String ret_type = ret_type_spelling.toString().normType().transCached(vd.trans_fns.type, &vd.types_table);
-
-      return writeFuncTypedef(
-        vd.out,
-        vd_func.params.array_view(),
-        ret_type,
-        base_name
-      );
-    };
-  }
-
-  // Translate alias
+  CXType type = clang::getCursorType(cursor);
   CXType under_type = clang::getTypedefDeclUnderlyingType(cursor);
 
-  CXString under_type_spell = clang::getTypeSpelling(under_type);
-  defer clang::disposeString(under_type_spell);
-  String under_type_name = under_type_spell.toString().normType().transCached(vd.trans_fns.type, &vd.types_table);
-  
-  return writeAliasTypedef(
-    vd.out,
-    base_name,
-    under_type_name
-  );
+  @pool()
+  {
+    String type_name = type.ttrans(vd.trans_fns.type, &vd.types_table);
+
+    if (under_type.kind == clang::TYPE_POINTER && clang::getPointeeType(under_type).kind == clang::TYPE_FUNCTION_PROTO)
+    {
+      // Translate pointer to function
+        FuncVisitData vd_func = {
+          .g = vd,
+        };
+
+        vd_func.params.temp_init(4);
+        
+        CXType ret_type = clang::getResultType(clang::getPointeeType(under_type));
+
+        String ret_type_name = ret_type.ttrans(vd.trans_fns.type, &vd.types_table);
+
+        // Translate function parameters and store them into vd_struct.fields
+        clang::visitChildren(cursor, &visitorFunc, (CXClientData) &vd_func);
+
+        return writeFuncTypedef(vd.out, type_name, ret_type_name, vd_func.params.array_view());
+    }
+    else
+    {
+      // Translate alias
+      String under_type_name = under_type.ttrans(vd.trans_fns.type, &vd.types_table);
+
+      return writeAliasTypedef(vd.out, type_name, under_type_name);
+    }
+  };
 }
 
