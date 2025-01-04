@@ -1,6 +1,6 @@
 
 module bindgen::bg @private;
-import clang;
+import std::io, clang;
 
 fn CXChildVisitResult visitorGlobal(
   CXCursor cursor, 
