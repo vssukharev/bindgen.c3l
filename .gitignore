@@ -1,9 +1,7 @@
 
 build/
 
-*.h
-/*.c3i
-examples/*.c3i
+*.c3i
 
-!examples/*.h
+!bindgen.c3l/*.c3i
 

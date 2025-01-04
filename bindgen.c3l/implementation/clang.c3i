@@ -6982,10 +6982,12 @@ fn void enableStackTraces()
 @extern("clang_enableStackTraces");
 
 def VoidPtrCallback = fn void(void*) @private;
-fn void clang_executeOnThread(
+
+fn void executeOnThread(
   VoidPtrCallback func, 
   void* user_data, 
-  CUInt stack_size);
+  CUInt stack_size) 
+@extern("clang_executeOnThread");
 
 /**
  * A semantic string that describes a code-completion result.

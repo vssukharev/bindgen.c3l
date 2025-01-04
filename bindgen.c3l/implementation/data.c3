@@ -12,6 +12,7 @@ struct GlobalVisitData
 {
   BGTransCallbacks trans_fns;
   TransTable types_table;
+  TransTable consts_table;
   File* out;
 }
 
@@ -36,6 +37,12 @@ struct StructVisitData
 
 struct TypedefVisitData
 {
+  GlobalVisitData* g;
+}
+
+struct ConstVisitData
+{
+  DString val;
   GlobalVisitData* g;
 }
 

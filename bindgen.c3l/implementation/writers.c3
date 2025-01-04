@@ -12,7 +12,7 @@ fn usz! writeFunc(
   String return_type,
   String original_name,
   String translated_name) 
-  @maydiscard
+@maydiscard
 {
   usz acc;
 
@@ -36,7 +36,7 @@ fn usz! writeStruct(
   File* out,
   VarDecl[] fields,
   String translated_name) 
-  @maydiscard
+@maydiscard
 {
   usz acc;
 
@@ -60,14 +60,15 @@ fn usz! writeFuncTypedef(
   VarDecl[] params,
   String return_type,
   String translated_name) 
-  @maydiscard
+@maydiscard
 {
   usz acc;
 
   acc += io::fprintfn(out, "def %s = fn %s(", translated_name, return_type)!;
   foreach (i, p : params) 
   {
-    acc += io::fprintf(out, "  %s %s", p.type, p.name)!;
+    acc += io::fprintf(out, "  %s", p.type)!;
+    acc += io::fprintf(out, p.name == "" ? "" : " %s", p.name)!;
     if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
   }
   acc += io::fprintn(out, ");")!;
@@ -84,13 +85,23 @@ fn usz! writeAliasTypedef(
   File* out,
   String translated_name,
   String underlying_name) 
-  @maydiscard
+@maydiscard
 {
-  usz acc;
-  
-  acc += io::fprintfn(out, "def %s = %s;", translated_name, underlying_name)!;
-
-  return acc;
+  return io::fprintfn(out, "def %s = %s;", translated_name, underlying_name);
 }
 
+
+<*
+ Writes global constant to 'out'
+ @returns "Number of bytes written"
+*>
+fn usz! writeConst(
+  File* out,
+  String translated_type,
+  String translated_name,
+  String value)
+@maydiscard
+{
+  return io::fprintfn(out, "const %s %s = %s;", translated_type, translated_name, value);
+}
 

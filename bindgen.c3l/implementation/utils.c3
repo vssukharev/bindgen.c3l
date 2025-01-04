@@ -7,8 +7,12 @@ const ANSI_GREEN = "\e[32m";
 const ANSI_YELLOW = "\e[33m";
 const ANSI_NONE = "\e[0m";
 
-macro log(String str = "", ...) 
+macro log(String str = "", ..., usz indent = 0) 
 {
+  for (usz i; i < indent; ++i)
+  {
+    io::eprintf("  ");
+  }
   io::eprintf("%s[%s]%s : ", ANSI_GREEN, $$FUNC, ANSI_NONE);
   io::eprintfn(str, $vasplat);
 } 
@@ -39,7 +43,7 @@ macro String CXString.toString(self) =>
   clang::getCString(self).str_view();
 
 macro String String.normType(self) => 
-  self.strip("struct ");
+  self.strip("struct ").strip("const ");
 
 <*
  Tranlsates 'self' string and returns the new 
