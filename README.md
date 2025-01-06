@@ -22,3 +22,10 @@ WIP C bindings generation library for C3 language.
 
 See `examples/hello.c3` (`c3c run hello` to immediately run example).
 
+## Adding new targets
+
+If your platform is not currently supported, you are free to submit an issue or PR. I am using linux so I don't know how to link with libclang under various platforms, so I would really appreciate your help with that.
+
+First of all, read a [short article](https://c3-lang.org/misc-advanced/library-packaging/) on C3 wiki about library packaging. Then you will need to modify `bindgen.c3l/manifest.json` with adding your target and linking arguments.
+
+
