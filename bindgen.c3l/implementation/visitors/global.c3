@@ -24,7 +24,6 @@ fn CXChildVisitResult visitorGlobal(
   if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
 
   log("(%s) : %s", cursor_kind_spell.toString(), cursor_spell.toString());
-  
 
   // TODO: make non-const global variables translation
   switch (cursor_kind)
@@ -34,6 +33,7 @@ fn CXChildVisitResult visitorGlobal(
     case clang::CURSOR_TYPEDEF_DECL: transTypedef(vd, cursor);
     case clang::CURSOR_VAR_DECL: transConst(vd, cursor);
     case clang::CURSOR_ENUM_DECL: transEnum(vd, cursor);
+    case clang::CURSOR_MACRO_DEFINITION: transMacro(vd, cursor);
   }
 
   return clang::CHILD_VISIT_CONTINUE;

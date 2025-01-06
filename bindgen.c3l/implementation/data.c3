@@ -72,3 +72,9 @@ struct EnumValVisitData
   DString* rhs;
 }
 
+struct MacroVisitData
+{
+  DString val;
+  GlobalVisitData* g;
+}
+

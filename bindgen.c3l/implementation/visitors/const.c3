@@ -22,12 +22,12 @@ fn CXChildVisitResult visitorConst(
   clang::tokenize(tu, sr, &tokens, &tokens_len);
   defer clang::disposeTokens(tu, tokens, tokens_len);
   
-  foreach (t : tokens[:tokens_len])
+  foreach (&t : tokens[:tokens_len])
   {
-    CXString token_spell = clang::getTokenSpelling(tu, t);
+    CXString token_spell = clang::getTokenSpelling(tu, *t);
     defer clang::disposeString(token_spell);
     String token_str = token_spell.toString();
-    CXTokenKind token_kind = clang::getTokenKind(t);
+    CXTokenKind token_kind = clang::getTokenKind(*t);
 
     // TODO: get rid of memory leak
     String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
