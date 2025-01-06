@@ -16,7 +16,7 @@ fn usz! writeFunc(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "fn %s %s(", return_type, translated_name)!;
+  acc += io::fprintfn(out, "extern fn %s %s(", return_type, translated_name)!;
   foreach (i, p : params) 
   {
     acc += io::fprintf(out, "  %s %s", p.type, p.name)!;
