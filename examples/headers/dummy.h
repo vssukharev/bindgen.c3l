@@ -16,6 +16,20 @@ struct SomeStruct {
   double ff;
 };
 
+enum MyEnum
+{
+  VAL_1 = 0,
+  VAL_2,
+  VAL_3 = 13,
+  VAL_4,
+};
+
+enum oneMoreEnum
+{
+  more_val1 = 4,
+  more_val2 = 3,
+  more_val3 = VAL_4 + 2,
+};
 
 int MyVar = 200 ^ 2; // -> 200 ^ 2
 

@@ -1,7 +1,5 @@
 
 build/
 
-*.c3i
-
-!bindgen.c3l/*.c3i
+examples/*.c3i
 

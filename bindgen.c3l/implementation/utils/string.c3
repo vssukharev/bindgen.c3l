@@ -13,7 +13,7 @@ macro String CXString.toString(self) =>
  spellings, e.g. `struct MyStruct` -> `MyStruct`
 *>
 macro String String.normType(self) => 
-  self.strip("struct ").strip("const ");
+  self.strip("struct ").strip("const ").strip("enum ");
 
 <*
  Tranlsates 'self' string and returns the new 

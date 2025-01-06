@@ -14,20 +14,7 @@ fn CXChildVisitResult visitorConst(
   ConstVisitData* vd = (ConstVisitData*) client_data;
 
   CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
-  CXSourceRange sr = clang::getCursorExtent(cursor);
-  
-  // Behaviour of clang::getCursorExtent is a bit broken. If some macro
-  // is expanded under the following cursor, beginning of the given range
-  // will point to the macro definition. Apparently, clang::getExpansionLocation
-  // fixes that bug. I love libclang :)
-  {
-    CXSourceLocation sl_begin = clang::getRangeStart(sr);    
-    CXSourceLocation sl_end = clang::getRangeEnd(sr);
-    CXFile file; CUInt offset; 
-    clang::getExpansionLocation(sl_begin, &file, null, null, &offset);
-    sl_begin = clang::getLocationForOffset(tu, file, offset); 
-    sr = clang::getRange(sl_begin, sl_end);
-  }
+  CXSourceRange sr = getTrueCursorExtent(cursor);
 
   CXToken* tokens;
   uint tokens_len;

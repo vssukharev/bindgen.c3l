@@ -26,13 +26,14 @@ fn CXChildVisitResult visitorGlobal(
   log("(%s) : %s", cursor_kind_spell.toString(), cursor_spell.toString());
   
 
+  // TODO: make non-const global variables translation
   switch (cursor_kind)
   {
     case clang::CURSOR_FUNCTION_DECL: transFunc(vd, cursor);
     case clang::CURSOR_STRUCT_DECL: transStruct(vd, cursor);
     case clang::CURSOR_TYPEDEF_DECL: transTypedef(vd, cursor);
     case clang::CURSOR_VAR_DECL: transConst(vd, cursor);
-    // TODO: make non-const global variables translation
+    case clang::CURSOR_ENUM_DECL: transEnum(vd, cursor);
   }
 
   return clang::CHILD_VISIT_CONTINUE;
