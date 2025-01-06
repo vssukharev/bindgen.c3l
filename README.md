@@ -1,7 +1,7 @@
 
 # bindgen.c3l
 
-C bindings generation library for C3 language. 
+WIP C bindings generation library for C3 language. 
 
 ## Setup
 
