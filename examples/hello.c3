@@ -38,8 +38,10 @@ fn String translateType(String str)
     case "long long": return "CLongLong";
     case "short": return "CShort";
     case "char": return "CChar";
+    case "unsigned char": return "CUChar";
     case "double": return "double";
     case "float": return "float";
+    case "void": return "void";
   }
 
   return capitalizeFirst(str);
