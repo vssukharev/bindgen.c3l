@@ -18,7 +18,7 @@ fn usz! writeEnum(
 {
   usz acc;
   
-  acc += io::fprintfn(out, "distinct %s = inline %s;", name, type)!;
+  acc += io::fprintfn(out, "\ndistinct %s = inline %s;", name, type)!;
   for (usz i; i < vals.len; ++i)
   {
     acc += io::fprintfn(out, "const %s %s = %s;", name, vals.names[i], vals.rhses[i])!;

@@ -42,7 +42,14 @@ fn usz! transTypedef(
       // Translate alias
       String under_type_name = under_type.ttrans(vd.trans_fns.type, &vd.types_table);
 
-      return writeAliasTypedef(vd.out, type_name, under_type_name);
+      if (type_name != under_type_name)
+      {
+        return writeAliasTypedef(vd.out, type_name, under_type_name);
+      }
+      else
+      {
+        return 0;
+      }
     }
   };
 }

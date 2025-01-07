@@ -38,11 +38,11 @@ const int ANOTHER_CONST = 50;
 const int FOO = ANOTHER_CONST + 1;
 
 #define HELLO 1
-const unsigned int BAR_1 = HELLO + (~0U);
+const unsigned int BAR_1 = HELLO + (~0ULL);
 const long long BAR_2 = (~0ULL);
 const char BAR_3[] = "KUKU, EPTA";
 
-typedef struct AnotherStruct_ {
+typedef struct AnotherStruct {
   int aa;
   double bb;
 } AnotherStruct;

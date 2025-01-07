@@ -53,6 +53,11 @@ fn usz! transMacro(
       String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
         ? token_str.transCached(vd.trans_fns.constant, &vd.consts_table)
         : token_str.copy();
+   
+      if (token_kind == clang::TOKEN_LITERAL)
+      {
+        trans_token_str = strTransIntSuffix(trans_token_str); // TODO: get rid of leaks
+      }
       
       val.append(trans_token_str);
     }

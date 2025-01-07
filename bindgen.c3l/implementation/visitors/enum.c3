@@ -22,8 +22,6 @@ fn CXChildVisitResult visitorEnum(
     .rhs = vd.vals.rhses + vd.current,
   };
 
-  log("%s", cursor_str, indent: 1);
-
   clang::visitChildren(cursor, &visitorEnumValue, (CXClientData) &vd_val);
 
   // If we get empty rhs, evaluate value
@@ -68,8 +66,6 @@ fn CXChildVisitResult visitorEnumValue(
     defer clang::disposeString(token_spell);
     String token_str = token_spell.toString();
     CXTokenKind token_kind = clang::getTokenKind(*t);
-
-    log("%s", token_str, indent: 2);
 
     // TODO: get rid of memory leak
     String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
