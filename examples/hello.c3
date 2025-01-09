@@ -64,6 +64,6 @@ fn void! main(String[] args)
     .constant = &capitalize,
   };
 
-  bg::translateHeader("./examples/headers/glfw3.h", out, cb)!;
+  bg::translateHeaders({"./examples/headers/glfw3.h"}, out, cb, "glfw")!;
 }
 

@@ -14,16 +14,17 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
  TODO: add support for custom compilation flags
  @param output_name "if stdout, write to stdout; otherwise, write to file on privided path"
 *>
-fn void! translateHeader(
-  String header_name,
+fn void! translateHeaders(
+  String[] header_names,
   String output_name,
-  BGTransCallbacks callbacks)
+  BGTransCallbacks callbacks,
+  String module_name)
 {
-  log("Translating %s", header_name);
+  log("Translating %s", header_names);
   log("Writing to %s", output_name);
   
   File out;
-  switch (output_name) 
+  switch (output_name)
   {
     case "stdout":
       out = *io::stdout();
@@ -31,7 +32,6 @@ fn void! translateHeader(
       out = file::open(output_name, "w")!;
   }
   defer (void) out.close();
-  
 
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
@@ -41,26 +41,26 @@ fn void! translateHeader(
   if (callbacks.type == null) warning("Type translation will not be performed as function pointer is null");
   if (callbacks.constant == null) warning("Constant translation will not be performed as function pointer is null");
 
-  CXTranslationUnit tu;
+  writeHeader(&out, module_name);
 
-  clang::parseTranslationUnit2(
-    index, 
-    (ZString)header_name, 
-    null, 0, null, 0, 
-    TRANSLATION_UNIT_PARSE_FLAGS, &tu
-  ).check()!;
-  
-  CXCursor cursor = clang::getTranslationUnitCursor(tu);
+  foreach (header_name : header_names)
+  {
+    CXTranslationUnit tu;
 
-  GlobalVisitData visit_data = {
-    .out = &out,
-    .trans_fns = callbacks,
-  };
+    clang::parseTranslationUnit2(index, (ZString)header_name, null, 0, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu).check()!;
+    
+    CXCursor cursor = clang::getTranslationUnitCursor(tu);
 
-  visit_data.types_table.new_init();
-  defer visit_data.types_table.free();
+    GlobalVisitData visit_data = {
+      .out = &out,
+      .trans_fns = callbacks,
+    };
 
-  clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
+    visit_data.types_table.new_init();
+    defer visit_data.types_table.free();
+
+    clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
+  }
 }
 
 <*
