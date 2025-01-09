@@ -64,7 +64,7 @@ fn String CXType.transCache(
   
   // Return if cached
   if (try trans_type_str = (*table)[type_str]) return trans_type_str;
-  
+
   // Here we also need to recursively retrieve inner-most type,
   // like: int[]* -> int. Inner types are those we will be translating
   CXType inner_type = type;

@@ -32,10 +32,12 @@ fn String translateType(String str, Allocator alloc)
 {
   switch (str)
   {
+    case "void": return "void".copy(alloc);
     case "int": return "CInt".copy(alloc);
     case "unsigned": return "CUInt".copy(alloc);
     case "unsigned int": return "CUInt".copy(alloc);
     case "unsigned short": return "CUShort".copy(alloc);
+    case "unsigned char": return "CUChar".copy(alloc);
     case "long long": return "CLongLong".copy(alloc);
     case "short": return "CShort".copy(alloc);
     case "char": return "CChar".copy(alloc);
