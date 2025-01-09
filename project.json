@@ -9,5 +9,9 @@
       "type" : "executable",
       "sources" : [ "examples/hello.c3" ],
     },
+    "glfw" : {
+      "type" : "executable",
+      "sources" : [ "examples/glfw.c3" ],
+    },
   },
 }
