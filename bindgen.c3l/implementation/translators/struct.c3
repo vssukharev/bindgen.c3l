@@ -7,14 +7,12 @@ import std::io, clang;
  @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
  @returns "Number of bytes written"
 *>
-fn usz! transStruct(
-  GlobalVisitData* vd,
-  CXCursor cursor)
-@maydiscard
+fn usz! transWriteStruct(GlobalVisitData* vd, CXCursor cursor) @maydiscard
 {
   @pool() {
     StructVisitData vd_struct = {
       .g = vd,
+      .allocator = allocator::temp(),
     };
 
     vd_struct.fields.temp_init(4);
@@ -22,12 +20,9 @@ fn usz! transStruct(
     // Translate function parameters and store them into vd_struct.fields
     clang::visitChildren(cursor, &visitorStruct, (CXClientData) &vd_struct);
  
-    @pool()
-    {
-      CXType type = clang::getCursorType(cursor);
-      String type_name = type.ttrans(vd.trans_fns.type, &vd.types_table);
-      return writeStruct(vd.out, vd_struct.fields.array_view(), type_name);
-    };
+    String type_name = clang::getCursorType(cursor).transCache(vd.trans_fns.type, &vd.types_table);
+
+    return writeStruct(vd.out, vd_struct.fields.array_view(), type_name);
   };
 }
 

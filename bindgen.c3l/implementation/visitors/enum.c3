@@ -3,7 +3,7 @@ module bindgen::bg @private;
 import std::io, clang;
 
 <*
-
+ Visits enum values
 *>
 fn CXChildVisitResult visitorEnum(
   CXCursor cursor, 
@@ -15,7 +15,7 @@ fn CXChildVisitResult visitorEnum(
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
   String cursor_str = cursor_spell.toString();
-  vd.vals.names[vd.current] = cursor_str.transCached(vd.g.trans_fns.constant, &vd.g.consts_table); 
+  vd.vals.names[vd.current] = cursor_str.transCache(vd.g.trans_fns.constant, &vd.g.consts_table); 
 
   EnumValVisitData vd_val = {
     .g = vd.g,
@@ -45,37 +45,45 @@ fn CXChildVisitResult visitorEnum(
 }
 
 <*
+
 *>
 fn CXChildVisitResult visitorEnumValue(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data)
 {
-  EnumValVisitData* vd = (EnumValVisitData*) client_data;
-
-  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
-  CXSourceRange sr = getTrueCursorExtent(cursor);
-
-  CXToken* tokens; uint tokens_len;
-  clang::tokenize(tu, sr, &tokens, &tokens_len);
-  defer clang::disposeTokens(tu, tokens, tokens_len);
-  
-  foreach (&t : tokens[:tokens_len])
+  @pool()
   {
-    CXString token_spell = clang::getTokenSpelling(tu, *t);
-    defer clang::disposeString(token_spell);
-    String token_str = token_spell.toString();
-    CXTokenKind token_kind = clang::getTokenKind(*t);
+    EnumValVisitData* vd = (EnumValVisitData*) client_data;
 
-    // TODO: get rid of memory leak
-    String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
-      ? token_str.transCached(vd.g.trans_fns.constant, &vd.g.consts_table)
-      : token_str.copy();
-    
-    vd.rhs.append_chars(trans_token_str);
-  }
+    CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+    CXSourceRange sr = getTrueCursorExtent(cursor);
+
+    CXToken* tokens; uint tokens_len;
+    clang::tokenize(tu, sr, &tokens, &tokens_len);
+    defer clang::disposeTokens(tu, tokens, tokens_len);
  
-  return clang::CHILD_VISIT_BREAK;
+    @iterateTokens(tokens[:tokens_len], tu; String token_str, CXTokenKind token_kind)
+    {
+      String trans_token_str;
+
+      switch (token_kind)
+      {
+        case clang::TOKEN_IDENTIFIER:
+          trans_token_str = token_str.transCache(vd.g.trans_fns.constant, &vd.g.consts_table);
+
+        case clang::TOKEN_LITERAL:
+          trans_token_str = token_str.tempTransIntSuffix();
+
+        default:
+          trans_token_str = token_str;
+      }
+      
+      vd.rhs.append_chars(trans_token_str);
+    };
+   
+    return clang::CHILD_VISIT_BREAK;
+  };
 }
 
 

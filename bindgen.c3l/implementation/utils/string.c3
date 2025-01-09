@@ -9,8 +9,9 @@ macro String CXString.toString(self) =>
   clang::getCString(self).str_view();
 
 <*
- Delete redundant prefixes in strings of type 
- spellings, e.g. `struct MyStruct` -> `MyStruct`
+ Strips redundant prefixes in strings of type 
+ spellings without any allocations. 
+ E.g. `struct MyStruct` -> `MyStruct`
 *>
 macro String String.normType(self) => 
   self.strip("struct ").strip("const ").strip("enum ");
@@ -19,81 +20,91 @@ macro String String.normType(self) =>
  Tranlsates 'self' string and returns the new 
  translated one (or copy of original string).
 *>
-macro String String.trans(self, BGTransFn fun) =>
-  fun != null ? fun(self) : self.copy();
+macro String String.newTrans(self, BGTransFn fun, Allocator alloc = allocator::heap()) =>
+  fun != null ? fun(self, alloc) : self.copy(alloc);
+
+macro String String.tempTrans(self, BGTransFn fun) =>
+  self.newTrans(fun, allocator::temp()) @inline;
 
 <*
  Translates 'self' string, returns the new 
- translated one (or copy of original string)
- and caches it into translation table.
+ translated one and caches it into translation 
+ table. String itself is always allocated on the
+ heap and should NOT be freed as it would cause
+ dangerous dead nodes it table.
 *>
-fn String String.transCached(self, BGTransFn fun, TransTable* table)
+fn String String.transCache(self, BGTransFn fun, TransTable* table, Allocator alloc = allocator::heap())
 {
   String translated;
   
-  if (try cached = (*table)[self]) 
+  if (try cached = (*table)[self])
   {
     translated = cached;
   } 
   else 
   {
-    translated = self.trans(fun);
-    if (table != null) table.set(self, translated);
+    translated = self.newTrans(fun, alloc);
+    if (table != null) (*table)[self] = translated; // 'translated' is not copied here
   }
 
   return translated;
 }
 
 <*
- TODO: make it more efficient
- Translated CXType to String
- @returns "String, allocated via 'allocator'"
+ Translates CXType to String
 *>
-fn String CXType.trans(
-  type,
+fn String CXType.transCache(
+  CXType type,
   BGTransFn fun, 
-  TransTable* table, 
-  Allocator allocator = allocator::heap())
+  TransTable* table)
 {
-  CXType base_type = type;
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = type_spell.toString().normType();
   
+  // Return if cached
+  if (try trans_type_str = (*table)[type_str]) return trans_type_str;
+  
+  // Here we also need to recursively retrieve inner-most type,
+  // like: int[]* -> int. Inner types are those we will be translating
+  CXType inner_type = type;
   while LOOP: (true) 
   {
-    switch (base_type.kind)
+    switch (inner_type.kind)
     {
       case clang::TYPE_POINTER: 
-        base_type = clang::getPointeeType(base_type);
+        inner_type = clang::getPointeeType(inner_type);
       case clang::TYPE_CONSTANT_ARRAY:
       case clang::TYPE_INCOMPLETE_ARRAY:
       case clang::TYPE_COMPLEX:
       case clang::TYPE_DEPENDENT_SIZED_ARRAY:
       case clang::TYPE_VECTOR:
-        base_type = clang::getElementType(base_type);
+        inner_type = clang::getElementType(inner_type);
       default:
         break LOOP;
     }
   }
 
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  CXString base_type_spell = clang::getTypeSpelling(base_type);
-  defer clang::disposeString(base_type_spell);
+  CXString inner_type_spell = clang::getTypeSpelling(inner_type);
+  defer clang::disposeString(inner_type_spell);
+  String inner_type_str = inner_type_spell.toString().normType();
 
-  String base_type_str = base_type_spell.toString().normType();
-  String trans_base_type_str = base_type_str.transCached(fun, table);
-  String type_str = type_spell.toString().normType();
+  // Here, translation is performed under inner type and it's worth to cache also.
+  // For example, if we have something like 'CXType*', 'CXType' already must be 
+  // defined somewhere and, hence, cached.
+  String trans_inner_type_str = inner_type_str.transCache(fun, table);
 
-  DString type_name;
-  type_name.temp_init();
-  defer type_name.free();
-  type_name.append(type_str);
-  type_name.replace(base_type_str, trans_base_type_str);
+  @pool()
+  {
+    DString res_dstr;
+    res_dstr.temp_init();
+    res_dstr.append(type_str);
+    res_dstr.replace(inner_type_str, trans_inner_type_str);
 
-  return type_name.copy_str(allocator);
+    String res = res_dstr.copy_str();
+    (*table)[type_str] = res;
+
+    return res;
+  };
 }
-
-<*
- Same as transType but allocates the String via temp allocator
-*>
-macro String CXType.ttrans(type, BGTransFn fun, TransTable* table) => type.trans(fun, table, allocator::temp());
 

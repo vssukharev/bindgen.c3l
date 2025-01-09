@@ -59,4 +59,16 @@ fn CXSourceRange getTrueCursorExtent(CXCursor cursor)
   return sr;
 }
 
+macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(String token_str, CXTokenKind token_kind))
+{
+  foreach (&t : tokens)
+  {
+    CXString token_spell = clang::getTokenSpelling(tu, *t);
+    defer clang::disposeString(token_spell);
+    String token_str = token_spell.toString();
+    CXTokenKind token_kind = clang::getTokenKind(*t);
+
+    @body(token_str, token_kind);
+  }
+}
 

@@ -13,5 +13,5 @@ fn usz! writeConst(
   String value)
 @maydiscard
 {
-  return io::fprintfn(out, "\nconst %s %s = %s;", translated_type, translated_name, value);
+  return io::fprintfn(out, "const %s %s = %s;\n", translated_type, translated_name, value);
 }

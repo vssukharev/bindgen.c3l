@@ -2,7 +2,6 @@
 module bindgen::bg;
 import clang, std::collections::map, std::io;
 
-// TODO: add support for custom TRANSLATION_UNIT_PARSE_FLAGS
 const TRANSLATION_UNIT_PARSE_FLAGS =
   clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
 | clang::TRANSLATION_UNIT_INCLUDE_ATTRIBUTED_TYPES
@@ -54,15 +53,20 @@ fn void! translateHeader(
   CXCursor cursor = clang::getTranslationUnitCursor(tu);
 
   GlobalVisitData visit_data = {
-    .types_table = map::new(<String, String>)(),
     .out = &out,
     .trans_fns = callbacks,
   };
 
+  visit_data.types_table.new_init();
   defer visit_data.types_table.free();
 
   clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
 }
+
+<*
+ @returns "Translated string, allocated via 'allocator'"
+*>
+def BGTransFn = fn String (String old, Allocator allocator = allocator::heap());
 
 struct BGTransCallbacks
 {
@@ -71,14 +75,6 @@ struct BGTransCallbacks
   BGTransFn variable;
   BGTransFn constant;
 }
-
-// All transformation functions must return to string, 
-// allocated on a heap as free method will be invoked later.
-def BGTransFn = fn String (String old);
-
-// TODO: implement macro translation
-// def BGMacroTransFn = fn String ();
-// def BGMacroFuncTransFn = fn String ();
 
 fault BGParseError
 {

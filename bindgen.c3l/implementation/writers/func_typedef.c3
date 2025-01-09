@@ -15,14 +15,14 @@ fn usz! writeFuncTypedef(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "\ndef %s = fn %s(", translated_name, return_type)!;
+  acc += io::fprintfn(out, "def %s = fn %s(", translated_name, return_type)!;
   foreach (i, p : params) 
   {
     acc += io::fprintf(out, "  %s", p.type)!;
     acc += io::fprintf(out, p.name == "" ? "" : " %s", p.name)!;
     if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
   }
-  acc += io::fprintn(out, ");")!;
+  acc += io::fprintn(out, ");\n")!;
   
   return acc;
 }

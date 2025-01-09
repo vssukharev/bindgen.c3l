@@ -7,20 +7,17 @@ import std::io, clang;
  @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL "Cursor must point to enum declaration"
  @returns "Number of bytes written"
 *>
-fn usz! transEnum(
-  GlobalVisitData* vd,
-  CXCursor cursor)
-@maydiscard
+fn usz! transWriteEnum(GlobalVisitData* vd, CXCursor cursor) @maydiscard
 {
   @pool()
   {
-    CXType enum_name = clang::getCursorType(cursor);
-    String enum_str = enum_name.ttrans(vd.trans_fns.type, &vd.types_table);
+    CXType type = clang::getCursorType(cursor);
+    String type_str = type.transCache(vd.trans_fns.type, &vd.types_table);
 
-    CXType enum_type = clang::getEnumDeclIntegerType(cursor);
-    String enum_type_str = enum_type.ttrans(vd.trans_fns.type, &vd.types_table);
+    CXType under_type = clang::getEnumDeclIntegerType(cursor);
+    String under_type_str = under_type.transCache(vd.trans_fns.type, &vd.types_table);
   
-    // Get values quantity
+    // Get values length
     usz values_len;
     clang::visitChildren(
       cursor, 
@@ -49,7 +46,7 @@ fn usz! transEnum(
         vd_enum.vals.rhses[i].temp_init();
       }
 
-      switch (enum_type.kind)
+      switch (under_type.kind)
       {
         case clang::TYPE_UCHAR:
         case clang::TYPE_USHORT: 
@@ -63,7 +60,7 @@ fn usz! transEnum(
 
       clang::visitChildren(cursor, &visitorEnum, (CXClientData) &vd_enum);
 
-      return writeEnum(vd.out, enum_str, enum_type_str, vd_enum.vals);
+      return writeEnum(vd.out, type_str, under_type_str, vd_enum.vals);
     };
   };
 }

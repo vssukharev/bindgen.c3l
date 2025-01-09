@@ -2,6 +2,9 @@
 module bindgen::bg @private;
 import std::io, clang;
 
+<*
+
+*>
 fn CXChildVisitResult visitorFunc(
   CXCursor cursor, 
   CXCursor parent, 
@@ -9,15 +12,15 @@ fn CXChildVisitResult visitorFunc(
 {
   FuncVisitData* vd = (FuncVisitData*) client_data;
 
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-  String translated_name = cursor_spell.toString().trans(vd.g.trans_fns.variable);
+  CXString name_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(name_spell);
+  String trans_name_str = name_spell.toString().newTrans(vd.g.trans_fns.variable, vd.allocator);
 
-  CXString cursor_type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
-  defer clang::disposeString(cursor_type_spell);
-  String translated_type_name = cursor_type_spell.toString().normType().transCached(vd.g.trans_fns.type, &vd.g.types_table);
+  CXString type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
+  defer clang::disposeString(type_spell);
+  String trans_type_str = type_spell.toString().normType().transCache(vd.g.trans_fns.type, &vd.g.types_table);
 
-  vd.params.push({translated_type_name, translated_name});
+  vd.params.push({trans_type_str, trans_name_str});
 
   return clang::CHILD_VISIT_CONTINUE;
 }

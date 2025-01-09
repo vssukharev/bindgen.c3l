@@ -7,62 +7,56 @@ import std::io, clang;
  @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION "Cursor must point to macro definition"
  @returns "Number of bytes written"
 *>
-fn usz! transMacro(
-  GlobalVisitData* vd,
-  CXCursor cursor)
-@maydiscard
+fn usz! transWriteMacro(GlobalVisitData* vd, CXCursor cursor) @maydiscard
 {
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-  String cursor_str = cursor_spell.toString();
+  CXString macro_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(macro_spell);
+  String macro_str = macro_spell.toString();
   
   if (clang::isMacroFunctionLike_Cursor(cursor))
   {
-    warning("Macro %s is function-like, so it must be translated manually.", cursor_str);
+    warning("Macro %s is function-like, so it must be translated manually.", macro_str);
     return 0;
   }
 
   @pool()
   {
-    String name = cursor_str.transCached(vd.trans_fns.constant, &vd.consts_table); 
-
-    DString val;
-    val.temp_init();
+    String trans_macro_str = macro_str.transCache(vd.trans_fns.constant, &vd.consts_table); 
 
     CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
-    CXSourceRange sr = clang::getCursorExtent(cursor);
+    CXSourceRange sr = clang::getCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
 
     CXToken* tokens; uint tokens_len;
     clang::tokenize(tu, sr, &tokens, &tokens_len);
     defer clang::disposeTokens(tu, tokens, tokens_len);
     
-    foreach (t : tokens[1..tokens_len-1])
+    DString val;
+    val.temp_init();
+ 
+    @iterateTokens(tokens[1..tokens_len-1], tu; String token_str, CXTokenKind token_kind)
     {
-      CXString token_spell = clang::getTokenSpelling(tu, t);
-      defer clang::disposeString(token_spell);
-      String token_str = token_spell.toString();
-      CXTokenKind token_kind = clang::getTokenKind(t);
+      String trans_token_str;
 
-      if (token_kind == clang::TOKEN_KEYWORD)
+      switch (token_kind)
       {
-        warning("Macro %s comprises C keyword '%s', so it must be translated manually.", cursor_str, token_str);
-        return 0;
-      }
+        case clang::TOKEN_KEYWORD:
+          warning("Macro %s comprises C keyword '%s', so it must be translated manually.", macro_str, token_str);
+          return 0;
 
-      // TODO: get rid of memory leak
-      String trans_token_str = token_kind == clang::TOKEN_IDENTIFIER 
-        ? token_str.transCached(vd.trans_fns.constant, &vd.consts_table)
-        : token_str.copy();
-   
-      if (token_kind == clang::TOKEN_LITERAL)
-      {
-        trans_token_str = strTransIntSuffix(trans_token_str); // TODO: get rid of leaks
+        case clang::TOKEN_IDENTIFIER:
+          trans_token_str = token_str.transCache(vd.trans_fns.constant, &vd.consts_table);
+
+        case clang::TOKEN_LITERAL:
+          trans_token_str = token_str.tempTransIntSuffix();
+
+        default:
+          trans_token_str = token_str;
       }
       
       val.append(trans_token_str);
-    }
+    };
 
-    return writeMacro(vd.out, name, val.str_view());
+    return writeMacro(vd.out, trans_macro_str, val.str_view());
   };
 }
 

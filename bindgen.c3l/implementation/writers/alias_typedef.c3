@@ -12,5 +12,5 @@ fn usz! writeAliasTypedef(
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "\ndef %s = %s;", translated_name, underlying_name);
+  return io::fprintfn(out, "def %s = %s;\n", translated_name, underlying_name);
 }

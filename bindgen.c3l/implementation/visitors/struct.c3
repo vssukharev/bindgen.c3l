@@ -9,18 +9,15 @@ fn CXChildVisitResult visitorStruct(
 {
   StructVisitData* vd = (StructVisitData*) client_data;
 
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-  String original_name = cursor_spell.toString();
+  CXString name_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(name_spell);
+  String trans_name_str = name_spell.toString().newTrans(vd.g.trans_fns.variable, vd.allocator);
 
-  CXString cursor_type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
-  defer clang::disposeString(cursor_type_spell);
-  String original_type_name = cursor_type_spell.toString().normType();
+  CXString type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
+  defer clang::disposeString(type_spell);
+  String trans_type_str = type_spell.toString().normType().transCache(vd.g.trans_fns.type, &vd.g.types_table);
 
-  String translated_name = original_name.trans(vd.g.trans_fns.variable);
-  String translated_type_name = original_type_name.transCached(vd.g.trans_fns.type, &vd.g.types_table);
-
-  vd.fields.push({translated_type_name, translated_name});
+  vd.fields.push({trans_type_str, trans_name_str});
 
   return clang::CHILD_VISIT_CONTINUE;
 }

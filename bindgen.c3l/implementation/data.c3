@@ -8,7 +8,7 @@ import std::io, std::collections::map, std::collections::list;
  Translation table maps C name to C3 name. 
  For instance: { .key = "int", .val = "CInt" } is "int" -> "CInt".
 *>
-def TransTable = Map(<String, String>);
+def TransTable = HashMap(<String, String>);
 
 def VarDeclList = List(<VarDecl>);
 
@@ -35,15 +35,18 @@ struct GlobalVisitData
   File* out;
 }
 
+// 'allocator' is for VarDecl.name allocations
 struct FuncVisitData
 {
   VarDeclList params;
+  Allocator allocator;  
   GlobalVisitData* g;
 }
 
 struct StructVisitData
 {
   VarDeclList fields;
+  Allocator allocator;
   GlobalVisitData* g;
 }
 

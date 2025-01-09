@@ -16,13 +16,13 @@ fn usz! writeFunc(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "\nfn %s %s(", return_type, translated_name)!;
+  acc += io::fprintfn(out, "fn %s %s(", return_type, translated_name)!;
   foreach (i, p : params) 
   {
     acc += io::fprintf(out, "  %s %s", p.type, p.name)!;
     if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
   }
-  acc += io::fprintf(out, ")\n@extern(\"%s\");\n", original_name)!;
+  acc += io::fprintfn(out, ")\n@extern(\"%s\");\n", original_name)!;
 
   return acc;
 }

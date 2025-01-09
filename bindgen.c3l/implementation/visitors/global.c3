@@ -28,12 +28,12 @@ fn CXChildVisitResult visitorGlobal(
   // TODO: make non-const global variables translation
   switch (cursor_kind)
   {
-    case clang::CURSOR_FUNCTION_DECL: transFunc(vd, cursor);
-    case clang::CURSOR_STRUCT_DECL: transStruct(vd, cursor);
-    case clang::CURSOR_TYPEDEF_DECL: transTypedef(vd, cursor);
-    case clang::CURSOR_VAR_DECL: transConst(vd, cursor);
-    case clang::CURSOR_ENUM_DECL: transEnum(vd, cursor);
-    case clang::CURSOR_MACRO_DEFINITION: transMacro(vd, cursor);
+    case clang::CURSOR_FUNCTION_DECL: transWriteFunc(vd, cursor);
+    case clang::CURSOR_STRUCT_DECL: transWriteStruct(vd, cursor);
+    case clang::CURSOR_TYPEDEF_DECL: transWriteTypedef(vd, cursor);
+    case clang::CURSOR_VAR_DECL: transWriteConst(vd, cursor);
+    case clang::CURSOR_ENUM_DECL: transWriteEnum(vd, cursor);
+    case clang::CURSOR_MACRO_DEFINITION: transWriteMacro(vd, cursor);
   }
 
   return clang::CHILD_VISIT_CONTINUE;

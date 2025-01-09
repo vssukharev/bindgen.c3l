@@ -14,12 +14,12 @@ fn usz! writeStruct(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "\nstruct %s {", translated_name)!;
+  acc += io::fprintfn(out, "struct %s {", translated_name)!;
   foreach (p : fields) 
   {
     acc += io::fprintfn(out, "  %s %s;", p.type, p.name)!;
   }
-  acc += io::fprintfn(out, "}")!;
+  acc += io::fprintfn(out, "}\n")!;
   
   return acc;
 }

@@ -12,6 +12,6 @@ fn usz! writeMacro(
   String value)
 @maydiscard
 {
-  return io::fprintfn(out, "\nconst %s = %s;", translated_name, value);
+  return io::fprintfn(out, "const %s = %s;\n", translated_name, value);
 }
 

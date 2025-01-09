@@ -2,25 +2,25 @@
 import bindgen;
 import std::ascii, std::io;
 
-fn String lowerizeFirst(String str)
+fn String lowerizeFirst(String str, Allocator alloc)
 {
-  String str2 = str.copy();
+  String str2 = str.copy(alloc);
   if (str.len == 0) return str2;
   str2[0] = str[0].to_lower();
   return str2;
 }
 
-fn String capitalizeFirst(String str)
+fn String capitalizeFirst(String str, Allocator alloc)
 {
-  String str2 = str.copy();
+  String str2 = str.copy(alloc);
   if (str.len == 0) return str2;
   str2[0] = str[0].to_upper();
   return str2;
 }
 
-fn String capitalize(String str)
+fn String capitalize(String str, Allocator alloc)
 {
-  String str2 = str.copy();
+  String str2 = str.copy(alloc);
   if (str.len == 0) return str2;
   for (usz i; i < str.len; ++i) {
     str2[i] = str[i].to_upper();
@@ -28,28 +28,27 @@ fn String capitalize(String str)
   return str2;
 }
 
-fn String translateType(String str)
+fn String translateType(String str, Allocator alloc)
 {
   switch (str)
   {
-    case "int": return "CInt";
-    case "unsigned": return "CUInt";
-    case "unsigned int": return "CUInt";
-    case "long long": return "CLongLong";
-    case "short": return "CShort";
-    case "char": return "CChar";
-    case "double": return "double";
-    case "float": return "float";
+    case "int": return "CInt".copy(alloc);
+    case "unsigned": return "CUInt".copy(alloc);
+    case "unsigned int": return "CUInt".copy(alloc);
+    case "long long": return "CLongLong".copy(alloc);
+    case "short": return "CShort".copy(alloc);
+    case "char": return "CChar".copy(alloc);
+    case "double": return "double".copy(alloc);
+    case "float": return "float".copy(alloc);
   }
 
-  return capitalizeFirst(str);
+  return capitalizeFirst(str, alloc);
 }
 
-fn String translateConstant(String str, Allocator alloc = allocator::heap())
+fn String translateConstant(String str, Allocator alloc)
 {
-  return str.copy();
+  return str.copy(alloc);
 }
-
 
 fn void! main(String[] args)
 {
