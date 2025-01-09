@@ -23,7 +23,7 @@ fn CXChildVisitResult visitorGlobal(
   // by compiler so skip it
   if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
 
-  log("(%s) : %s", cursor_kind_spell.toString(), cursor_spell.toString());
+  // log("(%s) : %s", cursor_kind_spell.toString(), cursor_spell.toString());
 
   // TODO: make non-const global variables translation
   switch (cursor_kind)

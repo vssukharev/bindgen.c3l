@@ -15,7 +15,7 @@ fn usz! transWriteMacro(GlobalVisitData* vd, CXCursor cursor) @maydiscard
   
   if (clang::isMacroFunctionLike_Cursor(cursor))
   {
-    warning("Macro %s is function-like, so it must be translated manually.", macro_str);
+    warning("Macro %s is function-like, skipping...", macro_str);
     return 0;
   }
 
@@ -30,6 +30,13 @@ fn usz! transWriteMacro(GlobalVisitData* vd, CXCursor cursor) @maydiscard
     clang::tokenize(tu, sr, &tokens, &tokens_len);
     defer clang::disposeTokens(tu, tokens, tokens_len);
     
+    // If macro is empty, it's either guard or something that we might not want to translate
+    if (tokens_len <= 1) 
+    {
+      warning("Macro %s doesn't have value, skipping...", macro_str);
+      return 0;
+    }
+
     DString val;
     val.temp_init();
  
@@ -40,7 +47,7 @@ fn usz! transWriteMacro(GlobalVisitData* vd, CXCursor cursor) @maydiscard
       switch (token_kind)
       {
         case clang::TOKEN_KEYWORD:
-          warning("Macro %s comprises C keyword '%s', so it must be translated manually.", macro_str, token_str);
+          warning("Macro %s comprises C keyword '%s', skipping...", macro_str, token_str);
           return 0;
 
         case clang::TOKEN_IDENTIFIER:

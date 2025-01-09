@@ -35,6 +35,7 @@ fn String translateType(String str, Allocator alloc)
     case "int": return "CInt".copy(alloc);
     case "unsigned": return "CUInt".copy(alloc);
     case "unsigned int": return "CUInt".copy(alloc);
+    case "unsigned short": return "CUShort".copy(alloc);
     case "long long": return "CLongLong".copy(alloc);
     case "short": return "CShort".copy(alloc);
     case "char": return "CChar".copy(alloc);
@@ -61,6 +62,6 @@ fn void! main(String[] args)
     .constant = &capitalize,
   };
 
-  bg::translateHeader("./examples/headers/dummy.h", out, cb)!;
+  bg::translateHeader("./examples/headers/glfw3.h", out, cb)!;
 }
 
