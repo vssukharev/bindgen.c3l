@@ -11,7 +11,8 @@ fn usz! transWriteConst(GlobalVisitData* vd, CXCursor cursor) @maydiscard
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
-  
+  String cursor_str = cursor_spell.toString();
+
   CXType cursor_type = clang::getCursorType(cursor);
 
   @pool()
@@ -23,7 +24,7 @@ fn usz! transWriteConst(GlobalVisitData* vd, CXCursor cursor) @maydiscard
     // there everything, that is identifier
     clang::visitChildren(cursor, &visitorConst, (CXClientData) &vd_const);
     
-    String name = cursor_spell.toString().transCache(vd.trans_fns.constant, &vd.consts_table); 
+    String name = cursor_str.tempTrans(vd.trans_fns.constant); 
     String type_name = cursor_type.transCache(vd.trans_fns.type, &vd.types_table);
 
     return writeConst(vd.out, type_name, name, vd_const.val.str_view());

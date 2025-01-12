@@ -29,7 +29,7 @@ fn CXChildVisitResult visitorConst(
       switch (token_kind)
       {
         case clang::TOKEN_IDENTIFIER:
-          trans_token_str = token_str.transCache(vd.g.trans_fns.constant, &vd.g.consts_table);
+          trans_token_str = token_str.tempTrans(vd.g.trans_fns.constant);
 
         case clang::TOKEN_LITERAL:
           trans_token_str = token_str.tempTransIntSuffix();

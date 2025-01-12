@@ -20,7 +20,7 @@ struct VarDecl
 
 struct EnumVals
 {
-  DString* rhses;
+  String* rhses;
   String* names;
   usz len;
 }
@@ -31,7 +31,7 @@ struct GlobalVisitData
 {
   BGTransCallbacks trans_fns;
   TransTable types_table;
-  TransTable consts_table;
+  // TransTable consts_table;
   File* out;
 }
 
@@ -67,12 +67,6 @@ struct EnumVisitData
   EnumVals vals;
   usz current;
   bool is_unsigned;
-}
-
-struct EnumValVisitData
-{
-  GlobalVisitData* g;
-  DString* rhs;
 }
 
 struct MacroVisitData

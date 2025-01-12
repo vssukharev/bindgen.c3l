@@ -36,15 +36,10 @@ fn usz! transWriteEnum(GlobalVisitData* vd, CXCursor cursor) @maydiscard
         .g = vd,
         .vals = {
           .names = mem::temp_new_array(String, values_len).ptr,
-          .rhses = mem::temp_new_array(DString, values_len).ptr,
+          .rhses = mem::temp_new_array(String, values_len).ptr,
           .len = values_len,
         }
       };
-
-      for (usz i; i < vd_enum.vals.len; ++i)
-      {
-        vd_enum.vals.rhses[i].temp_init();
-      }
 
       switch (under_type.kind)
       {

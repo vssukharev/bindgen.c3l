@@ -21,7 +21,7 @@ fn usz! transWriteMacro(GlobalVisitData* vd, CXCursor cursor) @maydiscard
 
   @pool()
   {
-    String trans_macro_str = macro_str.transCache(vd.trans_fns.constant, &vd.consts_table); 
+    String trans_macro_str = macro_str.tempTrans(vd.trans_fns.constant); 
 
     CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
     CXSourceRange sr = clang::getCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
@@ -51,7 +51,7 @@ fn usz! transWriteMacro(GlobalVisitData* vd, CXCursor cursor) @maydiscard
           return 0;
 
         case clang::TOKEN_IDENTIFIER:
-          trans_token_str = token_str.transCache(vd.trans_fns.constant, &vd.consts_table);
+          trans_token_str = token_str.tempTrans(vd.trans_fns.constant);
 
         case clang::TOKEN_LITERAL:
           trans_token_str = token_str.tempTransIntSuffix();
