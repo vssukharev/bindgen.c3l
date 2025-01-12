@@ -39,12 +39,13 @@ fn CXChildVisitResult visitorEnum(
       CLongLong ival = clang::getEnumConstantDeclValue(cursor);
       vd_const.val.appendf("%s", ival);
     }
+  }
 
-    vd.vals.rhses[vd.current] = vd_const.val.copy_str(); // TODO: get rid of leak
+  vd.vals.rhses[vd.current] = vd_const.val.copy_str(); // TODO: get rid of leak
 
-    ++vd.current;
-  };
+  log("%s = %s;", vd.vals.names[vd.current], vd.vals.rhses[vd.current]);
 
+  ++vd.current;
   return clang::CHILD_VISIT_CONTINUE;
 }
 
