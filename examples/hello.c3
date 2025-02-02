@@ -53,7 +53,7 @@ fn String translateConstant(String str, Allocator alloc)
   return str.copy(alloc);
 }
 
-fn void! main(String[] args)
+fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "stdout";
   
@@ -64,6 +64,6 @@ fn void! main(String[] args)
     .constant = &capitalize,
   };
 
-  bg::translateHeaders({"./examples/headers/glfw3.h"}, out, cb, "glfw")!;
+  bg::translateHeaders({"./examples/headers/glfw3.h"}, out, cb, "glfw")!!;
 }
 

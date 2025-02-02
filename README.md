@@ -3,6 +3,11 @@
 
 WIP C bindings generation library for C3 language. 
 
+## TODO
+
+- Add unions translation
+- Get rid of bug in typedef alias translation
+
 ## Setup
 
 1. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).

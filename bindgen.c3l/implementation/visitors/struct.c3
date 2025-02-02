@@ -15,7 +15,7 @@ fn CXChildVisitResult visitorStruct(
 
   CXType type = clang::getCursorType(cursor);
   String trans_type_str = type.transCache(vd.g.trans_fns.type, &vd.g.types_table);
-
+  
   vd.fields.push({trans_type_str, trans_name_str});
 
   return clang::CHILD_VISIT_CONTINUE;

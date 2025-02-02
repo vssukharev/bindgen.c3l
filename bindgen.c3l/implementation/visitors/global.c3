@@ -34,6 +34,7 @@ fn CXChildVisitResult visitorGlobal(
     case clang::CURSOR_VAR_DECL: transWriteConst(vd, cursor);
     case clang::CURSOR_ENUM_DECL: transWriteEnum(vd, cursor);
     case clang::CURSOR_MACRO_DEFINITION: transWriteMacro(vd, cursor);
+    // TODO: union translation
   }
 
   return clang::CHILD_VISIT_CONTINUE;

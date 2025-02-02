@@ -43,8 +43,6 @@ fn CXChildVisitResult visitorEnum(
 
   vd.vals.rhses[vd.current] = vd_const.val.copy_str(); // TODO: get rid of leak
 
-  log("%s = %s;", vd.vals.names[vd.current], vd.vals.rhses[vd.current]);
-
   ++vd.current;
   return clang::CHILD_VISIT_CONTINUE;
 }

@@ -5,16 +5,32 @@ import clang, std::io;
 <*
  Casts CXString to String without allocations
 *>
-macro String CXString.toString(self) => 
+fn String CXString.toString(self) @inline => 
   clang::getCString(self).str_view();
 
 <*
- Strips redundant prefixes in strings of type 
- spellings without any allocations. 
- E.g. `struct MyStruct` -> `MyStruct`
+ Same as DString.normType but creates a new string
 *>
-macro String String.normType(self) => 
-  self.strip("struct ").strip("const ").strip("enum ");
+fn String String.normType(self, Allocator allocator) @inline
+{
+  DString dstr;
+  dstr.temp_init();
+  defer dstr.free();
+  dstr.append(self);
+  dstr.normType();
+  return dstr.copy_str(allocator);
+}
+
+<*
+ Normalizes types by deleting redundant infixes
+*>
+fn DString DString.normType(self)
+{
+  self.replace("const ", "");
+  self.replace("struct ", "");
+  self.replace("enum ", "");
+  return self;
+}
 
 <*
  Tranlsates 'self' string and returns the new 
@@ -51,6 +67,7 @@ fn String String.transCache(self, BGTransFn fun, TransTable* table, Allocator al
 }
 
 <*
+ TODO: get rid of inner 'const' qualifications, e.g. in 'const char const*'
  Translates CXType to String
 *>
 fn String CXType.transCache(
@@ -60,7 +77,7 @@ fn String CXType.transCache(
 {
   CXString type_spell = clang::getTypeSpelling(type);
   defer clang::disposeString(type_spell);
-  String type_str = type_spell.toString().normType();
+  String type_str = type_spell.toString();
   
   // Return if cached
   if (try trans_type_str = (*table)[type_str]) return trans_type_str;
@@ -87,7 +104,7 @@ fn String CXType.transCache(
 
   CXString inner_type_spell = clang::getTypeSpelling(inner_type);
   defer clang::disposeString(inner_type_spell);
-  String inner_type_str = inner_type_spell.toString().normType();
+  String inner_type_str = inner_type_spell.toString();
 
   // Here, translation is performed under inner type and it's worth to cache also.
   // For example, if we have something like 'CXType*', 'CXType' already must be 
@@ -100,6 +117,7 @@ fn String CXType.transCache(
     res_dstr.temp_init();
     res_dstr.append(type_str);
     res_dstr.replace(inner_type_str, trans_inner_type_str);
+    res_dstr.normType();
 
     String res = res_dstr.copy_str();
     (*table)[type_str] = res;
