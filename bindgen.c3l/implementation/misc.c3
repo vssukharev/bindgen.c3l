@@ -1,43 +1,7 @@
 
-module bindgen::bg @private;
+module bindgen::misc @private;
+import bindgen::trans @public;
 import clang, std::io;
-
-const ANSI_RED = "\e[31m";
-const ANSI_GREEN = "\e[32m";
-const ANSI_YELLOW = "\e[33m";
-const ANSI_NONE = "\e[0m";
-
-macro log(String str = "", ..., usz indent = 0) 
-{
-  for (usz i; i < indent; ++i)
-  {
-    io::eprintf("  ");
-  }
-  io::eprintf("%s[%s]%s : ", ANSI_GREEN, $$FUNC, ANSI_NONE);
-  io::eprintfn(str, $vasplat);
-} 
-
-macro warning(String str = "", ...) 
-{
-  io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);
-  io::eprintfn(str, $vasplat);
-} 
-
-macro void! CXErrorCode.check(code)
-{
-  switch (code)
-  {
-    case clang::ERROR_SUCCESS: 
-      return;
-    case clang::ERROR_FAILURE:
-    case clang::ERROR_AST_READ_ERROR:
-      return BGParseError.FAILURE?;
-    case clang::ERROR_CRASHED:
-      return BGParseError.CRASHED?;
-    case clang::ERROR_INVALID_ARGUMENTS:
-      return BGParseError.INVALID_ARGUMENTS?;
-  }
-}
 
 <*
  Behaviour of clang::getCursorExtent is a bit broken. If some macro
@@ -65,7 +29,7 @@ macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(String token_
   {
     CXString token_spell = clang::getTokenSpelling(tu, *t);
     defer clang::disposeString(token_spell);
-    String token_str = token_spell.toString();
+    String token_str = trans::convStr(token_spell);
     CXTokenKind token_kind = clang::getTokenKind(*t);
 
     @body(token_str, token_kind);

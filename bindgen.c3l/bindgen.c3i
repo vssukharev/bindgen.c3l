@@ -1,0 +1,29 @@
+
+module bindgen::bg;
+
+<* 
+ @param output_name "if stdout, write to stdout; otherwise, write to file on privided path"
+*>
+fn void! translateHeaders(String[] header_names, String output_name, BGTransCallbacks callbacks, String module_name);
+
+<*
+ @returns "Translated string, allocated via 'allocator'"
+*>
+def BGTransFn = fn String (String old, Allocator allocator = allocator::heap());
+
+struct BGTransCallbacks
+{
+  BGTransFn func;
+  BGTransFn type;
+  BGTransFn variable;
+  BGTransFn constant;
+}
+
+fault BGParseError
+{
+  FAILURE, 
+  CRASHED, 
+  INVALID_ARGUMENTS,
+}
+
+

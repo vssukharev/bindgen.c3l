@@ -1,5 +1,8 @@
 
 module bindgen::bg;
+import bindgen::err @public, 
+       bindgen::wter @public,
+       bindgen::vtor @public;
 import clang, std::collections::map, std::io;
 
 const TRANSLATION_UNIT_PARSE_FLAGS =
@@ -20,8 +23,8 @@ fn void! translateHeaders(
   BGTransCallbacks callbacks,
   String module_name)
 {
-  log("Translating %s", header_names);
-  log("Writing to %s", output_name);
+  err::log("Translating %s", header_names);
+  err::log("Writing to %s", output_name);
   
   File out;
   switch (output_name)
@@ -36,19 +39,20 @@ fn void! translateHeaders(
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
 
-  if (callbacks.func == null) warning("Function translation will not be performed as function pointer is null");
-  if (callbacks.variable == null) warning("Variable translation will not be performed as function pointer is null");
-  if (callbacks.type == null) warning("Type translation will not be performed as function pointer is null");
-  if (callbacks.constant == null) warning("Constant translation will not be performed as function pointer is null");
+  if (callbacks.func == null) err::warn("Function translation will not be performed as function pointer is null");
+  if (callbacks.variable == null) err::warn("Variable translation will not be performed as function pointer is null");
+  if (callbacks.type == null) err::warn("Type translation will not be performed as function pointer is null");
+  if (callbacks.constant == null) err::warn("Constant translation will not be performed as function pointer is null");
 
-  writeHeader(&out, module_name);
+  wter::moduleHead(&out, module_name);
 
   foreach (header_name : header_names)
   {
     CXTranslationUnit tu;
 
-    clang::parseTranslationUnit2(index, (ZString)header_name, null, 0, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu).check()!;
-    
+    CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, null, 0, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+    err::checkCode(code)!;
+
     CXCursor cursor = clang::getTranslationUnitCursor(tu);
 
     GlobalVisitData visit_data = {
@@ -56,16 +60,13 @@ fn void! translateHeaders(
       .trans_fns = callbacks,
     };
 
-    visit_data.types_table.new_init();
+    visit_data.types_table.init(mem);
     defer visit_data.types_table.free();
 
-    clang::visitChildren(cursor, &visitorGlobal, (CXClientData) &visit_data);
+    clang::visitChildren(cursor, &vtor::global, (CXClientData) &visit_data);
   }
 }
 
-<*
- @returns "Translated string, allocated via 'allocator'"
-*>
 def BGTransFn = fn String (String old, Allocator allocator = allocator::heap());
 
 struct BGTransCallbacks

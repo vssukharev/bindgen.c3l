@@ -3,11 +3,11 @@
   "targets" : {
     "linux-x86" : { 
       "linked-libraries" : [ "clang" ],
-      "sources" : [ "**" ]
+      "sources" : [ "implementation/**" ]
     },
     "linux-x64" : {
       "linked-libraries" : [ "clang" ],
-      "sources" : [ "**" ]
+      "sources" : [ "implementation/**" ]
     },
   }
 }

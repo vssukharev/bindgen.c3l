@@ -7,6 +7,7 @@ WIP C bindings generation library for C3 language.
 
 - Add unions translation
 - Get rid of bug in typedef alias translation
+- Add support for inlined enums
 
 ## Setup
 
