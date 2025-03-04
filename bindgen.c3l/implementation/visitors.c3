@@ -42,11 +42,12 @@ fn CXChildVisitResult global(
   switch (cursor_kind)
   {
     case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
-    case clang::CURSOR_STRUCT_DECL: ttor::structure(vd, cursor);
+    case clang::CURSOR_STRUCT_DECL: ttor::structDecl(vd, cursor);
     case clang::CURSOR_TYPEDEF_DECL: ttor::typedef(vd, cursor);
-    case clang::CURSOR_VAR_DECL: ttor::constant(vd, cursor);
-    case clang::CURSOR_ENUM_DECL: ttor::enumeration(vd, cursor);
-    case clang::CURSOR_MACRO_DEFINITION: ttor::macroConst(vd, cursor);
+    case clang::CURSOR_VAR_DECL: ttor::constDecl(vd, cursor);
+    case clang::CURSOR_ENUM_DECL: ttor::enumDecl(vd, cursor);
+    case clang::CURSOR_MACRO_DEFINITION: ttor::macroDef(vd, cursor);
+    case clang::CURSOR_UNION_DECL: ttor::unionDecl(vd, cursor);
     // TODO: union translation
   }
 
@@ -58,7 +59,7 @@ fn CXChildVisitResult global(
  Intended to visit rhs values of global constants, 
  translating only identifiers
 *>
-fn CXChildVisitResult constant(
+fn CXChildVisitResult constDecl(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data)
@@ -99,7 +100,7 @@ fn CXChildVisitResult constant(
   };
 }
 
-fn CXChildVisitResult enumeration(
+fn CXChildVisitResult enumDecl(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data)
@@ -118,7 +119,7 @@ fn CXChildVisitResult enumeration(
   vd_const.val.init(mem);
   defer vd_const.val.free();
 
-  clang::visitChildren(cursor, &vtor::constant, (CXClientData) &vd_const);
+  clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
 
   // If we get empty rhs, evaluate value
   if (vd_const.val.str_view() == "")
@@ -161,7 +162,10 @@ fn CXChildVisitResult func(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
-fn CXChildVisitResult structure(
+<*
+ Visits fields of either struct or union
+*>
+fn CXChildVisitResult fields(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data)

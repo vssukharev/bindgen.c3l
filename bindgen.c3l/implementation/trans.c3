@@ -13,6 +13,7 @@ fn DString* normTypeDStr(DString* ds)
   ds.replace("const ", "");
   ds.replace("struct ", "");
   ds.replace("enum ", "");
+  ds.replace("union ", "");
   return ds;
 }
 

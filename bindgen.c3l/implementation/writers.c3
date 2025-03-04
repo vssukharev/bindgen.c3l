@@ -58,7 +58,7 @@ fn usz! typedefFunc(
  Writes global constant to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! constant(
+fn usz! constDecl(
   File* out,
   String translated_type,
   String translated_name,
@@ -72,7 +72,7 @@ fn usz! constant(
  Writes enum with values to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! enumeration(
+fn usz! enumDecl(
   File* out,
   String name,
   String type,
@@ -132,7 +132,7 @@ fn usz! moduleHead(
  Writes structure to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! structure(
+fn usz! structDecl(
   File* out,
   VarDecl[] fields,
   String translated_name) 
@@ -148,5 +148,24 @@ fn usz! structure(
   acc += io::fprintfn(out, "}\n")!;
   
   return acc;
+}
+
+fn usz! unionDecl(
+  File* out,
+  VarDecl[] fields,
+  String translated_name) 
+@maydiscard
+{
+  usz acc;
+
+  acc += io::fprintfn(out, "union %s {", translated_name)!;
+  foreach (p : fields) 
+  {
+    acc += io::fprintfn(out, "  %s %s;", p.type, p.name)!;
+  }
+  acc += io::fprintfn(out, "}\n")!;
+  
+  return acc;
+
 }
 

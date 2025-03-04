@@ -13,7 +13,7 @@ import std::io, clang;
  @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL "Cursor must point to variable declaration"
  @return "Number of bytes written"
 *>
-fn usz! constant(
+fn usz! constDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -31,21 +31,21 @@ fn usz! constant(
 
     // Visit rhs of var declaration and translate 
     // there everything, that is identifier
-    clang::visitChildren(cursor, &vtor::constant, (CXClientData) &vd_const);
+    clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
     
     String name = trans::apply(cursor_str, vd.trans_fns.constant); 
     String type_name = trans::ctype(cursor_type, vd.trans_fns.type, &vd.types_table);
 
-    return wter::constant(vd.out, type_name, name, vd_const.val.str_view());
+    return wter::constDecl(vd.out, type_name, name, vd_const.val.str_view());
   };
 }
 
 <*
- Translates enumeration declaration and writes it to 'out'
+ Translates enumDecl declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL "Cursor must point to enum declaration"
  @returns "Number of bytes written"
 *>
-fn usz! enumeration(
+fn usz! enumDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -94,9 +94,9 @@ fn usz! enumeration(
           vd_enum.is_unsigned = false;
       }
 
-      clang::visitChildren(cursor, &vtor::enumeration, (CXClientData) &vd_enum);
+      clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
 
-      return wter::enumeration(vd.out, type_str, under_type_str, vd_enum.vals);
+      return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.vals);
     };
   };
 }
@@ -141,7 +141,7 @@ fn usz! func(
  @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION "Cursor must point to macro definition"
  @returns "Number of bytes written"
 *>
-fn usz! macroConst(
+fn usz! macroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -200,7 +200,7 @@ fn usz! macroConst(
       val.append(trans_token_str);
     };
 
-    return wter::constant(vd.out, "", trans_macro_str, val.str_view());
+    return wter::constDecl(vd.out, "", trans_macro_str, val.str_view());
   };
 }
 
@@ -209,7 +209,7 @@ fn usz! macroConst(
  @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
  @returns "Number of bytes written"
 *>
-fn usz! structure(
+fn usz! structDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -226,12 +226,12 @@ fn usz! structure(
     vd_struct.fields.tinit(4);
   
     // Translate function parameters and store them into vd_struct.fields
-    clang::visitChildren(cursor, &vtor::structure, (CXClientData) &vd_struct);
+    clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct);
 
     // If no fields are defined, type is incomplete
     if (vd_struct.fields.len() == 0) return wter::typedefDist(vd.out, type_name, "void");
 
-    return wter::structure(vd.out, vd_struct.fields.array_view(), type_name);
+    return wter::structDecl(vd.out, vd_struct.fields.array_view(), type_name);
   };
 }
 
@@ -279,6 +279,37 @@ fn usz! typedef(
         ? wter::typedefAlias(vd.out, type_name, under_type_name)
         : 0; // do not write if aliases are equal
     }
+  };
+}
+
+<*
+ Union declaration and writes it to 'out'
+ @require clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL "Cursor must point to union declaration"
+ @returns "Number of bytes written"
+*>
+fn usz! unionDecl(
+  GlobalVisitData* vd, 
+  CXCursor cursor) 
+@maydiscard
+{
+  @pool() {
+    CXType type = clang::getCursorType(cursor);
+    String type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+
+    StructVisitData vd_struct = {
+      .g = vd,
+      .allocator = allocator::temp(),
+    };
+
+    vd_struct.fields.tinit(4);
+  
+    // Translate function parameters and store them into vd_struct.fields
+    clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct);
+
+    // If no fields are defined, type is incomplete
+    if (vd_struct.fields.len() == 0) return wter::typedefDist(vd.out, type_name, "void");
+
+    return wter::unionDecl(vd.out, vd_struct.fields.array_view(), type_name);
   };
 }
 
