@@ -18,6 +18,12 @@ macro void log(String str = "", ..., usz indent = 0)
   io::eprintfn(str, $vasplat);
 } 
 
+macro void logf(File* out, String str = "", ...) 
+{
+  io::fprintf(out, "// [%s] : ", $$FUNC)!!;
+  io::fprintfn(out, str, $vasplat)!!;
+} 
+
 macro void warn(String str = "", ...) 
 {
   io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);

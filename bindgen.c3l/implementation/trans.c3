@@ -26,6 +26,12 @@ fn String normTypeStr(String s, Allocator allocator = allocator::heap())
   return dstr.copy_str(allocator);
 }
 
+fn String tnormTypeStr(String s) @inline
+{
+  return normTypeStr(s, allocator::temp());
+}
+
+
 fn String apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
 {
   return fun != null ? fun(s, alloc) : s.copy(alloc);
@@ -42,9 +48,12 @@ fn String tapply(String s, BGTransFn fun) @inline
  table. String itself is always allocated on the
  heap and should NOT be freed as it would cause
  dangerous dead nodes in table.
+ @param s "String to translate"
+ @param to_save "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
-fn String capply(String s, BGTransFn fun, TransTable* table)
+fn String capply(String s, BGTransFn fun, TransTable* table, String to_save = "")
 {
+  if (to_save == "") to_save = s;
   String translated;
   
   if (try cached = (*table)[s])
@@ -54,7 +63,7 @@ fn String capply(String s, BGTransFn fun, TransTable* table)
   else 
   {
     translated = trans::apply(s, fun);
-    if (table != null) (*table)[s] = translated; // 'translated' is not copied here
+    if (table != null) (*table)[to_save] = translated; // 'translated' is not copied here
   }
 
   return translated;
@@ -102,11 +111,6 @@ fn String ctype(
 
   @pool()
   {
-    // DString inner_type_dstr;
-    // inner_type_dstr.temp_init();
-    // inner_type_dstr.append(inner_type_str);
-    // normTypeDStr(&inner_type_dstr);
-
     // Here, translation is performed under inner type and it's worth to cache also.
     // For example, if we have something like 'CXType*', 'CXType' already must be 
     // defined somewhere and, hence, cached.
@@ -116,6 +120,7 @@ fn String ctype(
     res_dstr.tinit();
     res_dstr.append(type_str);
     res_dstr.replace(inner_type_str, trans_inner_type_str);
+    trans::normTypeDStr(&res_dstr);
 
     String res = res_dstr.copy_str(mem);
     (*table)[type_str] = res;

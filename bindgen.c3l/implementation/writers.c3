@@ -7,13 +7,51 @@ import std::io, clang;
  Writes aliasing typedef to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! aliasTypedef(
+fn usz! typedefAlias(
   File* out,
   String translated_name,
   String underlying_name) 
 @maydiscard
 {
   return io::fprintfn(out, "def %s = %s;", translated_name, underlying_name);
+}
+
+<*
+ Writes distinct typedef to 'out'
+ @returns "Number of bytes written"
+*>
+fn usz! typedefDist(
+  File* out,
+  String translated_name,
+  String underlying_name) 
+@maydiscard
+{
+  return io::fprintfn(out, "distinct %s = %s;", translated_name, underlying_name);
+}
+
+<*
+ Writes function pointer typedef to 'out'
+ @returns "Number of bytes written"
+*>
+fn usz! typedefFunc(
+  File* out,
+  String translated_name,
+  String return_type,
+  VarDecl[] params)
+@maydiscard
+{
+  usz acc;
+
+  acc += io::fprintfn(out, "def %s = fn %s(", translated_name, return_type)!;
+  foreach (i, p : params) 
+  {
+    acc += io::fprintf(out, "  %s", p.type)!;
+    acc += io::fprintf(out, p.name == "" ? "" : " %s", p.name)!;
+    if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
+  }
+  acc += io::fprintn(out, ");\n")!;
+  
+  return acc;
 }
 
 <*
@@ -76,44 +114,6 @@ fn usz! func(
   acc += io::fprintfn(out, ")\n@extern(\"%s\");\n", original_name)!;
 
   return acc;
-}
-
-<*
- Writes function pointer typedef to 'out'
- @returns "Number of bytes written"
-*>
-fn usz! funcTypedef(
-  File* out,
-  String translated_name,
-  String return_type,
-  VarDecl[] params)
-@maydiscard
-{
-  usz acc;
-
-  acc += io::fprintfn(out, "def %s = fn %s(", translated_name, return_type)!;
-  foreach (i, p : params) 
-  {
-    acc += io::fprintf(out, "  %s", p.type)!;
-    acc += io::fprintf(out, p.name == "" ? "" : " %s", p.name)!;
-    if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
-  }
-  acc += io::fprintn(out, ");\n")!;
-  
-  return acc;
-}
-
-<*
- Writes macro definition to 'out'
- @returns "Number of bytes written"
-*>
-fn usz! macroConst(
-  File* out,
-  String translated_name,
-  String value)
-@maydiscard
-{
-  return io::fprintfn(out, "const %s = %s;", translated_name, value);
 }
 
 <*

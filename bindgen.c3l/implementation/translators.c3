@@ -200,7 +200,7 @@ fn usz! macroConst(
       val.append(trans_token_str);
     };
 
-    return wter::macroConst(vd.out, trans_macro_str, val.str_view());
+    return wter::constant(vd.out, "", trans_macro_str, val.str_view());
   };
 }
 
@@ -229,7 +229,7 @@ fn usz! structure(
     clang::visitChildren(cursor, &vtor::structure, (CXClientData) &vd_struct);
 
     // If no fields are defined, type is incomplete
-    if (vd_struct.fields.len() == 0) return wter::aliasTypedef(vd.out, type_name, "void");
+    if (vd_struct.fields.len() == 0) return wter::typedefDist(vd.out, type_name, "void");
 
     return wter::structure(vd.out, vd_struct.fields.array_view(), type_name);
   };
@@ -268,17 +268,15 @@ fn usz! typedef(
       // Translate function parameters and store them into vd_struct.fields
       clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func);
 
-      return wter::funcTypedef(vd.out, type_name, ret_type_name, vd_func.params.array_view());
+      return wter::typedefFunc(vd.out, type_name, ret_type_name, vd_func.params.array_view());
     }
     else
     {
       // Translate alias
       String under_type_name = trans::ctype(under_type, vd.trans_fns.type, &vd.types_table);
-      
-      io::fprintfn(vd.out, "// %s, %s", type_name, under_type_name);
 
       return type_name != under_type_name 
-        ? wter::aliasTypedef(vd.out, type_name, under_type_name)
+        ? wter::typedefAlias(vd.out, type_name, under_type_name)
         : 0; // do not write if aliases are equal
     }
   };
