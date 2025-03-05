@@ -1,7 +1,7 @@
 
 // TODO: move to 'bindgen::impl'
 module bindgen::bg @private;
-import std::io, std::collections::map, std::collections::list;
+import std::io, std::collections::map, std::collections::list, clang;
 
 // --- Helper Structures
 
@@ -32,8 +32,8 @@ struct GlobalVisitData
 {
   BGTransCallbacks trans_fns;
   TransTable types_table;
-  // TransTable consts_table;
   File* out;
+  CXFile cxfile; // used to ignore nodes from other files 
 }
 
 // 'allocator' is for VarDecl.name allocations

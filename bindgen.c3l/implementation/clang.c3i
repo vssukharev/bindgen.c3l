@@ -6496,8 +6496,7 @@ fn CUInt getNumTopLevelHeaders_Module(
  *
  * \returns the specified top level header associated with the module.
  */
-fn
-CXFile CXModule.getTopLevelHeader(
+fn CXFile getTopLevelHeader_Module(
   CXModule mod, 
   CXTranslationUnit tu, 
   CUInt index) 

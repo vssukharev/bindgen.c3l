@@ -28,14 +28,20 @@ fn CXChildVisitResult global(
   CXFile cursor_file;
   clang::getExpansionLocation(clang::getCursorLocation(cursor), &cursor_file, null, null, null);
 
-  // If we can't find file, definition is included 
-  // by compiler so skip it
-  if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
-
+  // If cursor file is not equal to the parsed one,
+  // it's either inside of an included header or
+  // macro defined by compiler so that it returns 
+  // null pointer to a file
+  if (!clang::isEqual_File(cursor_file, vd.cxfile))
+  {
+    return clang::CHILD_VISIT_CONTINUE; 
+  }
 
   if (cursor_kind != clang::CURSOR_MACRO_EXPANSION) 
   {
-    err::logf(vd.out, "Kind: %s", cursor_kind);
+    String cursor_str = trans::convStr(clang::getCursorSpelling(cursor));
+    String file_name = trans::convStr(clang::getFileName(cursor_file));
+    err::logf(vd.out, "Kind: %s, Name: %s, File: %s", cursor_kind, cursor_str, file_name);
   }
 
   // TODO: make non-const global variables translation
@@ -48,7 +54,6 @@ fn CXChildVisitResult global(
     case clang::CURSOR_ENUM_DECL: ttor::enumDecl(vd, cursor);
     case clang::CURSOR_MACRO_DEFINITION: ttor::macroDef(vd, cursor);
     case clang::CURSOR_UNION_DECL: ttor::unionDecl(vd, cursor);
-    // TODO: union translation
   }
 
   return clang::CHILD_VISIT_CONTINUE;

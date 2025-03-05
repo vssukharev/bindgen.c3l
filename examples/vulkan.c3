@@ -60,7 +60,7 @@ fn void main(String[] args)
     .constant = &translateConstant,
   };
 
-  bg::translateHeaders({"./examples/headers/vulkan-part.h"}, out, cb, "vulkan::vk")!!;
+  bg::translateHeaders({"./examples/headers/vulkan-bug.h"}, out, cb, "vulkan::vk")!!;
 }
 
 
