@@ -9,8 +9,6 @@
 
 int MyFunc(float firstCase, int second_case);
 
-typedef int(*fnPtr)(int32_t a, float b, int);
-
 typedef int IType;
 
 #define ATTRIB inline
@@ -18,6 +16,8 @@ typedef int IType;
 struct SomeStruct {
   double ff;
 };
+
+typedef struct SomeStruct (*fnPtr)(int32_t a, float b, int);
 
 enum MyEnum
 {

@@ -157,6 +157,14 @@ fn CXChildVisitResult func(
 {
   FuncVisitData* vd = (FuncVisitData*) client_data;
 
+
+  // If CURSOR_TYPE_REF is occured as function, child, it means
+  // that it's return type of a function pointer, for instance
+  if (clang::getCursorKind(cursor) == clang::CURSOR_TYPE_REF)
+  {
+    return clang::CHILD_VISIT_CONTINUE;
+  }
+
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
   String name_str = trans::convStr(name_spell); 
@@ -166,8 +174,6 @@ fn CXChildVisitResult func(
   String trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
 
   vd.params.push({trans_type_str, trans_name_str});
-
-  err::flog(vd.g.out, "%s ; %s ; %s", name_str, trans_name_str, trans_type_str);
 
   return clang::CHILD_VISIT_CONTINUE;
 }
