@@ -22,8 +22,13 @@ fn String translateType(String str, Allocator alloc)
   switch (str)
   {
     case "void": return "void".copy(alloc);
+    case "uint8_t": return "char".copy(alloc);
+    case "size_t": return "isz".copy(alloc);
+    case "uint16_t": return "ushort".copy(alloc);
     case "uint32_t": return "uint".copy(alloc);
     case "uint64_t": return "ulong".copy(alloc);
+    case "int32_t": return "int".copy(alloc);
+    case "int64_t": return "long".copy(alloc);
     case "int": return "CInt".copy(alloc);
     case "unsigned": return "CUInt".copy(alloc);
     case "unsigned int": return "CUInt".copy(alloc);
@@ -60,7 +65,7 @@ fn void main(String[] args)
     .constant = &translateConstant,
   };
 
-  bg::translateHeaders({"./examples/headers/vulkan-bug.h"}, out, cb, "vulkan::vk")!!;
+  bg::translateHeaders({"./examples/headers/vulkan-part.h"}, out, cb, "vulkan::vk")!!;
 }
 
 

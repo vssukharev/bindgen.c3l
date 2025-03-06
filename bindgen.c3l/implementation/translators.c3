@@ -24,20 +24,23 @@ fn usz! constDecl(
 
   CXType cursor_type = clang::getCursorType(cursor);
 
-  @pool()
-  {
-    ConstVisitData vd_const = { .g = vd };
-    vd_const.val.tinit();
+  ConstVisitData vd_const = { .g = vd };
+  
+  // TODO: if we change to vd_const.val.tinit(), program terminates
+  // with illegal access. I have no idea why it's happening with temporary 
+  // allocator, but anyway.
+  vd_const.val.init(mem);
+  defer vd_const.val.free();
 
-    // Visit rhs of var declaration and translate 
-    // there everything, that is identifier
-    clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
-    
-    String name = trans::apply(cursor_str, vd.trans_fns.constant); 
-    String type_name = trans::ctype(cursor_type, vd.trans_fns.type, &vd.types_table);
+  // Visit rhs of var declaration and translate 
+  // there everything, that is identifier
+  clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
+  
+  String name = trans::apply(cursor_str, vd.trans_fns.constant); 
+  String type_name = trans::ctype(cursor_type, vd.trans_fns.type, &vd.types_table);
 
-    return wter::constDecl(vd.out, type_name, name, vd_const.val.str_view());
-  };
+  
+  return wter::constDecl(vd.out, type_name, name, vd_const.val.str_view());
 }
 
 <*
