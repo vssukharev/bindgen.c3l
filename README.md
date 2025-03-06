@@ -24,9 +24,12 @@ WIP C bindings generation library for C3 language.
 ```
 3. Import the module into your project. NOTICE: you must prefix functions with `bg`, not `bindgen` module name, for instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
 
-## Usage
+## Examples
 
-See `examples/hello.c3` (`c3c run hello` to immediately run example).
+There are some examples provided by me:
+- Vulkan header: `c3c run vulkan -- ./build/vulkan.c3i`
+- GLFW header: `c3c run glfw -- ./build/glfw.c3i`
+- My own dummy header: `c3c run dummy -- ./build/dummy.c3i`
 
 ## Adding new targets
 
