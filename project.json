@@ -5,9 +5,9 @@
   "dependencies" : [ "bindgen" ],
 
   "targets" : {
-    "hello" : {
+    "dummy" : {
       "type" : "executable",
-      "sources" : [ "examples/hello.c3" ],
+      "sources" : [ "examples/dummy.c3" ],
     },
     "glfw" : {
       "type" : "executable",

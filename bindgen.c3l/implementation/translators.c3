@@ -54,6 +54,8 @@ fn usz! enumDecl(
   {
     CXType type = clang::getCursorType(cursor);
     String type_str = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+  
+    err::flog(vd.out, "%s", type_str);
 
     CXType under_type = clang::getEnumDeclIntegerType(cursor);
     String under_type_str = trans::ctype(under_type, vd.trans_fns.type, &vd.types_table);

@@ -41,7 +41,7 @@ fn CXChildVisitResult global(
   {
     String cursor_str = trans::convStr(clang::getCursorSpelling(cursor));
     String file_name = trans::convStr(clang::getFileName(cursor_file));
-    err::logf(vd.out, "Kind: %s, Name: %s, File: %s", cursor_kind, cursor_str, file_name);
+    err::flog(vd.out, "Kind: %s, Name: %s, File: %s", cursor_kind, cursor_str, file_name);
   }
 
   // TODO: make non-const global variables translation
@@ -147,6 +147,9 @@ fn CXChildVisitResult enumDecl(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+<*
+ Considered to visit function parameters
+*>
 fn CXChildVisitResult func(
   CXCursor cursor, 
   CXCursor parent, 
@@ -163,6 +166,8 @@ fn CXChildVisitResult func(
   String trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
 
   vd.params.push({trans_type_str, trans_name_str});
+
+  err::flog(vd.g.out, "%s ; %s ; %s", name_str, trans_name_str, trans_type_str);
 
   return clang::CHILD_VISIT_CONTINUE;
 }

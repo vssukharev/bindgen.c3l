@@ -18,7 +18,7 @@ macro void log(String str = "", ..., usz indent = 0)
   io::eprintfn(str, $vasplat);
 } 
 
-macro void logf(File* out, String str = "", ...) 
+macro void flog(File* out, String str = "", ...) 
 {
   io::fprintf(out, "// [%s] : ", $$FUNC)!!;
   io::fprintfn(out, str, $vasplat)!!;

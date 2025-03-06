@@ -1,5 +1,7 @@
 // -> module dummy;
 
+#include <stdint.h>
+
 #define OHMY "Oh, my!"
 #define MACRO_VAL   1           // const MACRO_VAL = 1;
 #define ONE_MORE_MACRO MACRO_VAL + 1 // const ONE_MORE_MACRO = MACRO_VAL + 1
@@ -7,7 +9,7 @@
 
 int MyFunc(float firstCase, int second_case);
 
-typedef int(*fnPtr)(int a, float b, int);
+typedef int(*fnPtr)(int32_t a, float b, int);
 
 typedef int IType;
 

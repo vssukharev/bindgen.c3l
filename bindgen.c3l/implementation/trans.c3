@@ -106,22 +106,24 @@ fn String ctype(
     }
   }
 
-  CXString inner_type_spell = clang::getTypeSpelling(inner_type);
-  defer clang::disposeString(inner_type_spell);
-  String inner_type_str = trans::convStr(inner_type_spell);
-
   @pool()
   {
+    CXString inner_type_spell = clang::getTypeSpelling(inner_type);
+    defer clang::disposeString(inner_type_spell);
+    String inner_type_str = trans::normTypeStr(trans::convStr(inner_type_spell), tmem());
+
     // Here, translation is performed under inner type and it's worth to cache also.
     // For example, if we have something like 'CXType*', 'CXType' already must be 
     // defined somewhere and, hence, cached.
     String trans_inner_type_str = trans::capply(inner_type_str, fun, table);
 
+    // enum MyFoo -> Enum MyFoo
+
     DString res_dstr;
     res_dstr.tinit();
     res_dstr.append(type_str);
-    res_dstr.replace(inner_type_str, trans_inner_type_str);
     trans::normTypeDStr(&res_dstr);
+    res_dstr.replace(inner_type_str, trans_inner_type_str);
 
     String res = res_dstr.copy_str(mem);
     (*table)[type_str] = res;
