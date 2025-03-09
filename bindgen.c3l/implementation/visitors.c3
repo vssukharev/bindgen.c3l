@@ -55,9 +55,30 @@ fn CXChildVisitResult global(
 
 <*
  Intended to visit rhs values of global constants, 
- translating only identifiers
+ translating only identifiers. Regular (not enum)
+ constants have two children: their type and their value,
+ so we have to skip their type to the their value.
 *>
 fn CXChildVisitResult constDecl(
+  CXCursor cursor, 
+  CXCursor parent, 
+  CXClientData client_data)
+{
+  ConstVisitData* vd = (ConstVisitData*) client_data;
+  defer ++vd.current;
+  
+  if (vd.current == 0)
+  {
+    return clang::CHILD_VISIT_CONTINUE;
+  }
+
+  return vtor::enumConstDecl(cursor, parent, client_data);
+}
+
+<*
+ Intended to visit enum constants
+*>
+fn CXChildVisitResult enumConstDecl(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data)
@@ -77,6 +98,7 @@ fn CXChildVisitResult constDecl(
     
     misc::@iterateTokens(tokens[:tokens_len], tu; String token_str, CXTokenKind token_kind)
     {
+      err::flog(vd.g.out, "%s", token_str);
       String trans_token_str;
 
       switch (token_kind)
@@ -94,7 +116,7 @@ fn CXChildVisitResult constDecl(
       vd.val.append(trans_token_str);
     };
    
-    return clang::CHILD_VISIT_BREAK;
+    return clang::CHILD_VISIT_CONTINUE;
   };
 }
 
@@ -117,7 +139,7 @@ fn CXChildVisitResult enumDecl(
   vd_const.val.init(mem);
   defer vd_const.val.free();
 
-  clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
+  clang::visitChildren(cursor, &vtor::enumConstDecl, (CXClientData) &vd_const);
 
   // If we get empty rhs, evaluate value
   if (vd_const.val.str_view() == "")

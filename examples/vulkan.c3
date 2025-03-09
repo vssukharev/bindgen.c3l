@@ -54,6 +54,15 @@ fn String translateConstant(String str, Allocator alloc)
   return str.strip("VK_").capitalizeAll(alloc);
 }
 
+fn String translateVar(String str, Allocator alloc)
+{
+  if (str == "module")
+  {
+    return "cmodule".copy(alloc);
+  }
+  return str.lowerizeFirst(alloc);
+}
+
 fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "stdout";
@@ -61,7 +70,7 @@ fn void main(String[] args)
   BGTransCallbacks cb = {
     .func = &translateFunc,
     .type = &translateType,
-    .variable = &String.lowerizeFirst,
+    .variable = &translateVar,
     .constant = &translateConstant,
   };
 

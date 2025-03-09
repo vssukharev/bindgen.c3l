@@ -39,7 +39,6 @@ fn usz! constDecl(
   String name = trans::apply(cursor_str, vd.trans_fns.constant); 
   String type_name = trans::ctype(cursor_type, vd.trans_fns.type, &vd.types_table);
 
-  
   return wter::constDecl(vd.out, type_name, name, vd_const.val.str_view());
 }
 

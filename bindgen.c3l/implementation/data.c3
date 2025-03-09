@@ -60,6 +60,7 @@ struct ConstVisitData
 {
   DString val;
   GlobalVisitData* g;
+  usz current;
 }
 
 struct EnumVisitData
