@@ -46,7 +46,7 @@ fn usz! constDecl(
 <*
  Translates enumDecl declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL "Cursor must point to enum declaration"
- @returns "Number of bytes written"
+ @return "Number of bytes written"
 *>
 fn usz! enumDecl(
   GlobalVisitData* vd, 
@@ -57,8 +57,6 @@ fn usz! enumDecl(
   {
     CXType type = clang::getCursorType(cursor);
     String type_str = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
-  
-    err::flog(vd.out, "%s", type_str);
 
     CXType under_type = clang::getEnumDeclIntegerType(cursor);
     String under_type_str = trans::ctype(under_type, vd.trans_fns.type, &vd.types_table);

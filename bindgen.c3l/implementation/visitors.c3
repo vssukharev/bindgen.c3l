@@ -37,13 +37,6 @@ fn CXChildVisitResult global(
     return clang::CHILD_VISIT_CONTINUE; 
   }
 
-  if (cursor_kind != clang::CURSOR_MACRO_EXPANSION) 
-  {
-    String cursor_str = trans::convStr(clang::getCursorSpelling(cursor));
-    String file_name = trans::convStr(clang::getFileName(cursor_file));
-    err::flog(vd.out, "Kind: %s, Name: %s, File: %s", cursor_kind, cursor_str, file_name);
-  }
-
   // TODO: make non-const global variables translation
   switch (cursor_kind)
   {

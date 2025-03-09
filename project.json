@@ -9,13 +9,19 @@
       "type" : "executable",
       "sources" : [ "examples/dummy.c3" ],
     },
+
     "glfw" : {
       "type" : "executable",
       "sources" : [ "examples/glfw.c3" ],
     },
+
     "vulkan" : {
       "type" : "executable",
-      "sources" : [ "examples/vulkan.c3" ]
+      "sources" : [ "examples/vulkan.c3" ],
+    },
+    "vulkan-test" : {
+      "type" : "executable",
+      "sources" : [ "tests/general.c3", "tests/vulkan.c3" ],
     },
   },
 }
