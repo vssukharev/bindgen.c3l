@@ -210,25 +210,45 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
   }
 
   DString res;
-  // res.append() falls to infinite loop if use temp allocator
-  res.init(mem);
+  res.init(mem); // res.append() falls into infinite loop if use temp allocator
   defer res.free();
 
-  misc::@iterateTokens(tokens_ptr[start_from..tokens_len-1], tu; CXToken* token, String token_str)
+  foreach (&token : tokens_ptr[start_from..tokens_len-1])
   {
+    CXTokenKind token_kind = clang::getTokenKind(*token);
+    CXString token_spell = clang::getTokenSpelling(tu, *token);
+    defer clang::disposeString(token_spell);
+    String token_str = trans::convStr(token_spell);
+
+    String trans_token_str;
+
     @pool()
     {
-      CXTokenKind token_kind = clang::getTokenKind(*token);
-      String trans_token_str;
-      
       switch (token_kind)
       {
-        // case clang::TOKEN_KEYWORD:
-        //   err::warn("Can't translate C keyword, skipping...");
-
-        // We assume that any identifier is constant
+        // Assume that identifier is one of:
+        // 1. Constant (macro)
+        // 2. Functional macro
         case clang::TOKEN_IDENTIFIER:
-          trans_token_str = trans::apply(token_str, tfns.constant, tmem());
+          usz i = token - tokens_ptr;
+          bool is_func_macro = false;
+          if (i < tokens_len - 1)
+          { 
+            CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
+            defer clang::disposeString(token_spell_2);
+            String token_str_2 = trans::convStr(token_spell_2);
+            if (token_str_2 == "(")
+            {
+              trans_token_str = trans::apply(token_str, tfns.func_macro, tmem());
+              is_func_macro = true;
+              res.append("@");
+            }
+          }
+
+          if (!is_func_macro)
+          {
+            trans_token_str = trans::apply(token_str, tfns.constant, tmem());
+          }
 
         case clang::TOKEN_LITERAL:
           trans_token_str = trans::intSuf(token_str, tmem());

@@ -186,6 +186,7 @@ fn usz! funcMacroDef(
     clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
     defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
 
+    // Make a small tweak here. TODO: get rid of it
     if OUTER: (true) 
     {
       // First token is the name of a macro and second token is left brace so start from the third one
