@@ -174,7 +174,7 @@ fn usz! funcMacroDef(
 
     String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.func_macro);
 
-    err::warn("Macro %s (translated to @%s) is function like so complete it's body manually", macro_str, trans_macro_str);
+    err::warn("Macro %s (@%s) is function-like so you should complete it's body manually", macro_str, trans_macro_str);
 
     List{String} params;
     params.tinit();
@@ -186,7 +186,7 @@ fn usz! funcMacroDef(
     clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
     defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
 
-    do OUTER:
+    if OUTER: (true) 
     {
       // First token is the name of a macro and second token is left brace so start from the third one
       misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str)
@@ -197,7 +197,7 @@ fn usz! funcMacroDef(
           params.push(token_str);
         }
       };
-    };
+    }
 
     return wter::funcMacro(vd.out, params.array_view(), trans_macro_str);
   };
@@ -216,51 +216,12 @@ fn usz! constMacroDef(
     CXString macro_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(macro_spell);
     String macro_str = trans::convStr(macro_spell);
-  
+ 
     String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
 
-    CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
-    CXSourceRange sr = clang::getCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
+    String val = trans::tokensUnderCursor(tmem(), cursor, &vd.trans_fns);
 
-    CXToken* tokens; uint tokens_len;
-    clang::tokenize(tu, sr, &tokens, &tokens_len);
-    defer clang::disposeTokens(tu, tokens, tokens_len);
-    
-    // If macro is empty, it's either guard or something that we might not want to translate
-    if (tokens_len <= 1) 
-    {
-      err::warn("Macro %s doesn't have value, skipping...", macro_str);
-      return 0;
-    }
-
-    DString val;
-    val.tinit();
- 
-    misc::@iterateTokens(tokens[1..tokens_len-1], tu; CXToken* token, String token_str)
-    {
-      CXTokenKind token_kind = clang::getTokenKind(*token);
-      String trans_token_str;
-
-      switch (token_kind)
-      {
-        case clang::TOKEN_KEYWORD:
-          err::warn("Macro %s comprises C keyword '%s', skipping...", macro_str, token_str);
-          return 0;
-
-        case clang::TOKEN_IDENTIFIER:
-          trans_token_str = trans::tapply(token_str, vd.trans_fns.constant);
-
-        case clang::TOKEN_LITERAL:
-          trans_token_str = trans::tintSuf(token_str);
-
-        default:
-          trans_token_str = token_str;
-      }
-      
-      val.append(trans_token_str);
-    };
-
-    return wter::constDecl(vd.out, "", trans_macro_str, val.str_view());
+    return wter::constDecl(vd.out, "", trans_macro_str, val);
   };
 }
 

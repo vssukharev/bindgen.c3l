@@ -92,31 +92,11 @@ fn CXChildVisitResult enumConstDecl(
     CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
     CXSourceRange sr = misc::getTrueCursorExtent(cursor);
 
-    CXToken* tokens; 
+    CXToken* tokens;
     uint tokens_len;
 
-    clang::tokenize(tu, sr, &tokens, &tokens_len);
-    defer clang::disposeTokens(tu, tokens, tokens_len);
-
-    misc::@iterateTokens(tokens[:tokens_len], tu; CXToken* token, String token_str)
-    {
-      CXTokenKind token_kind = clang::getTokenKind(*token);
-      String trans_token_str;
-
-      switch (token_kind)
-      {
-        case clang::TOKEN_IDENTIFIER:
-          trans_token_str = trans::tapply(token_str, vd.g.trans_fns.constant);
-
-        case clang::TOKEN_LITERAL:
-          trans_token_str = trans::tintSuf(token_str);
-
-        default:
-          trans_token_str = token_str;
-      }
-
-      vd.val.append(trans_token_str);
-    };
+    String trans_tokens = trans::tokensUnderCursor(tmem(), cursor, &vd.g.trans_fns);
+    vd.val.append(trans_tokens);
    
     return clang::CHILD_VISIT_CONTINUE;
   };
@@ -173,7 +153,6 @@ fn CXChildVisitResult func(
   CXClientData client_data)
 {
   FuncVisitData* vd = (FuncVisitData*) client_data;
-
 
   // If CURSOR_TYPE_REF is occured as function, child, it means
   // that it's return type of a function pointer, for instance

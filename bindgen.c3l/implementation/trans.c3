@@ -176,9 +176,8 @@ fn String tintSuf(String lit) @inline
 
 <*
  Translates tokens under cursor.
- @param start_from "Token number to start iterating from. It's needed as sometimes cursor name can be also tokenized, e.g. when tokenizing a macro, first token is it's name."
 *>
-fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns, usz start_from)
+fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns)
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
@@ -192,7 +191,12 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
   defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
     
   CXCursorKind kind = clang::getCursorKind(cursor);
-  if (tokens_len <= 1) 
+  
+  // Token number to start iterating from. 
+  // It's needed as sometimes cursor name can be also tokenized, 
+  // e.g. when tokenizing a macro, first token is it's name.
+  usz start_from = kind == clang::CURSOR_MACRO_DEFINITION ? 1 : 0;
+  if (tokens_len <= start_from)
   {
     switch (kind)
     {
@@ -202,12 +206,12 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
       default:
         err::warn("Expression under %s doesn't have value, skipping...", cursor_str);
     }
-
     return "";
   }
 
   DString res;
-  res.tinit();
+  // res.append() falls to infinite loop if use temp allocator
+  res.init(mem);
   defer res.free();
 
   misc::@iterateTokens(tokens_ptr[start_from..tokens_len-1], tu; CXToken* token, String token_str)
@@ -219,8 +223,8 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
       
       switch (token_kind)
       {
-        case clang::TOKEN_KEYWORD:
-          err::warn("Can't translate C keyword, skipping...");
+        // case clang::TOKEN_KEYWORD:
+        //   err::warn("Can't translate C keyword, skipping...");
 
         // We assume that any identifier is constant
         case clang::TOKEN_IDENTIFIER:
@@ -229,6 +233,7 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
         case clang::TOKEN_LITERAL:
           trans_token_str = trans::intSuf(token_str, tmem());
 
+        case clang::TOKEN_KEYWORD:
         case clang::TOKEN_PUNCTUATION:
         case clang::TOKEN_COMMENT:
           trans_token_str = token_str;
