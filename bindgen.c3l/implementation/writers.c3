@@ -65,7 +65,18 @@ fn usz! constDecl(
   String value)
 @maydiscard
 {
-  return io::fprintfn(out, "const %s %s = %s;", translated_type, translated_name, value);
+  usz acc;
+
+  if (translated_type == "")
+  {
+    acc += io::fprintfn(out, "const %s = %s;", translated_name, value)!;
+  }
+  else
+  {
+    acc += io::fprintfn(out, "const %s %s = %s;", translated_type, translated_name, value)!;
+  }
+
+  return acc;
 }
 
 <*
@@ -134,7 +145,7 @@ fn usz! funcMacro(
     acc += io::fprintf(out, "#%s", p)!;
     if (i < params.len - 1) acc += io::fprint(out, ", ")!;
   }
-  acc += io::fprintfn(out, ") { }", name)!;
+  acc += io::fprintfn(out, ") { }")!;
 
   return acc;
 }
