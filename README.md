@@ -3,13 +3,18 @@
 
 WIP C bindings generation library for C3 language. 
 
+
 ## TODO
 
 - Add support for inlined enums
 - Check vulkan translation for bugs
 - Add support for custom clang flags
+- Add functional macro partial translation
 
 ## Setup
+
+> [!CAUTION]
+> Currently c3c in development so it's not stable. To be sure that you are using a correct version of the compiler, look at the 'flake.lock': "nodes"- > "c3c" -> "lock" -> "rev". 
 
 1. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
 2. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
