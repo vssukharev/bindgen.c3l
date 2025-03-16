@@ -5,7 +5,8 @@ import bindgen::bg @public,
        bindgen::vtor @public, 
        bindgen::wter @public, 
        bindgen::err @public,
-       bindgen::misc @public;
+       bindgen::misc @public,
+       std::collections::list;
 import std::io, clang;
 
 <*
@@ -148,18 +149,74 @@ fn usz! macroDef(
   CXCursor cursor) 
 @maydiscard
 {
-  CXString macro_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(macro_spell);
-  String macro_str = trans::convStr(macro_spell);
-  
   if (clang::isMacroFunctionLike_Cursor(cursor))
   {
-    err::warn("Macro %s is function-like, skipping...", macro_str);
-    return 0;
+    return ttor::funcMacroDef(vd, cursor);
   }
+  else
+  {
+    return ttor::constMacroDef(vd, cursor);
+  }
+}
 
+<*
+ Translates functional macro without generating it's body
+*>
+fn usz! funcMacroDef(
+  GlobalVisitData* vd,
+  CXCursor cursor)
+{
   @pool()
   {
+    CXString macro_spell = clang::getCursorSpelling(cursor);
+    defer clang::disposeString(macro_spell);
+    String macro_str = trans::convStr(macro_spell);
+
+    String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.func_macro);
+
+    err::warn("Macro %s (translated to @%s) is function like so complete it's body manually", macro_str, trans_macro_str);
+
+    List{String} params;
+    params.tinit();
+
+    CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+    CXSourceRange sr = misc::getTrueCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
+    
+    CXToken* tokens_ptr; uint tokens_len;
+    clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
+    defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
+
+    do OUTER:
+    {
+      // First token is the name of a macro and second token is left brace so start from the third one
+      misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str)
+      {
+        if (token_str == ")") break OUTER;
+        if (token_str != ",")
+        {
+          params.push(token_str);
+        }
+      };
+    };
+
+    return wter::funcMacro(vd.out, params.array_view(), trans_macro_str);
+  };
+}
+
+<*
+ Translates macro which is not function-like, e.g.:
+ `#define MY_MACRO 1` -> `const MY_MACRO = 1;`
+*>
+fn usz! constMacroDef(
+  GlobalVisitData* vd, 
+  CXCursor cursor) 
+{
+  @pool()
+  {
+    CXString macro_spell = clang::getCursorSpelling(cursor);
+    defer clang::disposeString(macro_spell);
+    String macro_str = trans::convStr(macro_spell);
+  
     String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
 
     CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
@@ -179,8 +236,9 @@ fn usz! macroDef(
     DString val;
     val.tinit();
  
-    misc::@iterateTokens(tokens[1..tokens_len-1], tu; String token_str, CXTokenKind token_kind)
+    misc::@iterateTokens(tokens[1..tokens_len-1], tu; CXToken* token, String token_str)
     {
+      CXTokenKind token_kind = clang::getTokenKind(*token);
       String trans_token_str;
 
       switch (token_kind)

@@ -23,16 +23,18 @@ fn CXSourceRange getTrueCursorExtent(CXCursor cursor)
   return sr;
 }
 
-macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(String token_str, CXTokenKind token_kind))
+<*
+ Literally iterates through CXToken[] automatically converting them to strings it
+*>
+macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(CXToken* token, String token_str))
 {
   foreach (&t : tokens)
   {
     CXString token_spell = clang::getTokenSpelling(tu, *t);
     defer clang::disposeString(token_spell);
     String token_str = trans::convStr(token_spell);
-    CXTokenKind token_kind = clang::getTokenKind(*t);
 
-    @body(token_str, token_kind);
+    @body(t, token_str);
   }
 }
 

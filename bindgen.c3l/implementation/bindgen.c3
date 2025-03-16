@@ -24,6 +24,7 @@ struct BGTransCallbacks
   BGTransFn type;
   BGTransFn variable;
   BGTransFn constant;
+  BGTransFn func_macro;
 }
 
 fault BGParseError
@@ -63,6 +64,7 @@ fn void! translateHeaders(
   if (callbacks.variable == null) err::warn("Variable translation will not be performed as function pointer is null");
   if (callbacks.type == null) err::warn("Type translation will not be performed as function pointer is null");
   if (callbacks.constant == null) err::warn("Constant translation will not be performed as function pointer is null");
+  if (callbacks.func_macro == null) err::warn("Functional macros translation will not be performed as function pointer is null");
 
   wter::moduleHead(&out, module_name);
 

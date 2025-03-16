@@ -1,7 +1,14 @@
 
 module bindgen::trans @private;
-import bindgen::bg @public;
+import bindgen::bg @public,
+       bindgen::misc @public,
+       bindgen::err @public;
 import clang, std::io;
+
+fault TransErr
+{
+  INVALID_MACRO
+}
 
 fn String convStr(CXString s) @inline
 {
@@ -162,8 +169,76 @@ fn String intSuf(String lit, Allocator alloc = allocator::heap())
   return new;
 }
 
-fn String tintSuf(String lit)
+fn String tintSuf(String lit) @inline
 {
   return trans::intSuf(lit, allocator::temp());
 }
+
+<*
+ Translates tokens under cursor.
+ @param start_from "Token number to start iterating from. It's needed as sometimes cursor name can be also tokenized, e.g. when tokenizing a macro, first token is it's name."
+*>
+fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns, usz start_from)
+{
+  CXString cursor_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(cursor_spell);
+  String cursor_str = trans::convStr(cursor_spell);
+
+  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+  CXSourceRange sr = misc::getTrueCursorExtent(cursor);
+
+  CXToken* tokens_ptr; uint tokens_len;
+  clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
+  defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
+    
+  CXCursorKind kind = clang::getCursorKind(cursor);
+  if (tokens_len <= 1) 
+  {
+    switch (kind)
+    {
+      // If macro is empty, it's either guard or something that we might not want to translate
+      case clang::CURSOR_MACRO_DEFINITION:
+        err::warn("Macro %s doesn't have value, skipping...", cursor_str);
+      default:
+        err::warn("Expression under %s doesn't have value, skipping...", cursor_str);
+    }
+
+    return "";
+  }
+
+  DString res;
+  res.tinit();
+  defer res.free();
+
+  misc::@iterateTokens(tokens_ptr[start_from..tokens_len-1], tu; CXToken* token, String token_str)
+  {
+    @pool()
+    {
+      CXTokenKind token_kind = clang::getTokenKind(*token);
+      String trans_token_str;
+      
+      switch (token_kind)
+      {
+        case clang::TOKEN_KEYWORD:
+          err::warn("Can't translate C keyword, skipping...");
+
+        // We assume that any identifier is constant
+        case clang::TOKEN_IDENTIFIER:
+          trans_token_str = trans::apply(token_str, tfns.constant, tmem());
+
+        case clang::TOKEN_LITERAL:
+          trans_token_str = trans::intSuf(token_str, tmem());
+
+        case clang::TOKEN_PUNCTUATION:
+        case clang::TOKEN_COMMENT:
+          trans_token_str = token_str;
+      }
+
+      res.append(trans_token_str);
+    };
+  };
+
+  return res.copy_str(alloc);
+}
+
 

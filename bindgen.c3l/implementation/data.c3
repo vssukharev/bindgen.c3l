@@ -71,9 +71,3 @@ struct EnumVisitData
   bool is_unsigned;
 }
 
-struct MacroVisitData
-{
-  DString val;
-  GlobalVisitData* g;
-}
-

@@ -10,6 +10,17 @@ fn String lowerizeFirst(String str, Allocator alloc)
   return str2;
 }
 
+fn String lowerizeAll(String str, Allocator alloc)
+{
+  String str2 = str.copy(alloc);
+  foreach (i, &c : str2)
+  {
+    *c = str[i].to_lower();
+  }
+  return str2;
+}
+
+
 fn String capitalizeFirst(String str, Allocator alloc)
 {
   String str2 = str.copy(alloc);
@@ -50,9 +61,9 @@ fn String translateType(String str, Allocator alloc)
   return capitalizeFirst(str, alloc);
 }
 
-fn String translateConstant(String str, Allocator alloc)
+fn String translateFuncMacro(String str, Allocator alloc)
 {
-  return str.copy(alloc);
+  return lowerizeAll(str.strip("VK_"), alloc);
 }
 
 fn void main(String[] args)
@@ -64,6 +75,7 @@ fn void main(String[] args)
     .type = &translateType,
     .variable = &lowerizeFirst,
     .constant = &capitalize,
+    .func_macro = &translateFuncMacro,
   };
 
   bg::translateHeaders({"./examples/headers/dummy.h"}, out, cb, "dummy")!!;

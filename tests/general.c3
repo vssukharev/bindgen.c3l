@@ -8,7 +8,7 @@ fn void log(SubProcess process)
   while (len)
   {
     char[256] buffer;
-    len = process.read_stderr(&buffer, buffer.len)!!;
+    len = process.read_stdout(&buffer, buffer.len)!!;
     io::print((String) buffer[:len]);
   }
 }
@@ -16,7 +16,7 @@ fn void log(SubProcess process)
 macro void run(String[] command)
 {
   io::printfn("-------------------------------");
-  SubProcess process = process::create(command, { .inherit_environment = true })!!;
+  SubProcess process = process::create(command, { .combined_stdout_stderr = true, .inherit_environment = true })!!;
   defer process.destroy();
   cmd::log(process);
 }

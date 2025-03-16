@@ -1,52 +1,11 @@
-// -> module dummy;
 
-#include <stdint.h>
-
-#define OHMY "Oh, my!"
-#define MACRO_VAL   1           // const MACRO_VAL = 1;
-#define ONE_MORE_MACRO MACRO_VAL + 1 // const ONE_MORE_MACRO = MACRO_VAL + 1
-#define MACRO_FUN(base) base##t // unchanged
-
-int MyFunc(float firstCase, int second_case);
-
-typedef int IType;
-
-#define ATTRIB inline
-
-struct SomeStruct {
-  double ff;
-};
-
-typedef struct SomeStruct (*fnPtr)(int32_t a, float b, int);
-
-enum MyEnum
+/*
+macro @vkApiVersionVariant(#version)
 {
-  VAL_1 = 0,
-  VAL_2,
-  VAL_3 = 13,
-  VAL_4,
-};
+  return (uint)(#version) >> 29U
+}
+*/
 
-enum oneMoreEnum
-{
-  more_val1 = 4,
-  more_val2 = 3,
-  more_val3 = VAL_4 + 2,
-};
+#define VK_API_VERSION_MAJOR(version) (((uint32_t)(version) >> 22U) & 0x7FU)
+#define MACRO_FUN(arg1, arg2, base) base##t // unchanged
 
-int MyVar = 200 ^ 2; // -> 200 ^ 2
-
-const int ANOTHER_CONST = 50;
-const int FOO = ANOTHER_CONST + 1;
-
-#define HELLO 1
-const unsigned int BAR_1 = HELLO + (~0ULL);
-const long long BAR_2 = (~0ULL);
-const char BAR_3[] = "KUKU, EPTA";
-
-typedef struct AnotherStruct {
-  int aa;
-  double bb;
-} AnotherStruct;
-
-ATTRIB void g(struct SomeStruct ASD);

@@ -6149,7 +6149,9 @@ fn CXString getCursorDisplayName(
  * definition, it returns that declaration or definition unchanged.
  * Otherwise, returns the NULL cursor.
  */
-fn CXCursor clang_getCursorReferenced(CXCursor);
+fn CXCursor getCursorReferenced(
+  CXCursor cursor) 
+@extern("clang_getCursorReferenced");
 
 /**
  *  For a cursor that is either a reference to or a declaration
@@ -7963,7 +7965,9 @@ fn CXRemapping getRemappingsFromFileList(
 /**
  * Determine the number of remappings.
  */
-fn CUInt clang_remap_getNumFiles(CXRemapping);
+fn CUInt remap_getNumFiles(
+  CXRemapping remap) 
+@extern("clang_remap_getNumFiles");
 
 /**
  * Get the original and the associated filename from the remapping.

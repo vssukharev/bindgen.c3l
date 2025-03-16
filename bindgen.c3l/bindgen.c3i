@@ -17,6 +17,7 @@ struct BGTransCallbacks
   BGTransFn type;
   BGTransFn variable;
   BGTransFn constant;
+  BGTransFn func_macro;
 }
 
 fault BGParseError

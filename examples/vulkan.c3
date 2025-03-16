@@ -17,6 +17,16 @@ fn String String.lowerizeFirst(String str, Allocator alloc)
   return str2;
 }
 
+fn String lowerizeAll(String str, Allocator alloc)
+{
+  String str2 = str.copy(alloc);
+  foreach (i, &c : str2)
+  {
+    *c = str[i].to_lower();
+  }
+  return str2;
+}
+
 fn String translateType(String str, Allocator alloc)
 {
   switch (str)
@@ -54,6 +64,11 @@ fn String translateConstant(String str, Allocator alloc)
   return str.strip("VK_").capitalizeAll(alloc);
 }
 
+fn String translateFuncMacro(String str, Allocator alloc)
+{
+  return lowerizeAll(str.strip("VK_"), alloc);
+}
+
 fn String translateVar(String str, Allocator alloc)
 {
   if (str == "module")
@@ -72,6 +87,7 @@ fn void main(String[] args)
     .type = &translateType,
     .variable = &translateVar,
     .constant = &translateConstant,
+    .func_macro = &translateFuncMacro,
   };
 
   bg::translateHeaders({"./examples/headers/vulkan-part.h"}, out, cb, "vulkan::vk")!!;

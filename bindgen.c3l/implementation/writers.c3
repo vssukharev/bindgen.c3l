@@ -117,6 +117,29 @@ fn usz! func(
 }
 
 <*
+ Writes function to 'out'
+ @return "Number of bytes written"
+*>
+fn usz! funcMacro(
+  File* out,
+  String[] params,
+  String name) 
+@maydiscard
+{
+  usz acc;
+
+  acc += io::fprintf(out, "macro @%s(", name)!;
+  foreach (i, p : params) 
+  {
+    acc += io::fprintf(out, "#%s", p)!;
+    if (i < params.len - 1) acc += io::fprint(out, ", ")!;
+  }
+  acc += io::fprintfn(out, ") { }", name)!;
+
+  return acc;
+}
+
+<*
  Writes module name to 'out'
  @returns "Number of bytes written"
 *>

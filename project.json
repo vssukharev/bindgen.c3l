@@ -9,6 +9,10 @@
       "type" : "executable",
       "sources" : [ "examples/dummy.c3" ],
     },
+    "dummy-test" : {
+      "type" : "executable",
+      "sources" : [ "tests/general.c3", "tests/dummy.c3" ],
+    },
 
     "glfw" : {
       "type" : "executable",

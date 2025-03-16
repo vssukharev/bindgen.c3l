@@ -76,7 +76,9 @@ fn CXChildVisitResult constDecl(
 }
 
 <*
- Intended to visit enum constants
+ Intended to visit enum constants. It is like a subset
+ of vtor::constDecl which doesn't have the first child
+ as type.
 *>
 fn CXChildVisitResult enumConstDecl(
   CXCursor cursor, 
@@ -95,10 +97,10 @@ fn CXChildVisitResult enumConstDecl(
 
     clang::tokenize(tu, sr, &tokens, &tokens_len);
     defer clang::disposeTokens(tu, tokens, tokens_len);
-    
-    misc::@iterateTokens(tokens[:tokens_len], tu; String token_str, CXTokenKind token_kind)
+
+    misc::@iterateTokens(tokens[:tokens_len], tu; CXToken* token, String token_str)
     {
-      err::flog(vd.g.out, "%s", token_str);
+      CXTokenKind token_kind = clang::getTokenKind(*token);
       String trans_token_str;
 
       switch (token_kind)
