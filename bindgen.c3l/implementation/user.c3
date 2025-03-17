@@ -3,14 +3,15 @@ module bindgen::user @private;
 import std::os::process, std::io;
 import bindgen::err @public;
 
-const ARGS_NUM = 1;
-
 <*
- @return "ZString[1], each element of which should be then freed"
+ @param extra_opts "Additional options for clang compiler"
+ @return "ZString[], which and each element of which should be then freed via allocator"
 *>
-fn ZString[ARGS_NUM]! getParseCommandArgs(Allocator allocator = allocator::heap())
+fn ZString[]! getParseCommandArgs(Allocator allocator, String[] extra_opts)
 {
-  ZString[ARGS_NUM] arr;
+  const usz RESERVED_ARGS = 1;
+
+  ZString[] arr = allocator::alloc_array(allocator, ZString, RESERVED_ARGS + extra_opts.len);
 
   // 1-st argument: libc location
   DString libc_loc;
@@ -18,8 +19,16 @@ fn ZString[ARGS_NUM]! getParseCommandArgs(Allocator allocator = allocator::heap(
   defer libc_loc.free();
   libc_loc.append("-I");
   user::getLibcHeadersLoc(&libc_loc, allocator)!;
-
   arr[0] = libc_loc.copy_zstr(allocator);
+
+  // All arguments after
+  if (extra_opts.len > 0)
+  {
+    foreach (i, &elem : arr[RESERVED_ARGS..])
+    {
+      *elem = (ZString) extra_opts[i];
+    }
+  }
 
   return arr;
 }

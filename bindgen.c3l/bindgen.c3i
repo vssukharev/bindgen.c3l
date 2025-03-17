@@ -2,24 +2,38 @@
 module bindgen::bg;
 
 <* 
- @param output_name "if stdout, write to stdout; otherwise, write to file on privided path"
+ @param header_file_names "File names of headers to be translated"
+ @param output_file_name "If set to 'stdout', write to stdout; otherwise, write to file on privided path"
+ @param callbacks "Translation callbacks"
+ @param module_name "Name of a module appended on top of the file during translation"
+ @param command_options "Command options for clang while parsing each header"
 *>
-fn void! translateHeaders(String[] header_names, String output_name, BGTransCallbacks callbacks, String module_name);
+fn void! translateHeaders(
+  String[] header_file_names, 
+  String output_file_name, 
+  BGTransCallbacks callbacks, 
+  String module_name,
+  String[] command_options = {});
 
 <*
- @returns "Translated string, allocated via 'allocator'"
+ @param str "Original string from C source. Should NOT be changed"
+ @param allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
+ @return "Translated string, allocated via 'allocator'"
 *>
-def BGTransFn = fn String (String old, Allocator allocator = allocator::heap());
+def BGTransFn = fn String (String str, Allocator allocator = allocator::heap());
 
 struct BGTransCallbacks
 {
-  BGTransFn func;
-  BGTransFn type;
-  BGTransFn variable;
-  BGTransFn constant;
-  BGTransFn func_macro;
+  BGTransFn func; // Function
+  BGTransFn type; // Type
+  BGTransFn variable; // Function parameter or global variable
+  BGTransFn constant; // Global constant
+  BGTransFn func_macro; // Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically
 }
 
+<*
+ TODO: migrate to 0.7.0 faults syntax
+*>
 fault BGParseError
 {
   FAILURE, 

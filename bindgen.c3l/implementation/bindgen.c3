@@ -36,24 +36,25 @@ fault BGParseError
 
 <* 
  TODO: add support for custom compilation flags
- @param output_name "if stdout, write to stdout; otherwise, write to file on privided path"
+ @param output_file_name "if stdout, write to stdout; otherwise, write to file on privided path"
 *>
 fn void! translateHeaders(
-  String[] header_names,
-  String output_name,
-  BGTransCallbacks callbacks,
-  String module_name)
+  String[] header_file_names, 
+  String output_file_name, 
+  BGTransCallbacks callbacks, 
+  String module_name,
+  String[] command_options = {})
 {
-  err::log("Translating %s", header_names);
-  err::log("Writing to %s", output_name);
+  err::log("Translating %s", header_file_names);
+  err::log("Writing to %s", output_file_name);
   
   File out;
-  switch (output_name)
+  switch (output_file_name)
   {
     case "stdout":
       out = *io::stdout();
     default:
-      out = file::open(output_name, "w")!;
+      out = file::open(output_file_name, "w")!;
   }
   defer (void) out.close();
 
@@ -68,12 +69,12 @@ fn void! translateHeaders(
 
   wter::moduleHead(&out, module_name);
 
-  ZString[?] cargs = user::getParseCommandArgs(tmem())!;
+  ZString[] cargs = user::getParseCommandArgs(tmem(), command_options)!;
 
-  foreach (header_name : header_names)
+  foreach (header_name : header_file_names)
   {
     CXTranslationUnit tu;
-    CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, &cargs, cargs.len, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+    CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu);
     err::checkCode(code)!;
 
     CXCursor cursor = clang::getTranslationUnitCursor(tu);
@@ -90,9 +91,9 @@ fn void! translateHeaders(
     clang::visitChildren(cursor, &vtor::global, (CXClientData) &visit_data);
   }
 
-  // foreach (zstr : cargs)
-  // {
-  //   allocator::free(tmem(), zstr);
-  // }
+  foreach (zstr : cargs)
+  {
+    allocator::free(tmem(), zstr);
+  }
 }
 
