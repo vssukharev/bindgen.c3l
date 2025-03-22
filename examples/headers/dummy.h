@@ -1,11 +1,30 @@
 
+#include <stdint.h>
+
 /*
-macro @vkApiVersionVariant(#version)
+struct Hello
 {
-  return (uint)(#version) >> 29U
+  ulong transform;
+  bitstruct : uint
+  {
+    uint instanceCustomIndex : 0..20;
+    ushort mask : 21..23;
+  }
+  char a;
+  bitstruct : ulong
+  {
+    char instanceShaderBindingTableRecordOffset : 0..6;
+    uint flags : 7..33;
+  }
+  ulong accelerationStructureReference;
 }
 */
 
-#define VK_API_VERSION_MAJOR(version) (((uint32_t)(version) >> 22U) & 0x7FU)
-#define MACRO_FUN(arg1, arg2, base) base##t // unchanged
+typedef struct Hello {
+    uint64_t transform;
+    uint32_t instanceCustomIndex:28;
+    uint16_t mask:4;
+    uint8_t a;
+    uint64_t accelerationStructureReference;
+} Hello;
 

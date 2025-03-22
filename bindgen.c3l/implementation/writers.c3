@@ -1,6 +1,7 @@
 
 module bindgen::wter @private;
-import bindgen::bg @public;
+import bindgen::bg @public,
+       bindgen::err @public;
 import std::io, clang;
 
 <*
@@ -168,17 +169,14 @@ fn usz! moduleHead(
 *>
 fn usz! structDecl(
   File* out,
-  VarDecl[] fields,
+  FieldsC3* fields,
   String translated_name) 
 @maydiscard
 {
   usz acc;
 
   acc += io::fprintfn(out, "struct %s {", translated_name)!;
-  foreach (p : fields) 
-  {
-    acc += io::fprintfn(out, "  %s %s;", p.type, p.name)!;
-  }
+  acc += wter::fields(out, fields)!;
   acc += io::fprintfn(out, "}\n")!;
   
   return acc;
@@ -186,20 +184,46 @@ fn usz! structDecl(
 
 fn usz! unionDecl(
   File* out,
-  VarDecl[] fields,
+  FieldsC3* fields,
   String translated_name) 
 @maydiscard
 {
   usz acc;
 
   acc += io::fprintfn(out, "union %s {", translated_name)!;
-  foreach (p : fields) 
-  {
-    acc += io::fprintfn(out, "  %s %s;", p.type, p.name)!;
-  }
+  acc += wter::fields(out, fields)!;
   acc += io::fprintfn(out, "}\n")!;
   
   return acc;
+}
 
+fn usz! fields(
+  File* out,
+  FieldsC3* fs)
+{
+  usz acc;
+
+  usz norm_c;
+  usz bit_c;
+  foreach (FieldC3Kind k : fs.kinds[:fs.len()])
+  {
+    switch (k)
+    {
+      case NORMAL:
+        acc += io::fprintfn(out, "  %s %s;", fs.norm[norm_c].type, fs.norm[norm_c].name)!;
+        ++norm_c;
+
+      case BITSTRUCT:
+        acc += io::fprintfn(out, "  bitstruct : %s {", fs.bit[bit_c].under_type)!;
+        foreach (BitFieldC3 bf : fs.bit[bit_c].fields)
+        {
+          acc += io::fprintfn(out, "    %s %s : %s..%s;", bf.val.type, bf.val.name, bf.from, bf.to)!;
+        }
+        acc += io::fprintfn(out, "  }")!;
+        ++bit_c;
+    }
+  }
+
+  return acc;
 }
 

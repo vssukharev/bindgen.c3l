@@ -182,18 +182,22 @@ fn CXChildVisitResult fields(
   CXCursor parent, 
   CXClientData client_data)
 {
-  StructVisitData* vd = (StructVisitData*) client_data;
+  FieldsVisitData* vd = (FieldsVisitData*) client_data;
 
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
   String name_str = trans::convStr(name_spell);
-  String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
 
   CXType type = clang::getCursorType(cursor);
-  String trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
   
-  vd.fields.push({trans_type_str, trans_name_str});
+  vd.fields.widths[vd.current] = clang::getFieldDeclBitWidth(cursor);
 
+  vd.fields.vals[vd.current] = { 
+    .type = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table),
+    .name = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator), 
+  };
+
+  ++vd.current;
   return clang::CHILD_VISIT_CONTINUE;
 }
 

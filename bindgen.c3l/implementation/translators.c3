@@ -6,6 +6,7 @@ import bindgen::bg @public,
        bindgen::wter @public, 
        bindgen::err @public,
        bindgen::misc @public,
+       bindgen::algo @public,
        std::collections::list;
 import std::io, clang;
 
@@ -236,24 +237,49 @@ fn usz! structDecl(
   CXCursor cursor) 
 @maydiscard
 {
-  @pool() {
+  @pool() 
+  {
     CXType type = clang::getCursorType(cursor);
     String type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
 
-    StructVisitData vd_struct = {
+    // Get fields quantity
+    usz fields_len;
+    clang::visitChildren(
+      cursor, 
+      fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
+      {
+        usz* fields_len = (usz*) client_data;
+        ++*fields_len;
+        return clang::CHILD_VISIT_CONTINUE;
+      },
+      (CXClientData) &fields_len
+    );
+    
+    // If no fields are defined, type is incomplete
+    if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
+  
+    FieldsVisitData vd_struct = {
       .g = vd,
       .allocator = allocator::temp(),
+      .fields = {
+        .vals = mem::temp_array(VarDecl, fields_len).ptr,
+        .widths = mem::temp_array(CInt, fields_len).ptr,
+        .len = fields_len,
+      },
     };
 
-    vd_struct.fields.tinit(4);
-  
     // Translate function parameters and store them into vd_struct.fields
     clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct);
 
-    // If no fields are defined, type is incomplete
-    if (vd_struct.fields.len() == 0) return wter::typedefDist(vd.out, type_name, "void");
+    FieldsC3! c3_fields = algo::getC3Fields(tmem(), vd_struct.fields);
 
-    return wter::structDecl(vd.out, vd_struct.fields.array_view(), type_name);
+    if (catch c3_fields)
+    {
+      err::warn("Can't translate bit fields within struct %s, skipping...", type_name);
+      return 0;
+    }
+
+    return wter::structDecl(vd.out, &c3_fields, type_name);
   };
 }
 
@@ -318,20 +344,44 @@ fn usz! unionDecl(
     CXType type = clang::getCursorType(cursor);
     String type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
 
-    StructVisitData vd_struct = {
+    // Get fields quantity
+    usz fields_len;
+    clang::visitChildren(
+      cursor, 
+      fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
+      {
+        usz* fields_len = (usz*) client_data;
+        ++*fields_len;
+        return clang::CHILD_VISIT_CONTINUE;
+      },
+      (CXClientData) &fields_len
+    );
+    
+    // If no fields are defined, type is incomplete
+    if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
+  
+    FieldsVisitData vd_struct = {
       .g = vd,
       .allocator = allocator::temp(),
+      .fields = {
+        .vals = mem::temp_array(VarDecl, fields_len).ptr,
+        .widths = mem::temp_array(CInt, fields_len).ptr,
+        .len = fields_len,
+      },
     };
 
-    vd_struct.fields.tinit(4);
-  
     // Translate function parameters and store them into vd_struct.fields
     clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct);
 
-    // If no fields are defined, type is incomplete
-    if (vd_struct.fields.len() == 0) return wter::typedefDist(vd.out, type_name, "void");
+    FieldsC3! c3_fields = algo::getC3Fields(tmem(), vd_struct.fields);
 
-    return wter::unionDecl(vd.out, vd_struct.fields.array_view(), type_name);
+    if (catch c3_fields)
+    {
+      err::warn("Can't translate bit fields within struct %s, skipping...", type_name);
+      return 0;
+    }
+
+    return wter::unionDecl(vd.out, &c3_fields, type_name);
   };
 }
 
