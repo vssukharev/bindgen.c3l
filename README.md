@@ -16,8 +16,9 @@ WIP C bindings generation library for C3 language.
 > [!CAUTION]
 > Currently c3c is in development so it's not stable. To be sure that you are using a correct version of the compiler, look at the 'flake.lock': "nodes"- > "c3c" -> "lock" -> "rev". 
 
-1. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
-2. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
+1. Install [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html) on your system (library for parsing C files).
+2. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
+3. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
 ```json
 {
   "targets": {
@@ -27,7 +28,7 @@ WIP C bindings generation library for C3 language.
   },
 }
 ```
-3. Import the module into your project. NOTICE: you must prefix functions with `bg`, not `bindgen` module name, for instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
+4. Import the module into your project. NOTICE: you must prefix functions with `bg`, not `bindgen` module name, for instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
 
 ## Examples
 
