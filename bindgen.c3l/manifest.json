@@ -9,5 +9,10 @@
       "linked-libraries" : [ "clang" ],
       "sources" : [ "implementation/**" ]
     },
+    "macos-aarch64" : {
+      "linked-libraries" : [ "clang" ],
+      "link-args" : [ "-L /Library/Developer/CommandLineTools/usr/lib -rpath /Library/Developer/CommandLineTools/usr/lib" ],
+      "sources" : [ "implementation/**" ]
+    },
   }
 }
