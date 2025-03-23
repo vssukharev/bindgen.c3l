@@ -1,14 +1,11 @@
 
-module bindgen::bg;
-import bindgen::err @public, 
-       bindgen::wter @public,
-       bindgen::user @public,
-       bindgen::vtor @public;
+module bindgen::impl::api @private;
+import bindgen::bg @public;
+import bindgen::impl @public; 
 import clang, std::collections::map, std::io, std::os::process;
 
 const TRANSLATION_UNIT_PARSE_FLAGS =
   clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
-// | clang::TRANSLATION_UNIT_INCLUDE_ATTRIBUTED_TYPES
 | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
 | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
 // | clang::TRANSLATION_UNIT_KEEP_GOING
@@ -16,29 +13,7 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
 // | clang::TRANSLATION_UNIT_SINGLE_FILE_PARSE
 ;
 
-def BGTransFn = fn String (String old, Allocator allocator = allocator::heap());
-
-struct BGTransCallbacks
-{
-  BGTransFn func;
-  BGTransFn type;
-  BGTransFn variable;
-  BGTransFn constant;
-  BGTransFn func_macro;
-}
-
-fault BGParseError
-{
-  FAILURE, 
-  CRASHED, 
-  INVALID_ARGUMENTS,
-}
-
-<* 
- TODO: add support for custom compilation flags
- @param output_file_name "if stdout, write to stdout; otherwise, write to file on privided path"
-*>
-fn void! translateHeaders(
+fn void? translateHeaders(
   String[] header_file_names, 
   String output_file_name, 
   BGTransCallbacks callbacks, 
@@ -69,7 +44,7 @@ fn void! translateHeaders(
 
   wter::moduleHead(&out, module_name);
 
-  ZString[] cargs = user::getParseCommandArgs(tmem(), command_options)!;
+  ZString[] cargs = user::getParseCommandArgs(tmem, command_options)!;
 
   foreach (header_name : header_file_names)
   {
@@ -93,7 +68,7 @@ fn void! translateHeaders(
 
   foreach (zstr : cargs)
   {
-    allocator::free(tmem(), zstr);
+    allocator::free(tmem, zstr);
   }
 }
 

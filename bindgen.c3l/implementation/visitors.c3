@@ -1,11 +1,6 @@
 
-module bindgen::vtor @private;
-import bindgen::bg @public, 
-       bindgen::trans @public, 
-       bindgen::ttor @public, 
-       bindgen::wter @public, 
-       bindgen::err @public,
-       bindgen::misc @public;
+module bindgen::impl::vtor @private;
+import bindgen::bg, bindgen::impl @public;
 import std::io, clang;
 
 <*
@@ -42,7 +37,7 @@ fn CXChildVisitResult global(
   {
     case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
     case clang::CURSOR_STRUCT_DECL: ttor::structDecl(vd, cursor);
-    case clang::CURSOR_TYPEDEF_DECL: ttor::typedef(vd, cursor);
+    case clang::CURSOR_TYPEDEF_DECL: ttor::typedefDecl(vd, cursor);
     case clang::CURSOR_VAR_DECL: ttor::constDecl(vd, cursor);
     case clang::CURSOR_ENUM_DECL: ttor::enumDecl(vd, cursor);
     case clang::CURSOR_MACRO_DEFINITION: ttor::macroDef(vd, cursor);
@@ -95,7 +90,7 @@ fn CXChildVisitResult enumConstDecl(
     CXToken* tokens;
     uint tokens_len;
 
-    String trans_tokens = trans::tokensUnderCursor(tmem(), cursor, &vd.g.trans_fns);
+    String trans_tokens = trans::tokensUnderCursor(tmem, cursor, &vd.g.trans_fns);
     vd.val.append(trans_tokens);
    
     return clang::CHILD_VISIT_CONTINUE;

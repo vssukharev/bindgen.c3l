@@ -1,15 +1,11 @@
 
-module bindgen::algo @private;
-import bindgen::bg @public,
-       bindgen::err @public,
-       std::collections::list;
+module bindgen::impl::algo @private;
+import bindgen::impl @public; 
+import std::collections::list;
 
-fault AlgoErr
-{
-  FATAL
-}
+faultdef ERROR;
 
-def RangeStrList = List{RangeStr} @local;
+alias RangeStrList @local = List{RangeStr};
 struct RangeStr @local
 {
   String str;
@@ -26,7 +22,7 @@ struct RangeStr @local
    - Once width is power of 2, we set it in FieldsC3 with underlying type, which size equals to the accumulated width
  3. Then it allocates everything that is needed via an allocator and returns the resulting structure
 *>
-fn FieldsC3! getC3Fields(Allocator alloc, Fields cfs)
+fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs)
 {
   // Calculate length
   usz norm_fields_count;
@@ -62,7 +58,7 @@ fn FieldsC3! getC3Fields(Allocator alloc, Fields cfs)
         case 128:
           ranges.push({ .str = "uint128", .left = bit_field_seg, .right = i });               
         default:
-          return AlgoErr.FATAL?;
+          return algo::ERROR?;
       }
 
       bit_field_seg = 0;

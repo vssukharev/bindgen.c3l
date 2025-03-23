@@ -1,6 +1,6 @@
 
-module bindgen::misc @private;
-import bindgen::trans @public;
+module bindgen::impl::misc @private;
+import bindgen::impl @public;
 import clang, std::io;
 
 <*

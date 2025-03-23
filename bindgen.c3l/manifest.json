@@ -3,16 +3,16 @@
   "targets" : {
     "linux-x86" : { 
       "linked-libraries" : [ "clang" ],
-      "sources" : [ "implementation/**" ]
+      "sources" : [ "**" ]
     },
     "linux-x64" : {
       "linked-libraries" : [ "clang" ],
-      "sources" : [ "implementation/**" ]
+      "sources" : [ "**" ]
     },
     "macos-aarch64" : {
       "linked-libraries" : [ "clang" ],
       "link-args" : [ "-L /Library/Developer/CommandLineTools/usr/lib -rpath /Library/Developer/CommandLineTools/usr/lib" ],
-      "sources" : [ "implementation/**" ]
+      "sources" : [ "**" ]
     },
   }
 }

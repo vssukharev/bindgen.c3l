@@ -14,7 +14,7 @@ import libc; // for Time_t
  * Zero (\c CXError_Success) is the only error code indicating success.  Other
  * error codes, including not yet assigned non-zero values, indicate errors.
  */
-distinct CXErrorCode = inline CInt;
+typedef CXErrorCode = inline CInt;
 
 /**
  * No error.
@@ -101,7 +101,7 @@ fn void disposeStringSet(
 /**
  * A particular source file that is part of a translation unit.
  */
-distinct CXFile = inline void*;
+typedef CXFile = inline void*;
 
 /**
  * Retrieve the complete file and path name of the given file.
@@ -452,7 +452,7 @@ fn void disposeSourceRangeList(
 /**
  * Describes the severity of a particular diagnostic.
  */
-distinct CXDiagnosticSeverity = inline CInt;
+typedef CXDiagnosticSeverity = inline CInt;
 
 /**
  * A diagnostic that has been suppressed, e.g., by a command-line
@@ -489,12 +489,12 @@ const CXDiagnosticSeverity DIAGNOSTIC_FATAL = 4;
  * A single diagnostic, containing the diagnostic's severity,
  * location, text, source ranges, and fix-it hints.
  */
-distinct CXDiagnostic = inline void*;
+typedef CXDiagnostic = inline void*;
 
 /**
  * A group of CXDiagnostics.
  */
-distinct CXDiagnosticSet = inline void*;
+typedef CXDiagnosticSet = inline void*;
 
 /**
  * Determine the number of diagnostics in a CXDiagnosticSet.
@@ -521,7 +521,7 @@ fn CXDiagnostic getDiagnosticInSet(
  * Describes the kind of error that occurred (if any) in a call to
  * \c clang_loadDiagnostics.
  */
-distinct CXLoadDiag_Error = inline CInt;
+typedef CXLoadDiag_Error = inline CInt;
 /**
  * Indicates that no error occurred.
  */
@@ -594,7 +594,7 @@ fn void disposeDiagnostic(
  * The values in this enum are meant to be combined to customize the
  * behavior of \c clang_formatDiagnostic().
  */
-distinct CXDiagnosticDisplayOptions = inline CInt;
+typedef CXDiagnosticDisplayOptions = inline CInt;
 
 /**
  * Display the source-location information where the
@@ -844,7 +844,7 @@ fn CXString getDiagnosticFixIt(
  *
  * Must be freed by \c clang_CompilationDatabase_dispose
  */
-distinct CXCompilationDatabase = inline void*;
+typedef CXCompilationDatabase = inline void*;
 
 /**
  * Contains the results of a search in the compilation database
@@ -855,17 +855,17 @@ distinct CXCompilationDatabase = inline void*;
  * commands is wrapped in this opaque data structure. It must be freed by
  * \c clang_CompileCommands_dispose.
  */
-distinct CXCompileCommands = inline void*;
+typedef CXCompileCommands = inline void*;
 
 /**
  * Represents the command line invocation to compile a specific file.
  */
-distinct CXCompileCommand = inline void*;
+typedef CXCompileCommand = inline void*;
 
 /**
  * Error codes for Compilation Database
  */
-distinct CXCompilationDatabase_Error = inline CInt;
+typedef CXCompilationDatabase_Error = inline CInt;
 
 /*
  * No error occurred
@@ -1009,7 +1009,7 @@ fn CULongLong getBuildSessionTimestamp()
  * Object encapsulating information about overlaying virtual
  * file/directories over the real file system.
  */
-distinct CXVirtualFileOverlay = inline void*;
+typedef CXVirtualFileOverlay = inline void*;
 
 /**
  * Create a \c CXVirtualFileOverlay object.
@@ -1079,7 +1079,7 @@ fn void dispose_VirtualFileOverlay(
 /**
  * Object encapsulating information about a module.modulemap file.
  */
-distinct CXModuleMapDescriptor = inline void*;
+typedef CXModuleMapDescriptor = inline void*;
 
 /**
  * Create a \c CXModuleMapDescriptor object.
@@ -1161,7 +1161,7 @@ fn CXComment getParsedComment_Cursor(
  * node can be considered block content (e. g., paragraph), inline content
  * (plain text) or neither (the root AST node).
  */
-distinct CXCommentKind = inline CInt;
+typedef CXCommentKind = inline CInt;
 
 /**
  * Null comment.  No AST node is constructed at the requested location
@@ -1272,7 +1272,7 @@ const CXCommentKind COMMENT_FULL_COMMENT = 12;
  * The most appropriate rendering mode for an inline command, chosen on
  * command semantics in Doxygen.
  */
-distinct CXCommentInlineCommandRenderKind = inline CInt;
+typedef CXCommentInlineCommandRenderKind = inline CInt;
 /**
  * Command argument should be rendered in a normal font.
  */
@@ -1302,7 +1302,7 @@ const CXCommentInlineCommandRenderKind COMMENT_INLINE_COMMAND_RENDER_KIND_ANCHOR
 /**
  * Describes parameter passing direction for \\param or \\arg command.
  */
-distinct CXCommentParamPassDirection = inline CInt;
+typedef CXCommentParamPassDirection = inline CInt;
 
 /**
  * The parameter is an input parameter.
@@ -1706,7 +1706,7 @@ fn CXString getAsXMLFullComment(
  * the API information for a given translation unit. This can be used for a
  * single symbol symbol graph for a given symbol.
  */
-distinct CXAPISet = inline void*;
+typedef CXAPISet = inline void*;
 
 /**
  * Traverses the translation unit to create a \c CXAPISet.
@@ -1801,7 +1801,7 @@ fn void uninstallLLVMFatalErrorHandler()
 |                                 |
 \*-------------------------------*/
 
-distinct CXRewriter = void*;
+typedef CXRewriter = void*;
 
 /**
  * Create CXRewriter.
@@ -1870,24 +1870,24 @@ fn void dispose_Rewriter(
  * An "index" that consists of a set of translation units that would
  * typically be linked together into an executable or library.
  */
-distinct CXIndex = inline void*;
+typedef CXIndex = inline void*;
 
 /**
  * An opaque type representing target information for a given translation
  * unit.
  */
-distinct CXTargetInfo = inline void*;
+typedef CXTargetInfo = inline void*;
 
 /**
  * A single translation unit, which resides in an index.
  */
-distinct CXTranslationUnit = inline void*;
+typedef CXTranslationUnit = inline void*;
 
 /**
  * Opaque pointer representing client data that will be passed through
  * to various callbacks and visitors.
  */
-distinct CXClientData = inline void*;
+typedef CXClientData = inline void*;
 
 /**
  * Provides the contents of a file that has not yet been saved to disk.
@@ -1920,7 +1920,7 @@ struct CXUnsavedFile {
  * whether the use of this entity will result in a warning or error due to
  * it being deprecated or unavailable.
  */
-distinct CXAvailabilityKind = inline CInt;
+typedef CXAvailabilityKind = inline CInt;
 
 /**
  * The entity is available.
@@ -1971,7 +1971,7 @@ struct CXVersion {
  *
  * A negative value indicates that the cursor is not a function declaration.
  */
-distinct CXCursor_ExceptionSpecificationKind = inline CInt;
+typedef CXCursor_ExceptionSpecificationKind = inline CInt;
 
 /**
  * The cursor has no exception specification.
@@ -2070,7 +2070,7 @@ fn void disposeIndex(
   CXIndex index) 
 @extern("clang_disposeIndex");
 
-distinct CXChoice = inline CInt;
+typedef CXChoice = inline CInt;
 
 /*
  * Use the default value of an option that may depend on the process
@@ -2086,7 +2086,7 @@ const CXChoice CHOICE_ENABLED = 1;
  */
 const CXChoice CHOICE_DISABLED = 2;
 
-distinct CXGlobalOptFlags = inline CInt;
+typedef CXGlobalOptFlags = inline CInt;
 /*
  * Used to indicate that no special CXIndex options are needed.
  */
@@ -2500,7 +2500,7 @@ fn CXErrorCode createTranslationUnit2(
  * ORed together to specify which options should be used when
  * constructing the translation unit.
  */
-distinct CXTranslationUnit_Flags = inline CInt;
+typedef CXTranslationUnit_Flags = inline CInt;
 
 /*
  * Used to indicate that no special translation-unit options are
@@ -2742,7 +2742,7 @@ fn CXErrorCode parseTranslationUnit2FullArgv(
  * ORed together to specify which options should be used when
  * saving the translation unit.
  */
-distinct CXSaveTranslationUnit_Flags = inline CInt;
+typedef CXSaveTranslationUnit_Flags = inline CInt;
 
 /*
  * Used to indicate that no special saving options are needed.
@@ -2766,7 +2766,7 @@ fn CUInt defaultSaveOptions(
  * Describes the kind of error that occurred (if any) in a call to
  * \c clang_saveTranslationUnit().
  */
-distinct CXSaveError = inline CInt; 
+typedef CXSaveError = inline CInt; 
 
 /*
  * Indicates that no error occurred while saving a translation unit.
@@ -2848,7 +2848,7 @@ fn void disposeTranslationUnit(
  * ORed together to specify which options should be used when
  * reparsing the translation unit.
  */
-distinct CXReparse_Flags = inline CInt;
+typedef CXReparse_Flags = inline CInt;
 
 const CXReparse_Flags REPARSE_FLAGS_NONE = 0x0;
 
@@ -2915,7 +2915,7 @@ fn CInt reparseTranslationUnit(
 /**
  * Categorizes how memory is being used by a translation unit.
  */
-distinct CXTUResourceUsageKind = inline CInt; 
+typedef CXTUResourceUsageKind = inline CInt; 
 
 const CXTUResourceUsageKind TU_RESOURCE_USAGE_AST = 1;
 const CXTUResourceUsageKind TU_RESOURCE_USAGE_IDENTIFIERS = 2;
@@ -3018,7 +3018,7 @@ fn CInt getPointerWidth_TargetInfo(
 /**
  * Describes the kind of entity that a cursor refers to.
  */
-distinct CXCursorKind = inline CInt;
+typedef CXCursorKind = inline CInt;
 
 /* Declarations */
 /**
@@ -4276,7 +4276,7 @@ fn CUInt isUnexposed(
 /**
  * Describe the linkage of the entity referred to by a cursor.
  */
-distinct CXLinkageKind = inline CInt;
+typedef CXLinkageKind = inline CInt;
 
 /** This value indicates that no linkage information is available
  * for a provided CXCursor. 
@@ -4305,7 +4305,7 @@ fn CXLinkageKind getCursorLinkage(
   CXCursor cursor) 
 @extern("clang_getCursorLinkage");
 
-distinct CXVisibilityKind = inline CInt;
+typedef CXVisibilityKind = inline CInt;
 
 /** This value indicates that no visibility information is available
  * for a provided CXCursor. 
@@ -4467,7 +4467,7 @@ fn CInt hasVarDeclExternalStorage_Cursor(
 /**
  * Describe the "language" of the entity referred to by a cursor.
  */
-distinct CXLanguageKind = inline CInt;
+typedef CXLanguageKind = inline CInt;
 const CXLinkageKind LANGUAGE_INVALID = 0;
 const CXLinkageKind LANGUAGE_C = 1;
 const CXLinkageKind LANGUAGE_OBJC = 2;
@@ -4484,7 +4484,7 @@ fn CXLanguageKind getCursorLanguage(
  * Describe the "thread-local storage (TLS) kind" of the declaration
  * referred to by a cursor.
  */
-distinct CXTLSKind = inline CInt;
+typedef CXTLSKind = inline CInt;
 const CXTLSKind TLS_NONE = 0;
 const CXTLSKind TLS_DYNAMIC = 1;
 const CXTLSKind TLS_STATIC = 2;
@@ -4507,7 +4507,7 @@ fn CXTranslationUnit getTranslationUnit_Cursor(
 /**
  * A fast container representing a set of CXCursors.
  */
-distinct CXCursorSet = inline void*;
+typedef CXCursorSet = inline void*;
 
 /**
  * Creates an empty CXCursorSet.
@@ -4734,7 +4734,7 @@ fn CXSourceRange getCursorExtent(
 /**
  * Describes the kind of type
  */
-distinct CXTypeKind = inline CInt;
+typedef CXTypeKind = inline CInt;
 
 /**
  * Represents an invalid type (e.g., where no type is available).
@@ -4892,7 +4892,7 @@ const CXTypeKind TYPE_BTF_TAG_ATTRIBUTED = 17;
 /**
  * Describes the calling convention of a function type
  */
-distinct CXCallingConv = inline CInt;
+typedef CXCallingConv = inline CInt;
 
 const CXCallingConv CALLING_CONV_DEFAULT = 0;
 const CXCallingConv CALLING_CONV_C = 1;
@@ -5046,7 +5046,7 @@ fn CXCursor getArgument_Cursor(
  * See the definition of llvm::clang::TemplateArgument::ArgKind for full
  * element descriptions.
  */
-distinct CXTemplateArgumentKind = inline CInt;
+typedef CXTemplateArgumentKind = inline CInt;
 
 const CXTemplateArgumentKind TEMPLATE_ARGUMENT_KIND_NULL = 0;
 const CXTemplateArgumentKind TEMPLATE_ARGUMENT_KIND_TYPE = 1;
@@ -5538,7 +5538,7 @@ fn CUInt isTransparentTagTypedef_Type(
   CXType t) 
 @extern("clang_Type_isTransparentTagTypedef");
 
-distinct CXTypeNullabilityKind = inline CInt;
+typedef CXTypeNullabilityKind = inline CInt;
 /**
  * Values of this type can never be null.
  */
@@ -5582,7 +5582,7 @@ fn CXTypeNullabilityKind getNullability_Type(
  * A value of this enumeration type can be returned if the target type is not
  * a valid argument to sizeof, alignof or offsetof.
  */
-distinct CXTypeLayoutError = inline CInt;
+typedef CXTypeLayoutError = inline CInt;
 
 /**
  * Type is of kind CXType_Invalid.
@@ -5722,7 +5722,7 @@ fn CUInt isInlineNamespace_Cursor(
   CXCursor c) 
 @extern("clang_Cursor_isInlineNamespace");
 
-distinct CXRefQualifierKind = inline CInt;
+typedef CXRefQualifierKind = inline CInt;
 
 /** No ref-qualifier was provided. 
   */
@@ -5776,7 +5776,7 @@ fn CUInt isVirtualBase(
  * Represents the C++ access control level to a base class for a
  * cursor with kind CX_CXXBaseSpecifier.
  */
-distinct CX_CXXAccessSpecifier = inline CInt;
+typedef CX_CXXAccessSpecifier = inline CInt;
 
 const CX_CXXAccessSpecifier CXX_INVALID_ACCESS_SPECIFIER = 0;
 const CX_CXXAccessSpecifier CXX_PUBLIC = 1;
@@ -5798,7 +5798,7 @@ fn CX_CXXAccessSpecifier getCXXAccessSpecifier(
  * Represents the storage classes as declared in the source. CX_SC_Invalid
  * was added for the case that the passed cursor in not a declaration.
  */
-distinct CX_StorageClass = inline CInt;
+typedef CX_StorageClass = inline CInt;
 
 const CX_StorageClass SC_INVALID = 0;
 const CX_StorageClass SC_NONE = 1;
@@ -5867,7 +5867,7 @@ fn CXType getIBOutletCollectionType(
  * A value of this enumeration type should be returned by each
  * \c CXCursorVisitor to indicate how clang_visitChildren() proceed.
  */
-distinct CXChildVisitResult = inline CInt;
+typedef CXChildVisitResult = inline CInt;
 /**
  * Terminates the cursor traversal.
  */
@@ -5895,7 +5895,7 @@ const CXChildVisitResult CHILD_VISIT_RECURSE = 2;
  * The visitor should return one of the \c CXChildVisitResult values
  * to direct clang_visitCursorChildren().
  */
-def CXCursorVisitor = fn CXChildVisitResult(
+alias CXCursorVisitor = fn CXChildVisitResult(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data);
@@ -5938,7 +5938,7 @@ fn CUInt visitChildren(
  * The visitor should return one of the \c CXChildVisitResult values
  * to direct clang_visitChildrenWithBlock().
  */
-distinct CXCursorVisitorBlock = void*;
+typedef CXCursorVisitorBlock = void*;
 
 /**
  * Visits the children of a cursor using the specified block.  Behaves
@@ -6040,14 +6040,14 @@ fn CXSourceRange getSpellingNameRange_Cursor(
  * Opaque pointer representing a policy that controls pretty printing
  * for \c clang_getCursorPrettyPrinted.
  */
-distinct CXPrintingPolicy = inline void*;
+typedef CXPrintingPolicy = inline void*;
 
 /**
  * Properties for the printing policy.
  *
  * See \c clang::PrintingPolicy for more information.
  */
-distinct CXPrintingPolicyProperty = inline CInt;
+typedef CXPrintingPolicyProperty = inline CInt;
 
 const CXPrintingPolicyProperty PRINTING_POLICY_INDENTATION = 0;
 const CXPrintingPolicyProperty PRINTING_POLICY_SUPPRESS_SPECIFIERS = 1;
@@ -6262,7 +6262,7 @@ fn CXType getReceiverType_Cursor(
 /**
  * Property attributes for a \c CXCursor_ObjCPropertyDecl.
  */
-distinct CXObjCPropertyAttrKind = inline CInt;
+typedef CXObjCPropertyAttrKind = inline CInt;
 
 const CXObjCPropertyAttrKind OBJC_PROPERTY_ATTR_NOATTR = 0x00;
 const CXObjCPropertyAttrKind OBJC_PROPERTY_ATTR_READONLY = 0x01;
@@ -6311,7 +6311,7 @@ fn CXString getObjCPropertySetterName_Cursor(
  * 'Qualifiers' written next to the return and parameter types in
  * Objective-C method declarations.
  */
-distinct CXObjCDeclQualifierKind = inline CInt;
+typedef CXObjCDeclQualifierKind = inline CInt;
 
 const CXObjCPropertyAttrKind OBJC_DECL_QUALIFIER_NONE = 0x0;
 const CXObjCPropertyAttrKind OBJC_DECL_QUALIFIER_IN = 0x1;
@@ -6416,7 +6416,7 @@ fn CXStringSet* getObjCManglings_Cursor(
   CXCursor c) 
 @extern("clang_Cursor_getObjCManglings");
 
-distinct CXModule = inline void*;
+typedef CXModule = inline void*;
 
 /**
  * Given a CXCursor_ModuleImportDecl cursor, return the associated module.
@@ -6779,7 +6779,7 @@ fn CXSourceRange getCursorReferenceNameRange(
   CUInt piece_index) 
 @extern("clang_getCursorReferenceNameRange");
 
-distinct CXNameRefFlags = inline CInt;
+typedef CXNameRefFlags = inline CInt;
 
 /**
  * Include the nested-name-specifier, e.g. Foo:: in x.Foo::y, in the
@@ -6808,7 +6808,7 @@ const CXNameRefFlags NAME_RANGE_WANT_SINGLE_PIECE = 0x4;
 /**
  * Describes a kind of token.
  */
-distinct CXTokenKind = inline CInt;
+typedef CXTokenKind = inline CInt;
 
 /**
  * A token that contains some kind of punctuation.
@@ -6982,7 +6982,7 @@ fn void getDefinitionSpellingAndExtent(
 fn void enableStackTraces() 
 @extern("clang_enableStackTraces");
 
-def VoidPtrCallback = fn void(void*) @private;
+alias VoidPtrCallback @private = fn void(void*);
 
 fn void executeOnThread(
   VoidPtrCallback func, 
@@ -7003,7 +7003,7 @@ fn void executeOnThread(
  * with actual code,of a specific kind. See \c CXCompletionChunkKind for a
  * description of the different kinds of chunks.
  */
-distinct CXCompletionString = inline void*;
+typedef CXCompletionString = inline void*;
 
 /**
  * A single result of code completion.
@@ -7035,7 +7035,7 @@ struct CXCompletionResult {
  * either a piece of text with a specific "kind" that describes how that text
  * should be interpreted by the client or is another completion string.
  */
-distinct CXCompletionChunkKind = inline CInt;
+typedef CXCompletionChunkKind = inline CInt;
 
 /**
  * A code-completion string that describes "optional" text that
@@ -7445,7 +7445,7 @@ fn CXString getCompletionFixIt(
  * The enumerators in this enumeration can be bitwise-OR'd together to
  * provide multiple options to \c clang_codeCompleteAt().
  */
-distinct CXCodeComplete_Flags = inline CInt;
+typedef CXCodeComplete_Flags = inline CInt;
 
 /**
  * Whether to include macros within the set of code
@@ -7484,7 +7484,7 @@ const CXCodeComplete_Flags CODE_COMPLETE_INCLUDE_COMPLETION_SWITH_FIX_ITS = 0x10
  * The enumerators in this enumeration may be bitwise-OR'd together if multiple
  * contexts are occurring simultaneously.
  */
-distinct CXCompletionContext = inline CInt;
+typedef CXCompletionContext = inline CInt;
 
 /**
  * The context for completions is unexposed, as only Clang results
@@ -7821,7 +7821,7 @@ fn void toggleCrashRecovery(
  * array is sorted in order of immediate inclusion.  For example,
  * the first element refers to the location that included 'included_file'.
  */
-def CXInclusionVisitor = fn void(
+alias CXInclusionVisitor = fn void(
   CXFile included_file,
   CXSourceLocation* inclusion_stack,
   CUInt include_len,
@@ -7839,7 +7839,7 @@ fn void getInclusions(
   CXClientData client_data) 
 @extern("clang_getInclusions");
 
-distinct CXEvalResultKind = inline CInt;
+typedef CXEvalResultKind = inline CInt;
 
 const CXEvalResultKind EVAL_INT = 1;
 const CXEvalResultKind EVAL_FLOAT = 2;
@@ -7853,7 +7853,7 @@ const CXEvalResultKind EVAL_UNEXPOSED = 0;
 /**
  * Evaluation result of a cursor
  */
-distinct CXEvalResult = inline void*;
+typedef CXEvalResult = inline void*;
 
 /**
  * If cursor is a statement declaration tries to evaluate the
@@ -7933,7 +7933,7 @@ fn void dispose_EvalResult(
 /**
  * A remapping of original source files and their translated files.
  */
-distinct CXRemapping = inline void*;
+typedef CXRemapping = inline void*;
 
 /**
  * Retrieve a remapping.
@@ -7991,18 +7991,18 @@ fn void remap_dispose(
   CXRemapping remap) 
 @extern("clang_remap_dispose");
 
-distinct CXVisitorResult = inline CInt;
+typedef CXVisitorResult = inline CInt;
 
 const CXVisitorResult VISIT_BREAK = 0;
 const CXVisitorResult VISIT_CONTINUE = 1;
 
-def _CXCursorAndRangeVisitor = fn CXVisitorResult(void *context, CXCursor, CXSourceRange);
+alias _CXCursorAndRangeVisitor = fn CXVisitorResult(void *context, CXCursor, CXSourceRange);
 struct CXCursorAndRangeVisitor {
   void* context;
   _CXCursorAndRangeVisitor visit;
 }
 
-distinct CXResult = inline CInt;
+typedef CXResult = inline CInt;
 /**
  * Function returned successfully.
  */
@@ -8055,7 +8055,7 @@ fn CXResult findIncludesInFile(
   CXCursorAndRangeVisitor visitor) 
 @extern("clang_findIncludesInFile");
 
-distinct CXCursorAndRangeVisitorBlock = inline void*;
+typedef CXCursorAndRangeVisitorBlock = inline void*;
 
 fn CXResult findReferencesInFileWithBlock(
   CXCursor cursor, 
@@ -8072,24 +8072,24 @@ fn CXResult findIncludesInFileWithBlock(
 /**
  * The client's data object that is associated with a CXFile.
  */
-distinct CXIdxClientFile = inline void*;
+typedef CXIdxClientFile = inline void*;
 
 /**
  * The client's data object that is associated with a semantic entity.
  */
-distinct CXIdxClientEntity = inline void*;
+typedef CXIdxClientEntity = inline void*;
 
 /**
  * The client's data object that is associated with a semantic container
  * of entities.
  */
-distinct CXIdxClientContainer = inline void*;
+typedef CXIdxClientContainer = inline void*;
 
 /**
  * The client's data object that is associated with an AST file (PCH
  * or module).
  */
-distinct CXIdxClientASTFile = inline void*;
+typedef CXIdxClientASTFile = inline void*;
 
 /**
  * Source location passed to index callbacks.
@@ -8147,7 +8147,7 @@ struct CXIdxImportedASTFileInfo {
   CInt is_implicit;
 }
 
-distinct CXIdxEntityKind = inline CInt;
+typedef CXIdxEntityKind = inline CInt;
 
 const CXIdxEntityKind IDX_ENTITY_UNEXPOSED = 0;
 const CXIdxEntityKind IDX_ENTITY_TYPEDEF = 1;
@@ -8182,7 +8182,7 @@ const CXIdxEntityKind IDX_ENTITY_CXX_TYPE_ALIAS = 25;
 const CXIdxEntityKind IDX_ENTITY_CXX_INTERFACE = 26;
 const CXIdxEntityKind IDX_ENTITY_CXX_CONCEPT = 27;
 
-distinct CXIdxEntityLanguage = inline CInt;
+typedef CXIdxEntityLanguage = inline CInt;
 
 const CXIdxEntityLanguage IDX_ENTITY_LANG_NONE = 0;
 const CXIdxEntityLanguage IDX_ENTITY_LANG_C = 1;
@@ -8200,14 +8200,14 @@ const CXIdxEntityLanguage IDX_ENTITY_LANG_SWIFT = 4;
  * CXIdxEntity_CXXConversionFunction
  * CXIdxEntity_CXXTypeAlias
  */
-distinct CXIdxEntityCXXTemplateKind = inline CInt;
+typedef CXIdxEntityCXXTemplateKind = inline CInt;
 
 const CXIdxEntityKind IDX_ENTITY_NON_TEMPLATE = 0;
 const CXIdxEntityKind IDX_ENTITY_TEMPLATE = 1;
 const CXIdxEntityKind IDX_ENTITY_TEMPLATE_PARTIAL_SPECIALIZATION = 2;
 const CXIdxEntityKind IDX_ENTITY_TEMPLATE_SPECIALIZATION = 3;
 
-distinct CXIdxAttrKind = inline CInt;
+typedef CXIdxAttrKind = inline CInt;
 
 const CXIdxAttrKind IDX_ATTR_UNEXPOSED = 0;
 const CXIdxAttrKind IDX_ATTR_IB_ACTION = 1;
@@ -8242,7 +8242,7 @@ struct CXIdxIBOutletCollectionAttrInfo {
   CXIdxLoc class_loc;
 }
 
-distinct CXIdxDeclInfoFlags = inline CInt;
+typedef CXIdxDeclInfoFlags = inline CInt;
 const CXIdxDeclInfoFlags IDX_DECL_FLAG_SKIPPED = 0x1;
 
 struct CXIdxDeclInfo {
@@ -8270,7 +8270,7 @@ struct CXIdxDeclInfo {
   CUInt flags;
 }
 
-distinct CXIdxObjCContainerKind = inline CInt;
+typedef CXIdxObjCContainerKind = inline CInt;
 const CXIdxObjCContainerKind IDX_OBJC_CONTAINER_FORWARD_REF = 0;
 const CXIdxObjCContainerKind IDX_OBJC_CONTAINER_INTERFACE = 1;
 const CXIdxObjCContainerKind IDX_OBJC_CONTAINER_IMPLEMENTATION = 2;
@@ -8329,7 +8329,7 @@ struct CXIdxCXXClassDeclInfo {
  * This may be deprecated in a future version as this duplicates
  * the \c CXSymbolRole_Implicit bit in \c CXSymbolRole.
  */
-distinct CXIdxEntityRefKind = inline CInt;
+typedef CXIdxEntityRefKind = inline CInt;
 /**
  * The entity is referenced directly in user's code.
  */
@@ -8346,7 +8346,7 @@ const CXIdxEntityRefKind IDX_ENTITY_REF_IMPLICIT = 2;
  * Internal: this currently mirrors low 9 bits of clang::index::SymbolRole with
  * higher bits zeroed. These high bits may be exposed in the future.
  */
-distinct CXSymbolRole = inline CInt;
+typedef CXSymbolRole = inline CInt;
 const CXSymbolRole SYMBOL_ROLE_NONE = 0;
 const CXSymbolRole SYMBOL_ROLE_DECLARATION = 1 << 0;
 const CXSymbolRole SYMBOL_ROLE_DEFINITION = 1 << 1;
@@ -8396,37 +8396,37 @@ struct CXIdxEntityRefInfo {
 
 module clang @private;
 
-def _IndexerCallbackAbortQuery = fn CInt(
+alias _IndexerCallbackAbortQuery = fn CInt(
   CXClientData client_data, 
   void* reserved);
 
-def _IndexerCallbackDiagnostic = fn void(
+alias _IndexerCallbackDiagnostic = fn void(
   CXClientData client_data, 
   CXDiagnosticSet ds, 
   void* reserved);
 
-def _IndexerCallbackEnteredMainFile = fn CXIdxClientFile(
+alias _IndexerCallbackEnteredMainFile = fn CXIdxClientFile(
   CXClientData client_data, 
   CXFile mainFile, 
   void* reserved);
 
-def _IndexerCallbackIncludedFile = fn CXIdxClientFile(
+alias _IndexerCallbackIncludedFile = fn CXIdxClientFile(
   CXClientData client_data, 
   CXIdxIncludedFileInfo* file_info);
 
-def _IndexerCallbackImportedASTFile = fn CXIdxClientASTFile(
+alias _IndexerCallbackImportedASTFile = fn CXIdxClientASTFile(
   CXClientData client_data, 
   CXIdxImportedASTFileInfo* file_info);
 
-def _IndexerCallbackStartedTU = fn CXIdxClientContainer(
+alias _IndexerCallbackStartedTU = fn CXIdxClientContainer(
   CXClientData client_data, 
   void* reserved);
 
-def _IndexerCallbackIndexDecl = fn void(
+alias _IndexerCallbackIndexDecl = fn void(
   CXClientData client_data, 
   CXIdxDeclInfo* decl_info);
 
-def _IndexerCallbackIndexEntityRef = fn void(
+alias _IndexerCallbackIndexEntityRef = fn void(
   CXClientData client_data, 
   CXIdxEntityRefInfo* entity_ref_info);
 
@@ -8546,7 +8546,7 @@ fn void index_setClientEntity(
  * An indexing action/session, to be applied to one or multiple
  * translation units.
  */
-distinct CXIndexAction = inline void*;
+typedef CXIndexAction = inline void*;
 
 /**
  * An indexing action/session, to be applied to one or multiple
@@ -8568,7 +8568,7 @@ fn void dispose_IndexAction(
   CXIndexAction cidx) 
 @extern("clang_IndexAction_dispose");
 
-distinct CXIndexOptFlags = inline CInt;
+typedef CXIndexOptFlags = inline CInt;
 /**
  * Used to indicate that no special indexing options are needed.
  */
@@ -8725,7 +8725,7 @@ fn CXSourceLocation indexLoc_getCXSourceLocation(
  * The visitor should return one of the \c CXVisitorResult values
  * to direct \c clang_Type_visitFields.
  */
-def CXFieldVisitor = fn CXVisitorResult(
+alias CXFieldVisitor = fn CXVisitorResult(
   CXCursor c, 
   CXClientData client_data);
 
@@ -8757,7 +8757,7 @@ fn CUInt visitFields_Type(
 /**
  * Describes the kind of binary operators.
  */
-distinct CXBinaryOperatorKind = inline CInt;
+typedef CXBinaryOperatorKind = inline CInt;
 
 /** This value describes cursors which are not binary operators. 
   */
@@ -8881,7 +8881,7 @@ fn CXBinaryOperatorKind getCursorBinaryOperatorKind(
 /**
  * Describes the kind of unary operators.
  */
-distinct CXUnaryOperatorKind = inline CInt;
+typedef CXUnaryOperatorKind = inline CInt;
 
 /** This value describes cursors which are not unary operators. 
   */

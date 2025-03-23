@@ -1,14 +1,9 @@
 
-module bindgen::trans @private;
-import bindgen::bg @public,
-       bindgen::misc @public,
-       bindgen::err @public;
+module bindgen::impl::trans @private;
+import bindgen::bg, bindgen::impl @public;
 import clang, std::io;
 
-fault TransErr
-{
-  INVALID_MACRO
-}
+faultdef INVALID_MACRO;
 
 fn String convStr(CXString s) @inline
 {
@@ -78,7 +73,6 @@ fn String capply(String s, BGTransFn fun, TransTable* table, String to_save = ""
 }
 
 <*
- TODO: get rid of inner 'const' qualifications, e.g. in 'const char const*'
  Translates 'type' via 'fun' and caches it into 'table'
 *>
 fn String ctype(
@@ -117,7 +111,7 @@ fn String ctype(
   {
     CXString inner_type_spell = clang::getTypeSpelling(inner_type);
     defer clang::disposeString(inner_type_spell);
-    String inner_type_str = trans::normTypeStr(trans::convStr(inner_type_spell), tmem());
+    String inner_type_str = trans::normTypeStr(trans::convStr(inner_type_spell), tmem);
 
     // Here, translation is performed under inner type and it's worth to cache also.
     // For example, if we have something like 'CXType*', 'CXType' already must be 
@@ -148,7 +142,7 @@ fn String intSuf(String lit, Allocator alloc = allocator::heap())
 {
   if (lit.len == 0 || lit[0] == '"') return lit.copy(alloc);
 
-  usz! loc = lit.index_of("LL") ?? lit.index_of("ll");
+  usz? loc = lit.index_of("LL") ?? lit.index_of("ll");
   if (catch loc) return lit.copy(alloc); // It doesn't contain LL or ll
 
   String new = (String) allocator::alloc_array(alloc, char, lit.len-1);
@@ -239,7 +233,7 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
             String token_str_2 = trans::convStr(token_spell_2);
             if (token_str_2 == "(")
             {
-              trans_token_str = trans::apply(token_str, tfns.func_macro, tmem());
+              trans_token_str = trans::apply(token_str, tfns.func_macro, tmem);
               is_func_macro = true;
               res.append("@");
             }
@@ -247,11 +241,11 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
 
           if (!is_func_macro)
           {
-            trans_token_str = trans::apply(token_str, tfns.constant, tmem());
+            trans_token_str = trans::apply(token_str, tfns.constant, tmem);
           }
 
         case clang::TOKEN_LITERAL:
-          trans_token_str = trans::intSuf(token_str, tmem());
+          trans_token_str = trans::intSuf(token_str, tmem);
 
         case clang::TOKEN_KEYWORD:
         case clang::TOKEN_PUNCTUATION:

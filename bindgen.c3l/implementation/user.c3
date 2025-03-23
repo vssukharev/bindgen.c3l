@@ -1,13 +1,13 @@
 
-module bindgen::user @private;
+module bindgen::impl::user @private;
+import bindgen::impl @public;
 import std::os::process, std::io;
-import bindgen::err @public;
 
 <*
  @param extra_opts "Additional options for clang compiler"
  @return "ZString[], which and each element of which should be then freed via allocator"
 *>
-fn ZString[]! getParseCommandArgs(Allocator allocator, String[] extra_opts)
+fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts)
 {
   const usz RESERVED_ARGS = 1;
 
@@ -36,7 +36,7 @@ fn ZString[]! getParseCommandArgs(Allocator allocator, String[] extra_opts)
 <*
  @param res 
 *>
-fn void! getLibcHeadersLoc(DString* res, Allocator allocator = allocator::heap())
+fn void? getLibcHeadersLoc(DString* res, Allocator allocator = allocator::heap())
 {
   SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
   proc.join()!; // join the process to close stdin of clang

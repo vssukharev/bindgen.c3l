@@ -1,6 +1,6 @@
 
-// TODO: move to 'bindgen::impl'
-module bindgen::bg @private;
+module bindgen::impl @private;
+import bindgen::bg;
 import std::io, std::collections::map, std::collections::list, clang;
 
 // --- Helper Structures
@@ -9,8 +9,8 @@ import std::io, std::collections::map, std::collections::list, clang;
  Translation table maps C name to C3 name. 
  For instance: { .key = "int", .val = "CInt" } is "int" -> "CInt".
 *>
-def TransTable = HashMap{String, String};
-def VarDeclList = List{VarDecl};
+alias TransTable = HashMap{String, String};
+alias VarDeclList = List{VarDecl};
 
 struct VarDecl
 {

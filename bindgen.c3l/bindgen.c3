@@ -1,5 +1,6 @@
 
 module bindgen::bg;
+import bindgen::impl::api @public;
 
 <* 
  @param header_file_names "File names of headers to be translated"
@@ -8,19 +9,20 @@ module bindgen::bg;
  @param module_name "Name of a module appended on top of the file during translation"
  @param command_options "Command options for clang while parsing each header"
 *>
-fn void! translateHeaders(
+fn void? translateHeaders(
   String[] header_file_names, 
   String output_file_name, 
   BGTransCallbacks callbacks, 
   String module_name,
-  String[] command_options = {});
+  String[] command_options = {})
+=> api::translateHeaders(header_file_names, output_file_name, callbacks, module_name, command_options) @inline;
 
 <*
- @param str "Original string from C source. Should NOT be changed"
- @param allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
+ str "Original string from C source. Should NOT be changed"
+ allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
  @return "Translated string, allocated via 'allocator'"
 *>
-def BGTransFn = fn String (String str, Allocator allocator = allocator::heap());
+alias BGTransFn = fn String (String str, Allocator allocator = allocator::heap());
 
 struct BGTransCallbacks
 {
@@ -31,14 +33,6 @@ struct BGTransCallbacks
   BGTransFn func_macro; // Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically
 }
 
-<*
- TODO: migrate to 0.7.0 faults syntax
-*>
-fault BGParseError
-{
-  FAILURE, 
-  CRASHED, 
-  INVALID_ARGUMENTS,
-}
+faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 
 

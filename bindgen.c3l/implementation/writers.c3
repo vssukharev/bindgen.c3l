@@ -1,40 +1,39 @@
 
-module bindgen::wter @private;
-import bindgen::bg @public,
-       bindgen::err @public;
+module bindgen::impl::wter @private;
+import bindgen::bg, bindgen::impl @public;
 import std::io, clang;
 
 <*
  Writes aliasing typedef to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! typedefAlias(
+fn usz? typedefAlias(
   File* out,
   String translated_name,
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "def %s = %s;", translated_name, underlying_name);
+  return io::fprintfn(out, "alias %s = %s;", translated_name, underlying_name);
 }
 
 <*
  Writes distinct typedef to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! typedefDist(
+fn usz? typedefDist(
   File* out,
   String translated_name,
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "distinct %s = %s;", translated_name, underlying_name);
+  return io::fprintfn(out, "typedef %s = %s;", translated_name, underlying_name);
 }
 
 <*
  Writes function pointer typedef to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! typedefFunc(
+fn usz? typedefFunc(
   File* out,
   String translated_name,
   String return_type,
@@ -43,7 +42,7 @@ fn usz! typedefFunc(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "def %s = fn %s(", translated_name, return_type)!;
+  acc += io::fprintfn(out, "alias %s = fn %s(", translated_name, return_type)!;
   foreach (i, p : params) 
   {
     acc += io::fprintf(out, "  %s", p.type)!;
@@ -59,7 +58,7 @@ fn usz! typedefFunc(
  Writes global constant to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! constDecl(
+fn usz? constDecl(
   File* out,
   String translated_type,
   String translated_name,
@@ -84,7 +83,7 @@ fn usz! constDecl(
  Writes enum with values to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! enumDecl(
+fn usz? enumDecl(
   File* out,
   String name,
   String type,
@@ -93,7 +92,7 @@ fn usz! enumDecl(
 {
   usz acc;
   
-  acc += io::fprintfn(out, "distinct %s = inline %s;", name, type)!;
+  acc += io::fprintfn(out, "typedef %s = inline %s;", name, type)!;
   for (usz i; i < vals.len; ++i)
   {
     acc += io::fprintfn(out, "const %s %s = %s;", name, vals.names[i], vals.rhses[i])!;
@@ -107,7 +106,7 @@ fn usz! enumDecl(
  Writes function to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! func(
+fn usz? func(
   File* out,
   VarDecl[] params,
   String return_type,
@@ -132,7 +131,7 @@ fn usz! func(
  Writes function to 'out'
  @return "Number of bytes written"
 *>
-fn usz! funcMacro(
+fn usz? funcMacro(
   File* out,
   String[] params,
   String name) 
@@ -155,7 +154,7 @@ fn usz! funcMacro(
  Writes module name to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! moduleHead(
+fn usz? moduleHead(
   File* out,
   String module_name)
 @maydiscard
@@ -167,7 +166,7 @@ fn usz! moduleHead(
  Writes structure to 'out'
  @returns "Number of bytes written"
 *>
-fn usz! structDecl(
+fn usz? structDecl(
   File* out,
   FieldsC3* fields,
   String translated_name) 
@@ -182,7 +181,7 @@ fn usz! structDecl(
   return acc;
 }
 
-fn usz! unionDecl(
+fn usz? unionDecl(
   File* out,
   FieldsC3* fields,
   String translated_name) 
@@ -197,7 +196,7 @@ fn usz! unionDecl(
   return acc;
 }
 
-fn usz! fields(
+fn usz? fields(
   File* out,
   FieldsC3* fs)
 {

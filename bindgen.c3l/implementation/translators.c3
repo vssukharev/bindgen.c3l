@@ -1,21 +1,14 @@
 
-module bindgen::ttor @private;
-import bindgen::bg @public, 
-       bindgen::trans @public, 
-       bindgen::vtor @public, 
-       bindgen::wter @public, 
-       bindgen::err @public,
-       bindgen::misc @public,
-       bindgen::algo @public,
-       std::collections::list;
-import std::io, clang;
+module bindgen::impl::ttor @private;
+import bindgen::impl @public;
+import std::io, clang, std::collections::list;
 
 <*
  Translates global constant declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL "Cursor must point to variable declaration"
  @return "Number of bytes written"
 *>
-fn usz! constDecl(
+fn usz? constDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -49,7 +42,7 @@ fn usz! constDecl(
  @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL "Cursor must point to enum declaration"
  @return "Number of bytes written"
 *>
-fn usz! enumDecl(
+fn usz? enumDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -110,7 +103,7 @@ fn usz! enumDecl(
  @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL "Cursor must point to function declaration"
  @returns "Number of bytes written"
 *>
-fn usz! func(
+fn usz? func(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -145,7 +138,7 @@ fn usz! func(
  @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION "Cursor must point to macro definition"
  @returns "Number of bytes written"
 *>
-fn usz! macroDef(
+fn usz? macroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -163,7 +156,7 @@ fn usz! macroDef(
 <*
  Translates functional macro without generating it's body
 *>
-fn usz! funcMacroDef(
+fn usz? funcMacroDef(
   GlobalVisitData* vd,
   CXCursor cursor)
 {
@@ -209,7 +202,7 @@ fn usz! funcMacroDef(
  Translates macro which is not function-like, e.g.:
  `#define MY_MACRO 1` -> `const MY_MACRO = 1;`
 *>
-fn usz! constMacroDef(
+fn usz? constMacroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 {
@@ -221,7 +214,7 @@ fn usz! constMacroDef(
  
     String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
 
-    String val = trans::tokensUnderCursor(tmem(), cursor, &vd.trans_fns);
+    String val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
 
     return wter::constDecl(vd.out, "", trans_macro_str, val);
   };
@@ -232,7 +225,7 @@ fn usz! constMacroDef(
  @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
  @returns "Number of bytes written"
 *>
-fn usz! structDecl(
+fn usz? structDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -271,7 +264,7 @@ fn usz! structDecl(
     // Translate function parameters and store them into vd_struct.fields
     clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct);
 
-    FieldsC3! c3_fields = algo::getC3Fields(tmem(), vd_struct.fields);
+    FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
 
     if (catch c3_fields)
     {
@@ -288,7 +281,7 @@ fn usz! structDecl(
  @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL "Cursor must point to typedef declaration"
  @returns "Number of bytes written"
 *>
-fn usz! typedef(
+fn usz? typedefDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -335,7 +328,7 @@ fn usz! typedef(
  @require clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL "Cursor must point to union declaration"
  @returns "Number of bytes written"
 *>
-fn usz! unionDecl(
+fn usz? unionDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
 @maydiscard
@@ -373,7 +366,7 @@ fn usz! unionDecl(
     // Translate function parameters and store them into vd_struct.fields
     clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct);
 
-    FieldsC3! c3_fields = algo::getC3Fields(tmem(), vd_struct.fields);
+    FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
 
     if (catch c3_fields)
     {

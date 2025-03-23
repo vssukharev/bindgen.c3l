@@ -1,6 +1,6 @@
 
-module bindgen::err @private;
-import bindgen::bg;
+module bindgen::impl::err @private;
+import bindgen::bg, bindgen::impl @public;
 import clang, std::io;
 
 const ANSI_RED = "\e[31m";
@@ -30,19 +30,22 @@ macro void warn(String str = "", ...)
   io::eprintfn(str, $vasplat);
 } 
 
-macro void! checkCode(CXErrorCode code)
+macro void? checkCode(CXErrorCode code)
 {
   switch (code)
   {
     case clang::ERROR_SUCCESS: 
       return;
+
     case clang::ERROR_FAILURE:
     case clang::ERROR_AST_READ_ERROR:
-      return BGParseError.FAILURE?;
+      return bg::CLANG_PARSE_ERROR?;
+
     case clang::ERROR_CRASHED:
-      return BGParseError.CRASHED?;
+      return bg::CLANG_CRASH?;
+
     case clang::ERROR_INVALID_ARGUMENTS:
-      return BGParseError.INVALID_ARGUMENTS?;
+      return bg::INVALID_ARGUMENTS?;
   }
 }
 
