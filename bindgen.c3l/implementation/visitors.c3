@@ -3,6 +3,8 @@ module bindgen::impl::vtor @private;
 import bindgen::bg, bindgen::impl @public;
 import std::io, clang;
 
+const EMPTY_TOKENS @local = "";
+
 <*
  Global visitor
 *>
@@ -90,7 +92,7 @@ fn CXChildVisitResult enumConstDecl(
     CXToken* tokens;
     uint tokens_len;
 
-    String trans_tokens = trans::tokensUnderCursor(tmem, cursor, &vd.g.trans_fns);
+    String trans_tokens = trans::tokensUnderCursor(tmem, cursor, &vd.g.trans_fns) ?? EMPTY_TOKENS;
     vd.val.append(trans_tokens);
    
     return clang::CHILD_VISIT_CONTINUE;
@@ -106,7 +108,7 @@ fn CXChildVisitResult enumDecl(
 
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
-  String cursor_str = trans::convStr(cursor_spell);
+  String cursor_str = misc::convStr(cursor_spell);
   vd.vals.names[vd.current] = trans::apply(cursor_str, vd.g.trans_fns.constant); // TODO: get rid of leak 
 
   ConstVisitData vd_const = {
@@ -119,7 +121,7 @@ fn CXChildVisitResult enumDecl(
   clang::visitChildren(cursor, &vtor::enumConstDecl, (CXClientData) &vd_const);
 
   // If we get empty rhs, evaluate value
-  if (vd_const.val.str_view() == "")
+  if (vd_const.val.str_view() == EMPTY_TOKENS)
   {
     if (vd.is_unsigned)
     {
@@ -158,7 +160,7 @@ fn CXChildVisitResult func(
 
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
-  String name_str = trans::convStr(name_spell); 
+  String name_str = misc::convStr(name_spell); 
   String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
 
   CXType type = clang::getCursorType(cursor);
@@ -181,7 +183,7 @@ fn CXChildVisitResult fields(
 
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
-  String name_str = trans::convStr(name_spell);
+  String name_str = misc::convStr(name_spell);
 
   CXType type = clang::getCursorType(cursor);
   

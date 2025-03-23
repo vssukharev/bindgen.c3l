@@ -3,12 +3,7 @@ module bindgen::impl::trans @private;
 import bindgen::bg, bindgen::impl @public;
 import clang, std::io;
 
-faultdef INVALID_MACRO;
-
-fn String convStr(CXString s) @inline
-{
-  return clang::getCString(s).str_view();
-}
+faultdef UNTRANSLATABLE;
 
 fn DString* normTypeDStr(DString* ds)
 {
@@ -82,7 +77,7 @@ fn String ctype(
 {
   CXString type_spell = clang::getTypeSpelling(type);
   defer clang::disposeString(type_spell);
-  String type_str = trans::convStr(type_spell);
+  String type_str = misc::convStr(type_spell);
   
   // Return if cached
   if (try trans_type_str = (*table)[type_str]) return trans_type_str;
@@ -111,7 +106,7 @@ fn String ctype(
   {
     CXString inner_type_spell = clang::getTypeSpelling(inner_type);
     defer clang::disposeString(inner_type_spell);
-    String inner_type_str = trans::normTypeStr(trans::convStr(inner_type_spell), tmem);
+    String inner_type_str = trans::normTypeStr(misc::convStr(inner_type_spell), tmem);
 
     // Here, translation is performed under inner type and it's worth to cache also.
     // For example, if we have something like 'CXType*', 'CXType' already must be 
@@ -171,11 +166,11 @@ fn String tintSuf(String lit) @inline
 <*
  Translates tokens under cursor.
 *>
-fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns)
+fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns)
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
-  String cursor_str = trans::convStr(cursor_spell);
+  String cursor_str = misc::convStr(cursor_spell);
 
   CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
   CXSourceRange sr = misc::getTrueCursorExtent(cursor);
@@ -200,7 +195,7 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
       default:
         err::warn("Expression under %s doesn't have value, skipping...", cursor_str);
     }
-    return "";
+    return trans::UNTRANSLATABLE?;
   }
 
   DString res;
@@ -212,7 +207,7 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
     CXTokenKind token_kind = clang::getTokenKind(*token);
     CXString token_spell = clang::getTokenSpelling(tu, *token);
     defer clang::disposeString(token_spell);
-    String token_str = trans::convStr(token_spell);
+    String token_str = misc::convStr(token_spell);
 
     String trans_token_str;
 
@@ -230,7 +225,7 @@ fn String tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* 
           { 
             CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
             defer clang::disposeString(token_spell_2);
-            String token_str_2 = trans::convStr(token_spell_2);
+            String token_str_2 = misc::convStr(token_spell_2);
             if (token_str_2 == "(")
             {
               trans_token_str = trans::apply(token_str, tfns.func_macro, tmem);

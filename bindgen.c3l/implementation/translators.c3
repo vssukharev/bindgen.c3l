@@ -15,7 +15,7 @@ fn usz? constDecl(
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
-  String cursor_str = trans::convStr(cursor_spell);
+  String cursor_str = misc::convStr(cursor_spell);
 
   CXType cursor_type = clang::getCursorType(cursor);
 
@@ -122,7 +122,7 @@ fn usz? func(
     
     CXString func_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(func_spell);
-    String func_str = trans::convStr(func_spell);
+    String func_str = misc::convStr(func_spell);
   
     CXType ret_type = clang::getCursorResultType(cursor); 
 
@@ -164,7 +164,7 @@ fn usz? funcMacroDef(
   {
     CXString macro_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(macro_spell);
-    String macro_str = trans::convStr(macro_spell);
+    String macro_str = misc::convStr(macro_spell);
 
     String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.func_macro);
 
@@ -210,12 +210,12 @@ fn usz? constMacroDef(
   {
     CXString macro_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(macro_spell);
-    String macro_str = trans::convStr(macro_spell);
+    String macro_str = misc::convStr(macro_spell);
  
     String trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
 
-    String val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
-
+    String val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns)!;
+    
     return wter::constDecl(vd.out, "", trans_macro_str, val);
   };
 }

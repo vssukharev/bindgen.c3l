@@ -78,6 +78,6 @@ fn void main(String[] args)
     .func_macro = &translateFuncMacro,
   };
 
-  bg::translateHeaders({"./examples/headers/dummy.h"}, out, cb, "dummy")!!;
+  bg::translateHeaders({"./examples/headers/dummy.h"}, out, cb, "dummy", { "-DTEST_COND" })!!;
 }
 

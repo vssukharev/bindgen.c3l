@@ -3,6 +3,11 @@ module bindgen::impl::misc @private;
 import bindgen::impl @public;
 import clang, std::io;
 
+fn String convStr(CXString s) @inline
+{
+  return clang::getCString(s).str_view();
+}
+
 <*
  Behaviour of clang::getCursorExtent is a bit broken. If some macro
  is expanded under the following cursor, beginning of the given range
@@ -32,7 +37,7 @@ macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(CXToken* toke
   {
     CXString token_spell = clang::getTokenSpelling(tu, *t);
     defer clang::disposeString(token_spell);
-    String token_str = trans::convStr(token_spell);
+    String token_str = misc::convStr(token_spell);
 
     @body(t, token_str);
   }

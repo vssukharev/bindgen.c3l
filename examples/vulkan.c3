@@ -90,7 +90,7 @@ fn void main(String[] args)
     .func_macro = &translateFuncMacro,
   };
 
-  bg::translateHeaders({"./examples/headers/vulkan-part.h"}, out, cb, "vulkan::vk")!!;
+  bg::translateHeaders({"./examples/headers/vulkan-part.h"}, out, cb, "vulkan::vk", { "-DVK_ENABLE_BETA_EXTENSIONS" })!!;
 }
 
 

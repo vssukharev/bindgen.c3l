@@ -66,9 +66,10 @@ fn void? translateHeaders(
     clang::visitChildren(cursor, &vtor::global, (CXClientData) &visit_data);
   }
 
-  foreach (zstr : cargs)
-  {
-    allocator::free(tmem, zstr);
-  }
+  // TODO: make freeing of command args
+  // foreach (zstr : cargs)
+  // {
+  //   allocator::free(tmem, zstr);
+  // }
 }
 
