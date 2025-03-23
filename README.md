@@ -6,10 +6,9 @@ WIP C bindings generation library for C3 language.
 
 ## TODO
 
-1. Add support for bit fields
+1. Add support for C preproc various conditional directives
 2. Improve the translation of functional macros
-3. Add support for C preproc various conditional directives
-4. Add support for inlined enums
+3. Add support for inlined enums
 
 ## Setup
 
