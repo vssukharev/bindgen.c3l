@@ -36,14 +36,21 @@ fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs)
 
   usz bit_field_seg;
   CInt acc_bit_width;
+  bool is_in_range;
   foreach (i, w : cfs.widths[:cfs.len])
   {
-    if (w != -1) 
+    if (w != -1)
     {
-      if (bit_field_seg == 0) bit_field_seg = i;
+      if (!is_in_range) 
+      {
+        bit_field_seg = i;
+        acc_bit_width = 0;
+      }
+
       acc_bit_width += w;
+      is_in_range = true;
     }
-    else if (acc_bit_width != 0 && bit_field_seg != 0)
+    else if (is_in_range)
     {
       switch (acc_bit_width)
       {
@@ -61,8 +68,7 @@ fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs)
           return algo::ERROR?;
       }
 
-      bit_field_seg = 0;
-      acc_bit_width = 0;
+      is_in_range = false;
     }
   }
 
