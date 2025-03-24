@@ -12,7 +12,7 @@ faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 <*
  str "Original string from C source. Should NOT be changed"
  allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
- @return "Translated string, allocated via 'allocator', or empty string to skip the translation (TODO: not implemented yet)"
+ @return "Translated string, allocated via 'allocator', or empty string to skip the translation of a name"
 *>
 alias BGTransFn = fn String (
   String str, 

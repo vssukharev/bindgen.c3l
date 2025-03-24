@@ -8,15 +8,35 @@ fn String translateFuncMacro(String str, Allocator alloc)
   return bgstr::lowerize_all(a, alloc);
 }
 
+fn String translateType(String str, Allocator alloc)
+{
+  if (str == "IgnoreMeToo")
+  {
+    return "";
+  }
+
+  return bgstr::translate_type(str, alloc);
+}
+
+fn String translateConstant(String str, Allocator alloc)
+{
+  if (str == "IGNORE_ME")
+  {
+    return "";
+  }
+
+  return bgstr::capitalize_all(str, alloc);
+}
+
 fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "stdout";
   
   BGTransCallbacks cb = {
     .func = &bgstr::lowerize_first,
-    .type = &bgstr::translate_type,
+    .type = &translateType,
     .variable = &bgstr::lowerize_first,
-    .constant = &bgstr::capitalize_all,
+    .constant = &translateConstant,
     .func_macro = &translateFuncMacro,
   };
 

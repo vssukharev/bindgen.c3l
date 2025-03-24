@@ -109,7 +109,16 @@ fn CXChildVisitResult enumDecl(
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
-  vd.vals.names[vd.current] = trans::apply(cursor_str, vd.g.trans_fns.constant); // TODO: get rid of leak 
+  
+  String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant); // TODO: get rid of leak 
+
+  if (catch trans_cursor_str)
+  {
+    err::warn("Enum value '%s' is ignored", cursor_str);
+    return clang::CHILD_VISIT_CONTINUE;
+  }
+  
+  vd.vals.names[vd.current] = trans_cursor_str;
 
   ConstVisitData vd_const = {
     .g = vd.g,
@@ -161,10 +170,34 @@ fn CXChildVisitResult func(
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
   String name_str = misc::convStr(name_spell); 
-  String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
+  String? trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
+
+  if (catch trans_name_str)
+  {
+    CXString parent_spell = clang::getCursorSpelling(parent);
+    defer clang::disposeString(parent_spell);
+    String parent_str = misc::convStr(parent_spell);
+
+    err::warn("Can't translate function/function type '%s' as it's parameter '%s' is ignored", parent_str, name_str);
+    return clang::CHILD_VISIT_BREAK;
+  }
 
   CXType type = clang::getCursorType(cursor);
-  String trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
+  String? trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
+  
+  if (catch trans_type_str)
+  {
+    CXString type_spell = clang::getTypeSpelling(type);
+    defer clang::disposeString(type_spell);
+    String type_str = misc::convStr(type_spell);
+
+    CXString parent_spell = clang::getCursorSpelling(parent);
+    defer clang::disposeString(parent_spell);
+    String parent_str = misc::convStr(parent_spell);
+
+    err::warn("Can't translate function/function type '%s' as it's parameter '%s' has type '%s' which is ignored", parent_str, name_str, type_str);
+    return clang::CHILD_VISIT_BREAK;
+  }
 
   vd.params.push({trans_type_str, trans_name_str});
 
@@ -189,9 +222,34 @@ fn CXChildVisitResult fields(
   
   vd.fields.widths[vd.current] = clang::getFieldDeclBitWidth(cursor);
 
-  vd.fields.vals[vd.current] = { 
-    .type = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table),
-    .name = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator), 
+  String? res_name = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
+
+  if (catch res_name)
+  {
+    err::warn("Field (variable) '%s' is ignored", name_str);
+    return clang::CHILD_VISIT_BREAK;
+  }
+
+  String? res_type = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
+  
+  if (catch res_type)
+  {
+    CXString type_spell = clang::getTypeSpelling(type);
+    defer clang::disposeString(type_spell);
+    String type_str = misc::convStr(type_spell);
+
+    CXString parent_spell = clang::getCursorSpelling(parent);
+    defer clang::disposeString(parent_spell);
+    String parent_str = misc::convStr(parent_spell);
+
+    err::warn("Can't translate struct/union '%s' as it's return type '%s' is ignored", parent_str, type_str);
+    return clang::CHILD_VISIT_BREAK;
+  }
+  
+
+  vd.fields.vals[vd.current] = {
+    .type = res_type,
+    .name = res_name,
   };
 
   ++vd.current;

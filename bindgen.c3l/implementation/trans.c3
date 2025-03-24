@@ -4,6 +4,7 @@ import bindgen::bg, bindgen::impl @public;
 import clang, std::io;
 
 faultdef UNTRANSLATABLE;
+faultdef IGNORE;
 
 fn DString* normTypeDStr(DString* ds)
 {
@@ -29,15 +30,25 @@ fn String tnormTypeStr(String s) @inline
   return normTypeStr(s, allocator::temp());
 }
 
-
-fn String apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
+fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
 {
-  return fun != null ? fun(s, alloc) : s.copy(alloc);
+  if (fun == null)
+  {
+    return s.copy(alloc);                                   
+  }
+
+  String t = fun(s, alloc);
+  if (t == "")
+  {
+    return trans::IGNORE?;
+  }
+
+  return t;
 }
 
-fn String tapply(String s, BGTransFn fun) @inline
+fn String? tapply(String s, BGTransFn fun) @inline
 {
-  return trans::apply(s, fun);
+  return trans::apply(s, fun)!;
 }
 
 <*
@@ -47,11 +58,10 @@ fn String tapply(String s, BGTransFn fun) @inline
  heap and should NOT be freed as it would cause
  dangerous dead nodes in table.
  @param s "String to translate"
- @param to_save "String to be used as a key in the 'table'. By default, equals to 's'"
+ @param key "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
-fn String capply(String s, BGTransFn fun, TransTable* table, String to_save = "")
+fn String? capply(String s, BGTransFn fun, TransTable* table, String key = "")
 {
-  if (to_save == "") to_save = s;
   String translated;
   
   if (try cached = (*table)[s])
@@ -60,8 +70,10 @@ fn String capply(String s, BGTransFn fun, TransTable* table, String to_save = ""
   } 
   else 
   {
-    translated = trans::apply(s, fun);
-    if (table != null) (*table)[to_save] = translated; // 'translated' is not copied here
+    translated = trans::apply(s, fun)!;
+
+    if (key == "") key = s;
+    if (table != null) (*table)[key] = translated; // 'translated' is not copied here
   }
 
   return translated;
@@ -70,7 +82,7 @@ fn String capply(String s, BGTransFn fun, TransTable* table, String to_save = ""
 <*
  Translates 'type' via 'fun' and caches it into 'table'
 *>
-fn String ctype(
+fn String? ctype(
   CXType type,
   BGTransFn fun, 
   TransTable* table)
@@ -111,7 +123,7 @@ fn String ctype(
     // Here, translation is performed under inner type and it's worth to cache also.
     // For example, if we have something like 'CXType*', 'CXType' already must be 
     // defined somewhere and, hence, cached.
-    String trans_inner_type_str = trans::capply(inner_type_str, fun, table);
+    String trans_inner_type_str = trans::capply(inner_type_str, fun, table)!;
 
     // enum MyFoo -> Enum MyFoo
 
@@ -228,7 +240,7 @@ fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks*
             String token_str_2 = misc::convStr(token_spell_2);
             if (token_str_2 == "(")
             {
-              trans_token_str = trans::apply(token_str, tfns.func_macro, tmem);
+              trans_token_str = trans::apply(token_str, tfns.func_macro, tmem)!;
               is_func_macro = true;
               res.append("@");
             }
@@ -236,7 +248,7 @@ fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks*
 
           if (!is_func_macro)
           {
-            trans_token_str = trans::apply(token_str, tfns.constant, tmem);
+            trans_token_str = trans::apply(token_str, tfns.constant, tmem)!;
           }
 
         case clang::TOKEN_LITERAL:

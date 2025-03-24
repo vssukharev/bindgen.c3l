@@ -6,12 +6,11 @@ WIP C bindings generation library for C3 language.
 
 ## TODO
 
-1. Add filtering of translation symbols
-2. Add 'camel_to_snake', 'snake_to_camel' etc. functions to bindgen::bgstr
-3. Add FULL Vulkan headers translation example
-4. Add comprehensive test suite
-5. Add support for inlined enums
-6. Add C doc comments support 
+1. Add 'camel_to_snake', 'snake_to_camel' etc. functions to bindgen::bgstr
+2. Add FULL Vulkan headers translation example
+3. Add comprehensive test suite
+4. Add support for inlined enums
+5. Add C doc comments support 
 
 ## Setup
 
