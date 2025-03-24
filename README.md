@@ -6,9 +6,11 @@ WIP C bindings generation library for C3 language.
 
 ## TODO
 
-1. Add support for C preproc various conditional directives
-2. Improve the translation of functional macros
-3. Add support for inlined enums
+1. Change dummy.h
+2. Add helper functions (like lowerizeFirst) to library
+3. Add FULL Vulkan headers translation example
+4. Add comprehensive test suite
+5. Add support for inlined enums
 
 ## Setup
 
