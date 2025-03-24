@@ -13,7 +13,7 @@ fn usz? typedefAlias(
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "alias %s = %s;", translated_name, underlying_name);
+  return io::fprintfn(out, "alias %s = %s;\n", translated_name, underlying_name);
 }
 
 <*
@@ -26,7 +26,7 @@ fn usz? typedefDist(
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "typedef %s = %s;", translated_name, underlying_name);
+  return io::fprintfn(out, "typedef %s = %s;\n", translated_name, underlying_name);
 }
 
 <*

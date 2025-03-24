@@ -18,7 +18,7 @@ fn void? translateHeaders(
   String output_file_name, 
   BGTransCallbacks callbacks, 
   String module_name,
-  String[] command_options = {})
+  String[] command_options = {}) @inline
 {
   err::log("Translating %s", header_file_names);
   err::log("Writing to %s", output_file_name);

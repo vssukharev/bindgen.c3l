@@ -1,38 +1,117 @@
 
+<*
+ General API is as simple as it's possible. You have one only function
+ 'translate_headers' which takes all possible information about headers
+ to be translated.
+*>
 module bindgen::bg;
 import bindgen::impl::api @public;
 
+faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
+
+<*
+ str "Original string from C source. Should NOT be changed"
+ allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
+ @return "Translated string, allocated via 'allocator', or empty string to skip the translation (TODO: not implemented yet)"
+*>
+alias BGTransFn = fn String (
+  String str, 
+  Allocator allocator = mem);
+
+<*
+ func "Function"
+ type "Type"
+ variable "Function parameter or global variable"
+ constant "Global constant"
+ func_maro "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
+*>
+struct BGTransCallbacks
+{
+  BGTransFn func;
+  BGTransFn type;
+  BGTransFn variable; 
+  BGTransFn constant;
+  BGTransFn func_macro;
+}
+
 <* 
  @param header_file_names "File names of headers to be translated"
- @param output_file_name "If set to 'stdout', write to stdout; otherwise, write to file on privided path"
+ @param output_file_name "If set to 'stdout', write to stdout; otherwise, write to file under provided path"
  @param callbacks "Translation callbacks"
  @param module_name "Name of a module appended on top of the file during translation"
  @param command_options "Command options for clang while parsing each header"
+ @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
 *>
-fn void? translateHeaders(
+fn void? translate_headers(
   String[] header_file_names, 
   String output_file_name, 
   BGTransCallbacks callbacks, 
   String module_name,
   String[] command_options = {})
-=> api::translateHeaders(header_file_names, output_file_name, callbacks, module_name, command_options) @inline;
+=> api::translateHeaders(header_file_names, output_file_name, callbacks, module_name, command_options);
+
 
 <*
- str "Original string from C source. Should NOT be changed"
- allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
- @return "Translated string, allocated via 'allocator'"
+ This module is created for user comfort.
+ It comprises a small set of generally necessary string
+ manipulating functions, which follows the BGTransFn
+ signature.
 *>
-alias BGTransFn = fn String (String str, Allocator allocator = allocator::heap());
+module bindgen::bgstr;
+import bindgen::impl::api @public;
 
-struct BGTransCallbacks
-{
-  BGTransFn func; // Function
-  BGTransFn type; // Type
-  BGTransFn variable; // Function parameter or global variable
-  BGTransFn constant; // Global constant
-  BGTransFn func_macro; // Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically
-}
+<*
+ Lowerizes the first character of str. 
+ Example: SomeFunc -> someFunc
+*>
+fn String lowerize_first(String str, Allocator alloc) => api::strLowerizeFirst(str, alloc);
 
-faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
+<*
+ Lowerizes all characters of str. 
+ Example: Some_Func -> some_func
+*>
+fn String lowerize_all(String str, Allocator alloc) => api::strLowerizeAll(str, alloc);
+
+<*
+ Capitalizes the first character of str. 
+ Example: some_type -> Some_type
+*>
+fn String capitalize_first(String str, Allocator alloc) => api::strCapitalizeFirst(str, alloc);
+
+<*
+ Capitalizes all characters of str. 
+ Example: some_const -> SOME_CONST
+*>
+fn String capitalize_all(String str, Allocator alloc) => api::strCapitalizeAll(str, alloc);
+
+<*
+ Translates basic C type (str) to corresponding C3 ones.
+ If str is not a common C type (like 'int', 'uint32_t', etc.),
+ capitalizes the first character of the type.
+ All translations:
+  - some_type -> Some_type
+  - void -> void (no change)
+  - uint32_t -> uint
+  - long long -> CLongLong
+  - short -> CShort
+  - char -> CChar
+  - float -> float
+  - double -> double
+  - unsigned -> CUInt
+  - unsigned int -> CUInt
+  - unsigned short -> CUShort
+  - unsigned char -> CUChar
+  - int8_t -> ichar
+  - int16_t -> short
+  - int32_t -> int
+  - int64_t -> long
+  - uint8_t -> char
+  - uint16_t -> ushort
+  - uint32_t -> uint
+  - uint64_t -> ulong
+ NOTE: if some standard type is not written above, please look at 
+ bindgen.c3l/implementation/api_utils.c3 and submit an issue on github.
+*>
+fn String translate_type(String str, Allocator alloc) => api::strTranslateType(str, alloc);
 
 
