@@ -69,31 +69,36 @@ fn String strTranslateType(String str, Allocator alloc) @inline
   return api::strCapitalizeFirst(str, alloc);
 }
 
-fn String strSnakeToCamel(String str, Allocator alloc) @inline
+<*
+ Example: __one_two__three_ -> [ __ one two three _ ]
+ @return "List which must be freed"
+*>
+fn ListString strParseSnakeCase(Allocator alloc, String str) @local
 {
   ListString tokens;
-  tokens.tinit(str.len / 2);
-  defer tokens.free();
+  tokens.init(alloc, str.len / 2);
 
-  // Treat possible beginning '_' and one token
+  // Treat possible beginning '_'
   usz first = 0;
   while (first < str.len && str[first] == '_') ++first;
+  if (first > 0) tokens.push(str[0..first-1]);
+
+  // And one token
+  usz begin = first;
   while (first < str.len && str[first] != '_') ++first;
+  tokens.push(str[begin..first-1]);
 
   // Treat possible closing '_' 
   usz last = str.len - 1;
   while (last > 0 && str[last] == '_') --last;
-  
-  usz size = first + str.len - 1 - last;
 
   // Treat the rest [first..last]
   for (usz i = first; i <= last; ++i)
   {
     while (i <= last && str[i] == '_') ++i;
-    usz begin = i;
+    begin = i;
     while (i <= last && str[i] != '_') ++i;
     tokens.push(str[begin..i-1]);
-    size += i - begin;
   }
 
   // Push closing '_'
@@ -102,16 +107,54 @@ fn String strSnakeToCamel(String str, Allocator alloc) @inline
     tokens.push(str[last+1..str.len-1]);
   }
 
-  // Allocate new string.
-  // _asda_asddad_asdasdas__ -> _asdaAsddadAsdasdas__
-  // _b_c__d_e -> BCDE
+  return tokens;
+}
+
+
+fn String strSnakeToCamel(String str, Allocator alloc) @inline
+{
+  ListString tokens = strParseSnakeCase(tmem, str);
+  defer tokens.free();
+  
+  usz size = 0;
+  foreach (t : tokens)
+  {
+    size += t.len;
+  }
+
   String res = (String) allocator::alloc_array(alloc, char, size);
   
-  // This is the first token which should not be upperized
-  res[0..first-1] = str[0..first-1];
+  bool has_underscore = tokens[0][0] == '_';
 
-  last = first;
+  usz last = 0;
+  foreach (i, t : tokens)
+  {
+    res[last:t.len] = t;
+    if (i != (has_underscore ? 1 : 0))
+    {
+      res[last] = res[last].to_upper();
+    }
+    last += t.len;
+  }
+
+  return res;
+}
+
+fn String strSnakeToPascal(String str, Allocator alloc) @inline
+{
+  ListString tokens = strParseSnakeCase(tmem, str);
+  defer tokens.free();
+  
+  usz size = 0;
   foreach (t : tokens)
+  {
+    size += t.len;
+  }
+
+  String res = (String) allocator::alloc_array(alloc, char, size);
+  
+  usz last = 0;
+  foreach (i, t : tokens)
   {
     res[last:t.len] = t;
     res[last] = res[last].to_upper();
@@ -120,4 +163,108 @@ fn String strSnakeToCamel(String str, Allocator alloc) @inline
 
   return res;
 }
+
+fn String strSnakeToScreaming(String str, Allocator alloc) @inline
+{
+  String res = str.copy(alloc);
+  
+  foreach (&c : res)
+  {
+    *c = c.to_upper();
+  }
+
+  return res;
+}
+
+fn String strScreamingToCamel(String str, Allocator alloc)
+{
+  ListString tokens = strParseSnakeCase(tmem, str);
+  defer tokens.free();
+  
+  usz size = 0;
+  foreach (t : tokens)
+  {
+    size += t.len;
+  }
+
+  String res = (String) allocator::alloc_array(alloc, char, size);
+  
+  bool has_underscore = tokens[0][0] == '_';
+
+  usz last = 0;
+  foreach (i, t : tokens)
+  {
+    res[last:t.len] = t;
+    
+    usz offset = 1;
+    if (i == (has_underscore ? 1 : 0)) offset = 0;
+
+    for (usz j = last + offset; j < last + t.len; ++j)
+    {
+      res[j] = res[j].to_lower();
+    }
+
+    last += t.len;
+  }
+
+  return res;
+}
+
+fn String strScreamingToPascal(String str, Allocator alloc)
+{
+  ListString tokens = strParseSnakeCase(tmem, str);
+  defer tokens.free();
+  
+  usz size = 0;
+  foreach (t : tokens)
+  {
+    size += t.len;
+  }
+
+  String res = (String) allocator::alloc_array(alloc, char, size);
+  
+  usz last = 0;
+  foreach (i, t : tokens)
+  {
+    res[last:t.len] = t;
+    
+    for (usz j = last + 1; j < last + t.len; ++j)
+    {
+      res[j] = res[j].to_lower();
+    }
+
+    last += t.len;
+  }
+
+  return res;
+}
+
+fn String strScreamingToSnake(String str, Allocator alloc) @inline
+{
+  String res = str.copy(alloc);
+  
+  foreach (&c : res)
+  {
+    *c = c.to_lower();
+  }
+
+  return res;
+}
+
+
+<*
+ Example: __OneTwoThree__ -> [ __One Two Three __ ]
+ @return "List which then must be freed"
+*>
+fn ListString strParsePascalCase(Allocator, String str)
+{
+  return {};
+}
+
+fn String strPascalToSnake(String str, Allocator alloc) @inline
+{
+  return "";
+}
+
+alias strCamelToSnake = strPascalToSnake;
 
