@@ -114,4 +114,16 @@ fn String capitalize_all(String str, Allocator alloc) => api::strCapitalizeAll(s
 *>
 fn String translate_type(String str, Allocator alloc) => api::strTranslateType(str, alloc);
 
+fn String snake_to_camel(String str, Allocator alloc) => api::strSnakeToCamel(str, alloc);
+// fn String snake_to_pascal(String str, Allocator alloc) => api::strSnakeToPascal(str, alloc);
+// fn String snake_to_screaming(String str, Allocator alloc) => api::strSnakeToScreaming(str, alloc);
+//
+// fn String pascal_to_screaming(String str, Allocator alloc) => api::strPascalToScreaming(str, alloc);
+// fn String pascal_to_snake(String str, Allocator alloc) => api::strPascalToSnake(str, alloc);
+// fn String pascal_to_camel(String str, Allocator alloc) => api::strPascalToCamel(str, alloc);
+//
+// fn String screaming_to_snake(String str, Allocator alloc) => api::strScreamingToSnake(str, alloc);
+// fn String screaming_to_camel(String str, Allocator alloc) => api::strScreamingToCamel(str, alloc);
+// fn String screaming_to_pascal(String str, Allocator alloc) => api::strScreamingToPascal(str, alloc);
+
 

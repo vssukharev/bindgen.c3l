@@ -31,7 +31,7 @@ fn String translateConstant(String str, Allocator alloc)
 fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "stdout";
-  
+ 
   BGTransCallbacks cb = {
     .func = &bgstr::lowerize_first,
     .type = &translateType,

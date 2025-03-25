@@ -1,5 +1,9 @@
 
 module bindgen::impl::api @private;
+import bindgen::impl @public;
+import std::collections::list, std::ascii;
+
+alias ListString = List{String};
 
 fn String strLowerizeFirst(String str, Allocator alloc) @inline
 {
@@ -63,5 +67,57 @@ fn String strTranslateType(String str, Allocator alloc) @inline
   }
 
   return api::strCapitalizeFirst(str, alloc);
+}
+
+fn String strSnakeToCamel(String str, Allocator alloc) @inline
+{
+  ListString tokens;
+  tokens.tinit(str.len / 2);
+  defer tokens.free();
+
+  // Treat possible beginning '_' and one token
+  usz first = 0;
+  while (first < str.len && str[first] == '_') ++first;
+  while (first < str.len && str[first] != '_') ++first;
+
+  // Treat possible closing '_' 
+  usz last = str.len - 1;
+  while (last > 0 && str[last] == '_') --last;
+  
+  usz size = first + str.len - 1 - last;
+
+  // Treat the rest [first..last]
+  for (usz i = first; i <= last; ++i)
+  {
+    while (i <= last && str[i] == '_') ++i;
+    usz begin = i;
+    while (i <= last && str[i] != '_') ++i;
+    tokens.push(str[begin..i-1]);
+    size += i - begin;
+  }
+
+  // Push closing '_'
+  if (last < str.len - 1) 
+  {
+    tokens.push(str[last+1..str.len-1]);
+  }
+
+  // Allocate new string.
+  // _asda_asddad_asdasdas__ -> _asdaAsddadAsdasdas__
+  // _b_c__d_e -> BCDE
+  String res = (String) allocator::alloc_array(alloc, char, size);
+  
+  // This is the first token which should not be upperized
+  res[0..first-1] = str[0..first-1];
+
+  last = first;
+  foreach (t : tokens)
+  {
+    res[last:t.len] = t;
+    res[last] = res[last].to_upper();
+    last += t.len;
+  }
+
+  return res;
 }
 
