@@ -31,10 +31,7 @@ fn String translateConstant(String str, Allocator alloc)
 fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "stdout";
- 
-  // String name = "__OneTwoThree__";
-  // io::printfn("%s -> %s", name, bgstr::camel_to_snake(name, mem));
-  
+
   BGTransCallbacks cb = {
     .func = &bgstr::lowerize_first,
     .type = &translateType,
