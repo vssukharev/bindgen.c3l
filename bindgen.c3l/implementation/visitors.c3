@@ -49,12 +49,10 @@ fn CXChildVisitResult global(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
-
 <*
- Intended to visit rhs values of global constants, 
- translating only identifiers. Regular (not enum)
- constants have two children: their type and their value,
- so we have to skip their type to the their value.
+ Intended to visit global or enum constants.
+ Note that vd.current ought to be set to the
+ quantity of the children.
 *>
 fn CXChildVisitResult constDecl(
   CXCursor cursor, 
@@ -62,41 +60,17 @@ fn CXChildVisitResult constDecl(
   CXClientData client_data)
 {
   ConstVisitData* vd = (ConstVisitData*) client_data;
-  defer ++vd.current;
-  
-  if (vd.current == 0)
+
+  // When cursor type is a typedef of some other type, one more 
+  // child is added to it so skip it
+  if (clang::getCursorKind(cursor) == clang::CURSOR_TYPE_REF)
   {
     return clang::CHILD_VISIT_CONTINUE;
   }
 
-  return vtor::enumConstDecl(cursor, parent, client_data);
-}
+  vd.val = trans::tokensUnderCursor(vd.allocator, cursor, &vd.g.trans_fns) ?? EMPTY_TOKENS;
 
-<*
- Intended to visit enum constants. It is like a subset
- of vtor::constDecl which doesn't have the first child
- as type.
-*>
-fn CXChildVisitResult enumConstDecl(
-  CXCursor cursor, 
-  CXCursor parent, 
-  CXClientData client_data)
-{
-  @pool()
-  {
-    ConstVisitData* vd = (ConstVisitData*) client_data;
-
-    CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
-    CXSourceRange sr = misc::getTrueCursorExtent(cursor);
-
-    CXToken* tokens;
-    uint tokens_len;
-
-    String trans_tokens = trans::tokensUnderCursor(tmem, cursor, &vd.g.trans_fns) ?? EMPTY_TOKENS;
-    vd.val.append(trans_tokens);
-   
-    return clang::CHILD_VISIT_CONTINUE;
-  };
+  return clang::CHILD_VISIT_CONTINUE;
 }
 
 fn CXChildVisitResult enumDecl(
@@ -110,7 +84,7 @@ fn CXChildVisitResult enumDecl(
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
   
-  String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant); // TODO: get rid of leak 
+  String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, vd.allocator);
 
   if (catch trans_cursor_str)
   {
@@ -122,29 +96,27 @@ fn CXChildVisitResult enumDecl(
 
   ConstVisitData vd_const = {
     .g = vd.g,
+    .allocator = vd.allocator,
   };
 
-  vd_const.val.init(mem);
-  defer vd_const.val.free();
-
-  clang::visitChildren(cursor, &vtor::enumConstDecl, (CXClientData) &vd_const);
+  clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
 
   // If we get empty rhs, evaluate value
-  if (vd_const.val.str_view() == EMPTY_TOKENS)
+  if (vd_const.val == EMPTY_TOKENS)
   {
     if (vd.is_unsigned)
     {
       CULongLong ival = clang::getEnumConstantDeclUnsignedValue(cursor);
-      vd_const.val.appendf("%s", ival);
+      vd_const.val = string::format(vd.allocator, "%s", ival);
     }
     else
     {
       CLongLong ival = clang::getEnumConstantDeclValue(cursor);
-      vd_const.val.appendf("%s", ival);
+      vd_const.val = string::format(vd.allocator, "%s", ival);
     }
   }
 
-  vd.vals.rhses[vd.current] = vd_const.val.copy_str(mem); // TODO: get rid of leak
+  vd.vals.rhses[vd.current] = vd_const.val;
 
   ++vd.current;
   return clang::CHILD_VISIT_CONTINUE;
@@ -170,17 +142,9 @@ fn CXChildVisitResult func(
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
   String name_str = misc::convStr(name_spell); 
-  String? trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
 
-  if (catch trans_name_str)
-  {
-    CXString parent_spell = clang::getCursorSpelling(parent);
-    defer clang::disposeString(parent_spell);
-    String parent_str = misc::convStr(parent_spell);
-
-    err::warn("Can't translate function/function type '%s' as it's parameter '%s' is ignored", parent_str, name_str);
-    return clang::CHILD_VISIT_BREAK;
-  }
+  // Make parameter empty if it's ignored
+  String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator) ?? "";
 
   CXType type = clang::getCursorType(cursor);
   String? trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);

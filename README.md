@@ -7,10 +7,11 @@ WIP C bindings generation library for C3 language.
 ## TODO
 
 1. Add support for inlined function pointer types
-2. Add FULL Vulkan headers translation example
-3. Add comprehensive test suite
-4. Add support for inlined enums
-5. Add C doc comments support 
+2. Add non-const global variables translation
+3. Add FULL Vulkan headers translation example
+4. Add comprehensive test suite
+5. Add support for inlined enums
+6. Add C doc comments support 
 
 ## Setup
 

@@ -2,9 +2,8 @@
 // All includes are ignored
 #include <stdint.h>
 
+/// --------------- Structs
 
-
-/// --------------- Types
 struct incomplete_Distinct_t;
 
 typedef struct WillBeVisible 
@@ -27,19 +26,24 @@ struct NoBitfieldsTranslation
   int b : 12;
 };
 
-union AUnion
-{
-  int a;
-  float b;
-};
-
 struct IgnoreMeToo
 {
   double a;
   double b;
 };
 
+/// --------------- Unions
+
+union AUnion
+{
+  int a;
+  float b;
+};
+
+typedef int MyInt;
+
 /// --------------- Functions and macros
+
 int Some_function(uint32_t a, uint32_t b);
 
 int one_more_func(const char** description);
@@ -54,15 +58,25 @@ int wont_be_declared();
 
 #define FUNC_MACRO(a, b) a ## b
 
-
 /// --------------- Constants
+
 #define HOLLOW___
 
-// TODO: Add filter functions for user to filter out symbols
 #define IGNORE_ME as ... I ... aint ... your ... kind )
 
 #define some_const 69
 
 #define ONE_MORE_CONST (0x23 | 0x24 >> 2)
 
+static const int another_const_1 = 123 + 2 - 2;
+
+const MyInt another_const_2 = 0ULL;
+
+/// --------------- Enums
+
+enum SomeEnum
+{
+  SOME_MEMBER_1 = 3,
+  SOME_MEMBER_2 = 24,
+};
 

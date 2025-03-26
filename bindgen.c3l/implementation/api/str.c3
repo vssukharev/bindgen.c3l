@@ -1,6 +1,7 @@
 <* TODO: clean up it a bit *>
 module bindgen::impl::api @private;
 import bindgen::impl @public;
+import bindgen::bgstr;
 import std::collections::list, std::ascii;
 
 alias ListString = List{String};
@@ -41,41 +42,41 @@ fn String strCapitalizeAll(String str, Allocator alloc) @inline
   return str2;
 }
 
-fn String strTranslateType(String str, Allocator alloc) @inline
+fn String? strMapBasicType(String str, Allocator alloc) @inline
 {
   switch (str)
   {
-    case "void": return "void".copy(alloc);
-    case "int": return "CInt".copy(alloc);
-    case "long long": return "CLongLong".copy(alloc);
-    case "short": return "CShort".copy(alloc);
-    case "char": return "CChar".copy(alloc);
-    case "float": return "float".copy(alloc);
-    case "double": return "double".copy(alloc);
-    case "unsigned": return "CUInt".copy(alloc);
-    case "unsigned int": return "CUInt".copy(alloc);
+    case "void":          return "void".copy(alloc);
+    case "int":           return "CInt".copy(alloc);
+    case "long long":     return "CLongLong".copy(alloc);
+    case "short":         return "CShort".copy(alloc);
+    case "char":          return "CChar".copy(alloc);
+    case "float":         return "float".copy(alloc);
+    case "double":        return "double".copy(alloc);
+    case "size_t":        return "usz".copy(alloc);
+    case "int8_t":        return "ichar".copy(alloc);
+    case "int16_t":       return "short".copy(alloc);
+    case "int32_t":       return "int".copy(alloc);
+    case "int64_t":       return "long".copy(alloc);
+    case "uint8_t":       return "char".copy(alloc);
+    case "uint16_t":      return "ushort".copy(alloc);
+    case "uint32_t":      return "uint".copy(alloc);
+    case "uint64_t":      return "ulong".copy(alloc);
+    case "unsigned":      return "CUInt".copy(alloc);
+    case "unsigned int":  return "CUInt".copy(alloc);
     case "unsigned short": return "CUShort".copy(alloc);
     case "unsigned char": return "CUChar".copy(alloc);
-    case "int8_t": return "ichar".copy(alloc);
-    case "int16_t": return "short".copy(alloc);
-    case "int32_t": return "int".copy(alloc);
-    case "int64_t": return "long".copy(alloc);
-    case "uint8_t": return "char".copy(alloc);
-    case "uint16_t": return "ushort".copy(alloc);
-    case "uint32_t": return "uint".copy(alloc);
-    case "uint64_t": return "ulong".copy(alloc);
+    case "ptrdiff_t":     return "isz".copy(alloc);
+    default:              return bgstr::NOT_BASIC_TYPE?;
   }
-
-  return api::strCapitalizeFirst(str, alloc);
 }
 
 
-
 /// ----------------- SNAKE CASE --------------------
-fn String strSnakeToCamel(String str, Allocator alloc) @inline
+
+fn String strSnakeToCamel(String str, Allocator alloc) @inline => @pool()
 {
   ListString tokens = parseSnakeCase(tmem, str);
-  defer tokens.free();
   
   usz size = 0;
   foreach (t : tokens)
@@ -91,20 +92,25 @@ fn String strSnakeToCamel(String str, Allocator alloc) @inline
   foreach (i, t : tokens)
   {
     res[last:t.len] = t;
+
     if (i != (has_underscore ? 1 : 0))
     {
       res[last] = res[last].to_upper();
     }
+    else
+    {
+      res[last] = res[last].to_lower();
+    }
+
     last += t.len;
   }
 
   return res;
 }
 
-fn String strSnakeToPascal(String str, Allocator alloc) @inline
+fn String strSnakeToPascal(String str, Allocator alloc) @inline => @pool()
 {
   ListString tokens = parseSnakeCase(tmem, str);
-  defer tokens.free();
   
   usz size = 0;
   foreach (t : tokens)
@@ -139,10 +145,9 @@ fn String strSnakeToScreaming(String str, Allocator alloc) @inline
 
 /// ----------------- SCREAMING CASE --------------------
 
-fn String strScreamingToCamel(String str, Allocator alloc) @inline
+fn String strScreamingToCamel(String str, Allocator alloc) @inline => @pool()
 {
   ListString tokens = parseSnakeCase(tmem, str);
-  defer tokens.free();
   
   usz size = 0;
   foreach (t : tokens)
@@ -173,10 +178,9 @@ fn String strScreamingToCamel(String str, Allocator alloc) @inline
   return res;
 }
 
-fn String strScreamingToPascal(String str, Allocator alloc) @inline
+fn String strScreamingToPascal(String str, Allocator alloc) @inline => @pool()
 {
   ListString tokens = parseSnakeCase(tmem, str);
-  defer tokens.free();
   
   usz size = 0;
   foreach (t : tokens)
@@ -217,10 +221,9 @@ fn String strScreamingToSnake(String str, Allocator alloc) @inline
 
 /// ----------------- CAMEL CASE --------------------
 
-fn String strCamelToSnake(String str, Allocator alloc) @inline
+fn String strCamelToSnake(String str, Allocator alloc) @inline => @pool()
 {
   ListString tokens = parseCamelCase(tmem, str);
-  defer tokens.free();
   
   usz size = 0;
   foreach (t : tokens)
@@ -239,7 +242,11 @@ fn String strCamelToSnake(String str, Allocator alloc) @inline
   {
     bool is_underscore = t[0] == '_';
     res[last:t.len] = t;
-    res[last] = res[last].to_lower();
+
+    foreach (&c : res[last:t.len])
+    {
+      *c = c.to_lower();
+    }
 
     if (!is_underscore && i != last_token_index)
     {
@@ -253,10 +260,9 @@ fn String strCamelToSnake(String str, Allocator alloc) @inline
   return res;
 }
 
-fn String strCamelToScreaming(String str, Allocator alloc) @inline
+fn String strCamelToScreaming(String str, Allocator alloc) @inline => @pool()
 {
   ListString tokens = parseCamelCase(tmem, str);
-  defer tokens.free();
   
   usz size = 0;
   foreach (t : tokens)
@@ -358,7 +364,7 @@ fn ListString parseSnakeCase(Allocator alloc, String str) @local
 }
 
 <*
- Example: __oneTwo_three -> [ __ one Two_three __ ]
+ Example: __oneTWo_threeFOUR -> [ __ one TWo_three FOUR __ ]
  @return "List which then must be freed"
 *>
 fn ListString parseCamelCase(Allocator alloc, String str) @local
@@ -378,9 +384,18 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local
   // Treat the rest [first..last]
   for (usz i = first; i <= last;)
   {
-    usz begin = i++; // Treat first character
-    while (i <= last && (str[i] == '_' || str[i].is_lower())) ++i;
+    usz begin = i++;
+
+    // Handle several upper cases in a row
+    if (str[begin].is_upper()) while (i <= last && str[i].is_upper()) ++i;
+
+    while (i <= last && ( str[i] == '_' || str[i].is_lower() )) ++i;
     tokens.push(str[begin..i-1]);
+
+    // Handle digits
+    begin = i;
+    while (i <= last && str[i].is_digit()) ++i;
+    if (begin < i) tokens.push(str[begin..i-1]);
   }
 
   // Push closing '_'

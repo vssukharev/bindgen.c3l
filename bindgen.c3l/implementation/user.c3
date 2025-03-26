@@ -7,7 +7,7 @@ import std::os::process, std::io;
  @param extra_opts "Additional options for clang compiler"
  @return "ZString[], which and each element of which should be then freed via allocator"
 *>
-fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts)
+fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts) => @pool()
 {
   const usz RESERVED_ARGS = 1;
 
@@ -16,7 +16,6 @@ fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts)
   // 1-st argument: libc location
   DString libc_loc;
   libc_loc.tinit();
-  defer libc_loc.free();
   libc_loc.append("-I");
   user::getLibcHeadersLoc(&libc_loc, allocator)!;
   arr[0] = libc_loc.copy_zstr(allocator);
@@ -36,7 +35,7 @@ fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts)
 <*
  @param res 
 *>
-fn void? getLibcHeadersLoc(DString* res, Allocator allocator = allocator::heap())
+fn void? getLibcHeadersLoc(DString* res, Allocator allocator = allocator::heap()) => @pool()
 {
   SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
   proc.join()!; // join the process to close stdin of clang
@@ -62,7 +61,6 @@ fn void? getLibcHeadersLoc(DString* res, Allocator allocator = allocator::heap()
   {
     DString path;
     path.tinit();
-    defer path.free();
 
     while (try c = in.read_byte() && c != '\n')
     {

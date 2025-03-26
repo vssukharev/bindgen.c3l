@@ -9,6 +9,7 @@ import bindgen::impl::api @public;
 
 faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 
+
 <*
  str "Original string from C source. Should NOT be changed"
  allocator "Allocator for new returned string. Each allocation should be performed with that specific allocator"
@@ -60,11 +61,11 @@ fn void? translate_headers(
 module bindgen::bgstr;
 import bindgen::impl::api @public;
 
+faultdef NOT_BASIC_TYPE;
+
 <*
- Translates basic C type (str) to corresponding C3 ones.
- If str is not a common C type (like 'int', 'uint32_t', etc.),
- capitalizes the first character of the type.
- All translations:
+ Maps basic C type (str) to corresponding C3 ones.
+ All matches:
   - some_type -> Some_type
   - void -> void (no change)
   - uint32_t -> uint
@@ -85,35 +86,13 @@ import bindgen::impl::api @public;
   - uint16_t -> ushort
   - uint32_t -> uint
   - uint64_t -> ulong
+  - size_t -> usz
+  - ptrdiff_t -> isz
  NOTE: if some standard type is not written above, please look at 
  bindgen.c3l/implementation/api_utils.c3 and submit an issue on github.
+ @return? NOT_BASIC_TYPE
 *>
-fn String translate_type(String str, Allocator alloc) => api::strTranslateType(str, alloc);
-
-<*
- Lowerizes the first character of str. 
- Example: SomeFunc -> someFunc
-*>
-fn String lowerize_first(String str, Allocator alloc) => api::strLowerizeFirst(str, alloc);
-
-<*
- Lowerizes all characters of str. 
- Example: Some_Func -> some_func
-*>
-fn String lowerize_all(String str, Allocator alloc) => api::strLowerizeAll(str, alloc);
-
-<*
- Capitalizes the first character of str. 
- Example: some_type -> Some_type
-*>
-fn String capitalize_first(String str, Allocator alloc) => api::strCapitalizeFirst(str, alloc);
-
-<*
- Capitalizes all characters of str. 
- Example: some_const -> SOME_CONST
-*>
-fn String capitalize_all(String str, Allocator alloc) => api::strCapitalizeAll(str, alloc);
-
+fn String? map_basic_type(String str, Allocator alloc) => api::strMapBasicType(str, alloc);
 
 fn String snake_to_camel(String str, Allocator alloc) => api::strSnakeToCamel(str, alloc);
 fn String snake_to_pascal(String str, Allocator alloc) => api::strSnakeToPascal(str, alloc);
@@ -131,4 +110,22 @@ fn String screaming_to_snake(String str, Allocator alloc) => api::strScreamingTo
 fn String screaming_to_camel(String str, Allocator alloc) => api::strScreamingToCamel(str, alloc);
 fn String screaming_to_pascal(String str, Allocator alloc) => api::strScreamingToPascal(str, alloc);
 
+// Just aliases to above functions made for convenience
+macro String? String.map_basic_type(String str, Allocator alloc) => map_basic_type(str, alloc);
+
+macro String String.snake_to_camel(String str, Allocator alloc) => snake_to_camel(str, alloc);
+macro String String.snake_to_pascal(String str, Allocator alloc) => snake_to_pascal(str, alloc);
+macro String String.snake_to_screaming(String str, Allocator alloc) => snake_to_screaming(str, alloc);
+
+macro String String.pascal_to_screaming(String str, Allocator alloc) => pascal_to_screaming(str, alloc);
+macro String String.pascal_to_snake(String str, Allocator alloc) => pascal_to_snake(str, alloc);
+macro String String.pascal_to_camel(String str, Allocator alloc) => pascal_to_camel(str, alloc);
+
+macro String String.camel_to_screaming(String str, Allocator alloc) => camel_to_screaming(str, alloc);
+macro String String.camel_to_snake(String str, Allocator alloc) => camel_to_snake(str, alloc);
+macro String String.camel_to_pascal(String str, Allocator alloc) => camel_to_pascal(str, alloc);
+
+macro String String.screaming_to_snake(String str, Allocator alloc) => screaming_to_snake(str, alloc);
+macro String String.screaming_to_camel(String str, Allocator alloc) => screaming_to_camel(str, alloc);
+macro String String.screaming_to_pascal(String str, Allocator alloc) => screaming_to_pascal(str, alloc);
 

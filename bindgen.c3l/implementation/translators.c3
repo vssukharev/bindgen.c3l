@@ -11,28 +11,22 @@ import std::io, clang, std::collections::list;
 fn usz? constDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard
+@maydiscard => @pool()
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
-
   CXType cursor_type = clang::getCursorType(cursor);
-  ConstVisitData vd_const = { .g = vd };
-  
-  // TODO: if we change to vd_const.val.tinit(), program terminates
-  // with illegal access. I have no idea why it's happening with temporary 
-  // allocator, but anyway.
-  vd_const.val.init(mem);
-  defer vd_const.val.free();
+
+  ConstVisitData vd_const = { 
+    .g = vd,
+    .allocator = tmem,
+  };
 
   // Visit rhs of var declaration and translate 
   // there everything, that is identifier
-  if (clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const) != 0)
-  {
-    return 0;
-  }
-  
+  if (clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const) != 0) return 0;
+
   String? name = trans::apply(cursor_str, vd.trans_fns.constant);
 
   if (catch name)
@@ -53,7 +47,7 @@ fn usz? constDecl(
     return 0;
   }
 
-  return wter::constDecl(vd.out, type_name, name, vd_const.val.str_view());
+  return wter::constDecl(vd.out, type_name, name, vd_const.val);
 }
 
 <*
@@ -113,6 +107,7 @@ fn usz? enumDecl(
   {
     EnumVisitData vd_enum = {
       .g = vd,
+      .allocator = tmem,
       .vals = {
         .names = mem::temp_array(String, values_len).ptr,
         .rhses = mem::temp_array(String, values_len).ptr,
@@ -287,9 +282,15 @@ fn usz? constMacroDef(
 
     String? val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
     
-    if (catch val)
+    if (catch exc = val)
     {
-      err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", macro_str);
+      switch (exc)
+      {
+        case trans::IGNORE:
+          err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", macro_str);
+        case trans::EMPTY:
+          err::warn("Macro %s doesn't have value, skipping...", macro_str);
+      }
     }
    
     return wter::constDecl(vd.out, "", trans_macro_str, val);

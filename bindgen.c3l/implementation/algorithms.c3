@@ -22,7 +22,7 @@ struct RangeStr @local
    - Once width is power of 2, we set it in FieldsC3 with underlying type, which size equals to the accumulated width
  3. Then it allocates everything that is needed via an allocator and returns the resulting structure
 *>
-fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs)
+fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs) => @pool()
 {
   // Calculate length
   usz norm_fields_count;
@@ -32,7 +32,6 @@ fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs)
   // Detect bitstruct ranges
   RangeStrList ranges;
   ranges.tinit(2);
-  defer ranges.free();
 
   usz bit_field_seg;
   CInt acc_bit_width;

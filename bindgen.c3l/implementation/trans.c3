@@ -3,8 +3,7 @@ module bindgen::impl::trans @private;
 import bindgen::bg, bindgen::impl @public;
 import clang, std::io;
 
-faultdef UNTRANSLATABLE;
-faultdef IGNORE;
+faultdef EMPTY, IGNORE;
 
 fn DString* normTypeDStr(DString* ds)
 {
@@ -15,11 +14,10 @@ fn DString* normTypeDStr(DString* ds)
   return ds;
 }
 
-fn String normTypeStr(String s, Allocator allocator = allocator::heap())
+fn String normTypeStr(String s, Allocator allocator = allocator::heap()) => @pool()
 {
   DString dstr;
   dstr.tinit();
-  defer dstr.free();
   dstr.append(s);
   trans::normTypeDStr(&dstr);
   return dstr.copy_str(allocator);
@@ -177,6 +175,7 @@ fn String tintSuf(String lit) @inline
 
 <*
  Translates tokens under cursor.
+ @return "A string which then must be freed"
 *>
 fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns)
 {
@@ -197,18 +196,7 @@ fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks*
   // It's needed as sometimes cursor name can be also tokenized, 
   // e.g. when tokenizing a macro, first token is it's name.
   usz start_from = kind == clang::CURSOR_MACRO_DEFINITION ? 1 : 0;
-  if (tokens_len <= start_from)
-  {
-    switch (kind)
-    {
-      // If macro is empty, it's either guard or something that we might not want to translate
-      case clang::CURSOR_MACRO_DEFINITION:
-        err::warn("Macro %s doesn't have value, skipping...", cursor_str);
-      default:
-        err::warn("Expression under %s doesn't have value, skipping...", cursor_str);
-    }
-    return trans::UNTRANSLATABLE?;
-  }
+  if (tokens_len <= start_from) return trans::EMPTY?;
 
   DString res;
   res.init(mem); // res.append() falls into infinite loop if use temp allocator

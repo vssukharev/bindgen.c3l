@@ -92,14 +92,15 @@ struct TypedefVisitData
 
 struct ConstVisitData
 {
-  DString val;
+  String val;
+  Allocator allocator;
   GlobalVisitData* g;
-  usz current;
 }
 
 struct EnumVisitData
 {
   EnumVals vals;
+  Allocator allocator;
   GlobalVisitData* g;
   usz current;
   bool is_unsigned;
