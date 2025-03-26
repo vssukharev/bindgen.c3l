@@ -147,20 +147,38 @@ fn CXChildVisitResult func(
   String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator) ?? "";
 
   CXType type = clang::getCursorType(cursor);
-  String? trans_type_str = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
-  
-  if (catch trans_type_str)
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = misc::convStr(type_spell);
+ 
+  String trans_type_str;
+  if (misc::isTypePFN(type))
   {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String type_str = misc::convStr(type_spell);
+    if (try t = vd.g.types_table[type_str])
+    {
+      trans_type_str = t;
+    }
+    else
+    {
+      ++vd.g.anon_fns_counter;
+      trans_type_str = string::format(vd.allocator, "PrivateFn%s", vd.g.anon_fns_counter);
+      vd.g.types_table[type_str] = trans_type_str.copy(mem); // TODO: get rid of leak
+      if (try bs = ttor::pfnType(vd.g, trans_type_str, type, cursor)) vd.bytes_written += bs;
+    }
+  }
+  else
+  {
+    String? t = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
+    if (catch t)
+    {
+      CXString parent_spell = clang::getCursorSpelling(parent);
+      defer clang::disposeString(parent_spell);
+      String parent_str = misc::convStr(parent_spell);
 
-    CXString parent_spell = clang::getCursorSpelling(parent);
-    defer clang::disposeString(parent_spell);
-    String parent_str = misc::convStr(parent_spell);
-
-    err::warn("Can't translate function/function type '%s' as it's parameter '%s' has type '%s' which is ignored", parent_str, name_str, type_str);
-    return clang::CHILD_VISIT_BREAK;
+      err::warn("Can't translate function/function type '%s' as it's parameter '%s' has type '%s' which is ignored", parent_str, name_str, type_str);
+      return clang::CHILD_VISIT_BREAK;
+    }
+    trans_type_str = t;
   }
 
   vd.params.push({trans_type_str, trans_name_str});
@@ -178,42 +196,57 @@ fn CXChildVisitResult fields(
 {
   FieldsVisitData* vd = (FieldsVisitData*) client_data;
 
+  vd.fields.widths[vd.current] = clang::getFieldDeclBitWidth(cursor);
+
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
   String name_str = misc::convStr(name_spell);
 
   CXType type = clang::getCursorType(cursor);
-  
-  vd.fields.widths[vd.current] = clang::getFieldDeclBitWidth(cursor);
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = misc::convStr(type_spell);
 
-  String? res_name = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
-
-  if (catch res_name)
+  String? trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
+  if (catch trans_name_str)
   {
     err::warn("Field (variable) '%s' is ignored", name_str);
     return clang::CHILD_VISIT_BREAK;
   }
 
-  String? res_type = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
-  
-  if (catch res_type)
+  String trans_type_str;
+  if (misc::isTypePFN(type))
   {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String type_str = misc::convStr(type_spell);
+    if (try t = vd.g.types_table[type_str])
+    {
+      trans_type_str = t;
+    }
+    else
+    {
+      ++vd.g.anon_fns_counter;
+      trans_type_str = string::format(vd.allocator, "PrivateFn%s", vd.g.anon_fns_counter);
+      vd.g.types_table[type_str] = trans_type_str.copy(mem); // TODO: get rid of leak
+      if (try bs = ttor::pfnType(vd.g, trans_type_str, type, cursor)) vd.bytes_written += bs;
+    }
+  }
+  else
+  {
+    String? t = trans::ctype(type, vd.g.trans_fns.type, &vd.g.types_table);
+    if (catch t)
+    {
+      CXString parent_spell = clang::getCursorSpelling(parent);
+      defer clang::disposeString(parent_spell);
+      String parent_str = misc::convStr(parent_spell);
 
-    CXString parent_spell = clang::getCursorSpelling(parent);
-    defer clang::disposeString(parent_spell);
-    String parent_str = misc::convStr(parent_spell);
-
-    err::warn("Can't translate struct/union '%s' as it's return type '%s' is ignored", parent_str, type_str);
-    return clang::CHILD_VISIT_BREAK;
+      err::warn("Can't translate struct/union '%s' as it's return type '%s' is ignored", parent_str, type_str);
+      return clang::CHILD_VISIT_BREAK;
+    }
+    trans_type_str = t;
   }
   
-
   vd.fields.vals[vd.current] = {
-    .type = res_type,
-    .name = res_name,
+    .type = trans_type_str,
+    .name = trans_name_str,
   };
 
   ++vd.current;

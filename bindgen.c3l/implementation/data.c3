@@ -67,6 +67,7 @@ struct GlobalVisitData
   TransTable types_table;
   File* out;
   CXFile cxfile; // used to ignore nodes from other files 
+  usz anon_fns_counter;
 }
 
 // 'allocator' is for VarDecl.name allocations
@@ -75,6 +76,7 @@ struct FuncVisitData
   VarDeclList params;
   Allocator allocator;  
   GlobalVisitData* g;
+  usz bytes_written;
 }
 
 struct FieldsVisitData
@@ -83,6 +85,7 @@ struct FieldsVisitData
   Allocator allocator;
   GlobalVisitData* g;
   usz current;
+  usz bytes_written;
 }
 
 struct TypedefVisitData

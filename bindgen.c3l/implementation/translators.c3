@@ -154,10 +154,7 @@ fn usz? func(
   vd_func.params.tinit(4);
 
   // Translate function parameters and store them into vd_func.params
-  if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0)
-  {
-    return 0;
-  }
+  if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0) return 0;
   
   CXString func_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(func_spell);
@@ -185,7 +182,7 @@ fn usz? func(
     return 0;
   }
 
-  return wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str);
+  return vd_func.bytes_written + wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str);
 }
 
 <*
@@ -348,10 +345,7 @@ fn usz? structDecl(
   };
 
   // Translate function parameters and store them into vd_struct.fields
-  if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0)
-  {
-    return 0;
-  }
+  if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
 
   FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
 
@@ -361,7 +355,7 @@ fn usz? structDecl(
     return 0;
   }
 
-  return wter::structDecl(vd.out, &c3_fields, type_name);
+  return vd_struct.bytes_written + wter::structDecl(vd.out, &c3_fields, type_name);
 }
 
 <*
@@ -390,36 +384,9 @@ fn usz? typedefDecl(
     return 0;
   }
 
-  if (under_type.kind == clang::TYPE_POINTER && clang::getPointeeType(under_type).kind == clang::TYPE_FUNCTION_PROTO)
+  if (misc::isTypePFN(under_type))
   {
-    // Translate pointer to function
-    FuncVisitData vd_func = {
-      .g = vd,
-      .allocator = allocator::temp(),
-    };
-
-    vd_func.params.tinit(4);
-    
-    CXType ret_type = clang::getResultType(clang::getPointeeType(under_type));
-    String? ret_type_name = trans::ctype(ret_type, vd.trans_fns.type, &vd.types_table);
-
-    if (catch ret_type_name)
-    {
-      CXString type_spell = clang::getTypeSpelling(ret_type);
-      defer clang::disposeString(type_spell);
-      String type_str = misc::convStr(type_spell);
-
-      err::warn("Can't translate function pointer alias as it's return type '%s' is ignored", type_str);
-      return 0;
-    }
-
-    // Translate function parameters and store them into vd_struct.fields
-    if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0)
-    {
-      return 0;
-    }
-
-    return wter::typedefFunc(vd.out, type_name, ret_type_name, vd_func.params.array_view());
+    return ttor::pfnType(vd, type_name, under_type, cursor);
   }
   else
   {
@@ -450,65 +417,96 @@ fn usz? typedefDecl(
 fn usz? unionDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard
+@maydiscard => @pool()
 {
-  @pool() {
-    CXType type = clang::getCursorType(cursor);
-    String? type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+  CXType type = clang::getCursorType(cursor);
+  String? type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
 
-    if (catch type_name)
+  if (catch type_name)
+  {
+    CXString type_spell = clang::getTypeSpelling(type);
+    defer clang::disposeString(type_spell);
+    String type_str = misc::convStr(type_spell);
+
+    err::warn("Union '%s' is ignored", type_str);
+    return 0;
+  }
+
+  // Get fields quantity
+  usz fields_len;
+  clang::visitChildren(
+    cursor, 
+    fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
     {
-      CXString type_spell = clang::getTypeSpelling(type);
-      defer clang::disposeString(type_spell);
-      String type_str = misc::convStr(type_spell);
-
-      err::warn("Union '%s' is ignored", type_str);
-      return 0;
-    }
-
-
-    // Get fields quantity
-    usz fields_len;
-    clang::visitChildren(
-      cursor, 
-      fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
-      {
-        usz* fields_len = (usz*) client_data;
-        ++*fields_len;
-        return clang::CHILD_VISIT_CONTINUE;
-      },
-      (CXClientData) &fields_len
-    );
-    
-    // If no fields are defined, type is incomplete
-    if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
+      usz* fields_len = (usz*) client_data;
+      ++*fields_len;
+      return clang::CHILD_VISIT_CONTINUE;
+    },
+    (CXClientData) &fields_len
+  );
   
-    FieldsVisitData vd_struct = {
-      .g = vd,
-      .allocator = allocator::temp(),
-      .fields = {
-        .vals = mem::temp_array(VarDecl, fields_len).ptr,
-        .widths = mem::temp_array(CInt, fields_len).ptr,
-        .len = fields_len,
-      },
-    };
+  // If no fields are defined, type is incomplete
+  if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
 
-    // Translate function parameters and store them into vd_struct.fields
-    if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0)
-    {
-      return 0;
-    }
-
-    FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
-
-    if (catch c3_fields)
-    {
-      err::warn("Can't translate bit fields within struct '%s', skipping...", type_name);
-      return 0;
-    }
-
-    return wter::unionDecl(vd.out, &c3_fields, type_name);
+  FieldsVisitData vd_struct = {
+    .g = vd,
+    .allocator = allocator::temp(),
+    .fields = {
+      .vals = mem::temp_array(VarDecl, fields_len).ptr,
+      .widths = mem::temp_array(CInt, fields_len).ptr,
+      .len = fields_len,
+    },
   };
+
+  // Translate function parameters and store them into vd_struct.fields
+  if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
+
+  FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
+
+  if (catch c3_fields)
+  {
+    err::warn("Can't translate bit fields within struct '%s', skipping...", type_name);
+    return 0;
+  }
+
+  return vd_struct.bytes_written + wter::unionDecl(vd.out, &c3_fields, type_name);
+}
+
+fn usz? pfnType(
+  GlobalVisitData* vd, 
+  String name,
+  CXType type, 
+  CXCursor cursor) 
+=> @pool()
+{
+  FuncVisitData vd_func = {
+    .g = vd,
+    .allocator = tmem,
+  };
+
+  vd_func.params.tinit(4);
+  
+  CXType ret_type = clang::getResultType(clang::getPointeeType(type));
+  String? trans_ret_type_str = trans::ctype(ret_type, vd.trans_fns.type, &vd.types_table);
+
+  if (catch trans_ret_type_str)
+  {
+    CXString ret_type_spell = clang::getTypeSpelling(ret_type);
+    defer clang::disposeString(ret_type_spell);
+    String ret_type_str = misc::convStr(ret_type_spell);
+
+    CXString cursor_spell = clang::getCursorSpelling(cursor);
+    defer clang::disposeString(cursor_spell);
+    String cursor_str = misc::convStr(cursor_spell);
+
+    err::warn("Can't translate function pointer alias '%s' as it's return type '%s' is ignored", cursor_str, ret_type_str);
+    return 0;
+  }
+
+  // Translate function parameters and store them into vd_struct.fields
+  if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0) return 0;
+
+  return vd_func.bytes_written + wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view());
 }
 
 

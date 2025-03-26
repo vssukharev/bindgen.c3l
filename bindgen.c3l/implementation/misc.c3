@@ -43,3 +43,11 @@ macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(CXToken* toke
   }
 }
 
+<*
+ Detects whether the type is pointer to function
+*>
+fn bool isTypePFN(CXType type)
+{
+  return type.kind == clang::TYPE_POINTER && clang::getPointeeType(type).kind == clang::TYPE_FUNCTION_PROTO;
+}
+
