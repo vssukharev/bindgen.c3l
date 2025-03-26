@@ -9,10 +9,6 @@
       "type" : "executable",
       "sources" : [ "examples/dummy.c3" ],
     },
-    "dummy-test" : {
-      "type" : "executable",
-      "sources" : [ "tests/general.c3", "tests/dummy.c3" ],
-    },
 
     "glfw" : {
       "type" : "executable",
@@ -23,9 +19,10 @@
       "type" : "executable",
       "sources" : [ "examples/vulkan.c3" ],
     },
-    "vulkan-test" : {
+
+    "raylib" : {
       "type" : "executable",
-      "sources" : [ "tests/general.c3", "tests/vulkan.c3" ],
+      "sources" : [ "examples/raylib.c3" ],
     },
   },
 }

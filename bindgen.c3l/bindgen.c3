@@ -88,6 +88,7 @@ faultdef NOT_BASIC_TYPE;
   - uint64_t -> ulong
   - size_t -> usz
   - ptrdiff_t -> isz
+  - _Bool -> bool
  NOTE: if some standard type is not written above, please look at 
  bindgen.c3l/implementation/api_utils.c3 and submit an issue on github.
  @return? NOT_BASIC_TYPE

@@ -44,7 +44,10 @@ fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @
   return t;
 }
 
-fn String? tapply(String s, BGTransFn fun) @inline
+fn String? tapply(
+  String s, 
+  BGTransFn fun) 
+@inline
 {
   return trans::apply(s, fun)!;
 }
@@ -58,7 +61,11 @@ fn String? tapply(String s, BGTransFn fun) @inline
  @param s "String to translate"
  @param key "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
-fn String? capply(String s, BGTransFn fun, TransTable* table, String key = "")
+fn String? capply(
+  String s, 
+  BGTransFn fun, 
+  TransTable* table, 
+  String key = "")
 {
   String translated;
   
@@ -143,7 +150,9 @@ fn String? ctype(
  Technically, suffix can be mixed, e.g. 'LLu', 'ull', 'llU' - only 'll'
  and 'LL' must be together and in the same case.
 *>
-fn String intSuf(String lit, Allocator alloc = allocator::heap())
+fn String intSuf(
+  String lit, 
+  Allocator alloc = allocator::heap())
 {
   if (lit.len == 0 || lit[0] == '"') return lit.copy(alloc);
 
@@ -168,16 +177,14 @@ fn String intSuf(String lit, Allocator alloc = allocator::heap())
   return new;
 }
 
-fn String tintSuf(String lit) @inline
-{
-  return trans::intSuf(lit, allocator::temp());
-}
-
 <*
  Translates tokens under cursor.
  @return "A string which then must be freed"
 *>
-fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks* tfns)
+fn String? tokensUnderCursor(
+  Allocator alloc, 
+  CXCursor cursor, 
+  BGTransCallbacks* tfns)
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
@@ -202,6 +209,7 @@ fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks*
   res.init(mem); // res.append() falls into infinite loop if use temp allocator
   defer res.free();
 
+  bool is_func_macro_ignored;
   foreach (&token : tokens_ptr[start_from..tokens_len-1])
   {
     CXTokenKind token_kind = clang::getTokenKind(*token);
@@ -209,10 +217,16 @@ fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks*
     defer clang::disposeString(token_spell);
     String token_str = misc::convStr(token_spell);
 
-    String trans_token_str;
+    if (is_func_macro_ignored)
+    {
+      if (token_str == ")") is_func_macro_ignored = false;
+      continue;
+    }
 
+    String trans_token_str;
     @pool()
     {
+      bool is_func_macro;
       switch (token_kind)
       {
         // Assume that identifier is one of:
@@ -220,23 +234,31 @@ fn String? tokensUnderCursor(Allocator alloc, CXCursor cursor, BGTransCallbacks*
         // 2. Functional macro
         case clang::TOKEN_IDENTIFIER:
           usz i = token - tokens_ptr;
-          bool is_func_macro = false;
           if (i < tokens_len - 1)
-          { 
+          {
             CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
             defer clang::disposeString(token_spell_2);
             String token_str_2 = misc::convStr(token_spell_2);
+
             if (token_str_2 == "(")
             {
-              trans_token_str = trans::apply(token_str, tfns.func_macro, tmem)!;
               is_func_macro = true;
-              res.append("@");
+              if (try t = trans::apply(token_str, tfns.func_macro, tmem)) 
+              {
+                trans_token_str = t;
+                res.append("@");
+              }
+              else
+              {
+                is_func_macro_ignored = true;
+                trans_token_str = "";
+              }
             }
           }
 
           if (!is_func_macro)
           {
-            trans_token_str = trans::apply(token_str, tfns.constant, tmem)!;
+            trans_token_str = trans::apply(token_str, tfns.constant, tmem) ?? "";
           }
 
         case clang::TOKEN_LITERAL:

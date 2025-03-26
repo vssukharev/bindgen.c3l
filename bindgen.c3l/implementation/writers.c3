@@ -42,13 +42,20 @@ fn usz? typedefFunc(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "alias %s = fn %s(", translated_name, return_type)!;
+  acc += io::fprintf(out, "alias %s = fn %s(", translated_name, return_type)!;
+  
+  if (params.len > 1) acc += io::fprintf(out, "\n")!;
+
   foreach (i, p : params) 
   {
     acc += io::fprintf(out, "  %s", p.type)!;
-    acc += io::fprintf(out, p.name == "" ? "" : " %s", p.name)!;
+    if (p.name)
+    {
+      acc += io::fprintf(out, " %s", p.name)!;
+    }
     if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
   }
+
   acc += io::fprintn(out, ");\n")!;
   
   return acc;
@@ -116,7 +123,9 @@ fn usz? func(
 {
   usz acc;
 
-  acc += io::fprintfn(out, "fn %s %s(", return_type, translated_name)!;
+  acc += io::fprintf(out, "fn %s %s(", return_type, translated_name)!;
+  if (params.len > 0) acc += io::fprintf(out, "\n")!;
+
   foreach (i, p : params) 
   {
     acc += io::fprintf(out, "  %s %s", p.type, p.name)!;
@@ -145,7 +154,7 @@ fn usz? funcMacro(
     acc += io::fprintf(out, "#%s", p)!;
     if (i < params.len - 1) acc += io::fprint(out, ", ")!;
   }
-  acc += io::fprintfn(out, ") { }")!;
+  acc += io::fprintfn(out, ") {}")!;
 
   return acc;
 }

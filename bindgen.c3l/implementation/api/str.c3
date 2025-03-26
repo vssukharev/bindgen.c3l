@@ -47,26 +47,45 @@ fn String? strMapBasicType(String str, Allocator alloc) @inline
   switch (str)
   {
     case "void":          return "void".copy(alloc);
-    case "int":           return "CInt".copy(alloc);
-    case "long long":     return "CLongLong".copy(alloc);
-    case "short":         return "CShort".copy(alloc);
-    case "char":          return "CChar".copy(alloc);
-    case "float":         return "float".copy(alloc);
-    case "double":        return "double".copy(alloc);
+    case "_Bool":         return "bool".copy(alloc);
+    case "ptrdiff_t":     return "isz".copy(alloc);
     case "size_t":        return "usz".copy(alloc);
+
+    case "char":          return "CChar".copy(alloc);
+    case "short":         return "CShort".copy(alloc);
+    case "int":           return "CInt".copy(alloc);
+    case "long":          return "CLong".copy(alloc);
+    case "long long":     return "CLongLong".copy(alloc);
+
+    case "unsigned char":       return "char".copy(alloc);
+    case "unsigned short":      return "CUShort".copy(alloc);
+    case "unsigned":            return "CUInt".copy(alloc);
+    case "unsigned int":        return "CUInt".copy(alloc);
+    case "unsigned long":       return "CULong".copy(alloc);
+    case "unsigned long long":  return "CULongLong".copy(alloc);
+    
+    case "signed char":       return "ichar".copy(alloc);
+    case "signed short":      return "CShort".copy(alloc);
+    case "signed":            return "CUInt".copy(alloc);
+    case "signed int":        return "CInt".copy(alloc);
+    case "signed long":       return "CLong".copy(alloc);
+    case "signed long long":  return "CLongLong".copy(alloc);
+
     case "int8_t":        return "ichar".copy(alloc);
     case "int16_t":       return "short".copy(alloc);
     case "int32_t":       return "int".copy(alloc);
     case "int64_t":       return "long".copy(alloc);
+    case "intptr_t":      return "iptr".copy(alloc);
+
     case "uint8_t":       return "char".copy(alloc);
     case "uint16_t":      return "ushort".copy(alloc);
     case "uint32_t":      return "uint".copy(alloc);
     case "uint64_t":      return "ulong".copy(alloc);
-    case "unsigned":      return "CUInt".copy(alloc);
-    case "unsigned int":  return "CUInt".copy(alloc);
-    case "unsigned short": return "CUShort".copy(alloc);
-    case "unsigned char": return "CUChar".copy(alloc);
-    case "ptrdiff_t":     return "isz".copy(alloc);
+    case "uintptr_t":     return "uptr".copy(alloc);
+
+    case "float":         return "float".copy(alloc);
+    case "double":        return "double".copy(alloc);
+
     default:              return bgstr::NOT_BASIC_TYPE?;
   }
 }
