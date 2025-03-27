@@ -16,7 +16,6 @@ fn usz? constDecl(
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
-  CXType cursor_type = clang::getCursorType(cursor);
 
   ConstVisitData vd_const = { 
     .g = vd,
@@ -28,18 +27,16 @@ fn usz? constDecl(
   if (clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const) != 0) return 0;
 
   String? name = trans::apply(cursor_str, vd.trans_fns.constant);
-
   if (catch name)
   {
     err::warn("Constant '%s' is ignored", cursor_str);
     return 0;
   }
 
-  String? type_name = trans::ctype(cursor_type, vd.trans_fns.type, &vd.types_table);
-  
+  String? type_name = trans::ctypeWithPFN(cursor, vd);
   if (catch type_name)
   {
-    CXString type_spell = clang::getTypeSpelling(cursor_type);
+    CXString type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
 
@@ -61,27 +58,21 @@ fn usz? enumDecl(
 @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
-  String? type_str = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String orig_type_str = misc::convStr(type_spell);
 
+  String? type_str = trans::ctype(type, vd);
   if (catch type_str)
   {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String orig_type_str = misc::convStr(type_spell);
-
     err::warn("Enum '%s' is ignored", orig_type_str);
     return 0;
   }
 
   CXType under_type = clang::getEnumDeclIntegerType(cursor);
-  String? under_type_str = trans::ctype(under_type, vd.trans_fns.type, &vd.types_table);
-  
+  String? under_type_str = trans::ctype(under_type, vd);
   if (catch under_type_str)
   {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String orig_type_str = misc::convStr(type_spell);
-
     CXString under_type_spell = clang::getTypeSpelling(type);
     defer clang::disposeString(type_spell);
     String orig_under_type_str = misc::convStr(type_spell);
@@ -127,10 +118,7 @@ fn usz? enumDecl(
         vd_enum.is_unsigned = false;
     }
 
-    if (clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum) != 0)
-    {
-      return 0;
-    }
+    if (clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum) != 0) return 0;
 
     return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.vals);
   };
@@ -160,18 +148,21 @@ fn usz? func(
   defer clang::disposeString(func_spell);
   String func_str = misc::convStr(func_spell);
 
-  CXType ret_type = clang::getCursorResultType(cursor); 
-
   String? trans_func_str = trans::apply(func_str, vd.trans_fns.func);
-
   if (catch trans_func_str)
   {
     err::warn("Function '%s' is ignored", func_str);
     return 0;
   }
 
-  String? trans_ret_type_str = trans::ctype(ret_type, vd.trans_fns.type, &vd.types_table);
+  CXType ret_type = clang::getCursorResultType(cursor); 
+  if (misc::isTypePFN(ret_type))
+  {
+    err::warn("Function '%s' returns pointer to function, which I can't translate, skipping...", func_str);
+    return 0;
+  }
 
+  String? trans_ret_type_str = trans::ctype(ret_type, vd);
   if (catch trans_ret_type_str)
   {
     CXString type_spell = clang::getTypeSpelling(ret_type);
@@ -182,7 +173,7 @@ fn usz? func(
     return 0;
   }
 
-  return vd_func.bytes_written + wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str);
+  return wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str);
 }
 
 <*
@@ -305,7 +296,7 @@ fn usz? structDecl(
 @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
-  String? type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+  String? type_name = trans::ctype(type, vd);
 
   if (catch type_name)
   {
@@ -355,7 +346,7 @@ fn usz? structDecl(
     return 0;
   }
 
-  return vd_struct.bytes_written + wter::structDecl(vd.out, &c3_fields, type_name);
+  return wter::structDecl(vd.out, &c3_fields, type_name);
 }
 
 <*
@@ -371,7 +362,7 @@ fn usz? typedefDecl(
   CXType type = clang::getCursorType(cursor);
   CXType under_type = clang::getTypedefDeclUnderlyingType(cursor);
 
-  String? type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+  String? type_name = trans::ctype(type, vd);
 
   if (catch type_name)
   {
@@ -391,7 +382,7 @@ fn usz? typedefDecl(
   else
   {
     // Translate alias
-    String? under_type_name = trans::ctype(under_type, vd.trans_fns.type, &vd.types_table);
+    String? under_type_name = trans::ctype(under_type, vd);
 
     if (catch under_type_name)
     {
@@ -420,7 +411,7 @@ fn usz? unionDecl(
 @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
-  String? type_name = trans::ctype(type, vd.trans_fns.type, &vd.types_table);
+  String? type_name = trans::ctype(type, vd);
 
   if (catch type_name)
   {
@@ -469,7 +460,7 @@ fn usz? unionDecl(
     return 0;
   }
 
-  return vd_struct.bytes_written + wter::unionDecl(vd.out, &c3_fields, type_name);
+  return wter::unionDecl(vd.out, &c3_fields, type_name);
 }
 
 fn usz? pfnType(
@@ -487,7 +478,7 @@ fn usz? pfnType(
   vd_func.params.tinit(4);
   
   CXType ret_type = clang::getResultType(clang::getPointeeType(type));
-  String? trans_ret_type_str = trans::ctype(ret_type, vd.trans_fns.type, &vd.types_table);
+  String? trans_ret_type_str = trans::ctype(ret_type, vd);
 
   if (catch trans_ret_type_str)
   {
@@ -506,7 +497,7 @@ fn usz? pfnType(
   // Translate function parameters and store them into vd_struct.fields
   if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0) return 0;
 
-  return vd_func.bytes_written + wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view());
+  return wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view());
 }
 
 

@@ -74,9 +74,8 @@ struct GlobalVisitData
 struct FuncVisitData
 {
   VarDeclList params;
-  Allocator allocator;  
+  Allocator allocator;
   GlobalVisitData* g;
-  usz bytes_written;
 }
 
 struct FieldsVisitData
@@ -85,7 +84,6 @@ struct FieldsVisitData
   Allocator allocator;
   GlobalVisitData* g;
   usz current;
-  usz bytes_written;
 }
 
 struct TypedefVisitData

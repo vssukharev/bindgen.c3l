@@ -48,6 +48,6 @@ macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(CXToken* toke
 *>
 fn bool isTypePFN(CXType type)
 {
-  return type.kind == clang::TYPE_POINTER && clang::getPointeeType(type).kind == clang::TYPE_FUNCTION_PROTO;
+  return clang::getPointeeType(type).kind == clang::TYPE_FUNCTION_PROTO;
 }
 

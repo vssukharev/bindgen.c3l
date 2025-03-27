@@ -85,20 +85,13 @@ fn String? capply(
 }
 
 <*
- Translates 'type' via 'fun' and caches it into 'table'
+ Translates type to a string
 *>
 fn String? ctype(
   CXType type,
-  BGTransFn fun, 
-  TransTable* table)
+  GlobalVisitData* vd)
+=> @pool()
 {
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  String type_str = misc::convStr(type_spell);
-  
-  // Return if cached
-  if (try trans_type_str = (*table)[type_str]) return trans_type_str;
-
   // Here we also need to recursively retrieve inner-most type,
   // like: int[]* -> int. Inner types are those we will be translating
   CXType inner_type = type;
@@ -119,30 +112,64 @@ fn String? ctype(
     }
   }
 
-  @pool()
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = misc::convStr(type_spell);
+
+  CXString inner_type_spell = clang::getTypeSpelling(inner_type);
+  defer clang::disposeString(inner_type_spell);
+  String inner_type_str = trans::normTypeStr(misc::convStr(inner_type_spell), tmem);
+
+  // Here, translation is performed under inner type and it's worth to cache also.
+  // For example, if we have something like 'CXType*', 'CXType' already must be 
+  // defined somewhere and, hence, cached.
+  String trans_inner_type_str = trans::capply(inner_type_str, vd.trans_fns.type, &vd.types_table)!;
+
+  // enum MyFoo -> Enum MyFoo
+  DString res_dstr;
+  res_dstr.tinit();
+  res_dstr.append(type_str);
+  trans::normTypeDStr(&res_dstr);
+  res_dstr.replace(inner_type_str, trans_inner_type_str);
+
+  String res = res_dstr.copy_str(mem);
+  vd.types_table[type_str] = res;
+
+  return res;
+}
+
+<*
+ The same as trans::ctype but should be applied on types 
+ which can possibly be pointers to functions. It is a superset
+ of trans::ctype
+*>
+fn String? ctypeWithPFN(
+  CXCursor cursor,
+  GlobalVisitData* vd)
+=> @pool()
+{
+  CXType type = clang::getCursorType(cursor);
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = misc::convStr(type_spell);
+  
+  // Return if cached
+  if (try trans_type_str = vd.types_table[type_str]) return trans_type_str;
+
+  String res;
+  if (misc::isTypePFN(type))
   {
-    CXString inner_type_spell = clang::getTypeSpelling(inner_type);
-    defer clang::disposeString(inner_type_spell);
-    String inner_type_str = trans::normTypeStr(misc::convStr(inner_type_spell), tmem);
+    ++vd.anon_fns_counter;
+    res = string::format(mem, "PrivateFn%s", vd.anon_fns_counter);
+    vd.types_table[type_str] = res;
+    (void) ttor::pfnType(vd, res, type, cursor);
+  }
+  else
+  {
+    res = trans::ctype(type, vd)!;
+  }
 
-    // Here, translation is performed under inner type and it's worth to cache also.
-    // For example, if we have something like 'CXType*', 'CXType' already must be 
-    // defined somewhere and, hence, cached.
-    String trans_inner_type_str = trans::capply(inner_type_str, fun, table)!;
-
-    // enum MyFoo -> Enum MyFoo
-
-    DString res_dstr;
-    res_dstr.tinit();
-    res_dstr.append(type_str);
-    trans::normTypeDStr(&res_dstr);
-    res_dstr.replace(inner_type_str, trans_inner_type_str);
-
-    String res = res_dstr.copy_str(mem);
-    (*table)[type_str] = res;
-
-    return res;
-  };
+  return res;
 }
 
 <*

@@ -67,27 +67,29 @@ int wont_be_declared();
 
 int higher_order(int (*f)(int a, double b), double a);
 
-// #define FUNC_MACRO(a, b) a ## b
+int (*getFunc(void))(int a, int b);
+
+#define FUNC_MACRO(a, b) a ## b
 
 /// --------------- Constants
 
-// #define HOLLOW___
-//
-// #define IGNORE_ME as ... I ... aint ... your ... kind )
-//
-// #define some_const 69
-//
-// #define ONE_MORE_CONST (0x23 | 0x24 >> 2)
-//
-// static const int another_const_1 = 123 + 2 - 2;
-//
-// const MyInt another_const_2 = 0ULL;
+#define HOLLOW___
+
+#define IGNORE_ME as ... I ... aint ... your ... kind )
+
+#define some_const 69
+
+#define ONE_MORE_CONST (0x23 | 0x24 >> 2)
+
+static const int another_const_1 = 123 + 2 - 2;
+
+const MyInt another_const_2 = 0ULL;
 
 /// --------------- Enums
 
-// enum SomeEnum
-// {
-//   SOME_MEMBER_1 = 3,
-//   SOME_MEMBER_2 = 24,
-// };
+enum SomeEnum
+{
+  SOME_MEMBER_1 = 3,
+  SOME_MEMBER_2 = 24,
+};
 
