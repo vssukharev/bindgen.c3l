@@ -81,47 +81,27 @@ fn usz? enumDecl(
     return 0;
   }
 
-  // Get values length
-  usz values_len;
-  clang::visitChildren(
-    cursor, 
-    fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
-    {
-      usz* values_len = (usz*) client_data;
-      ++*values_len;
-      return clang::CHILD_VISIT_CONTINUE;
-    },
-    (CXClientData) &values_len
-  );
-
-  @pool()
-  {
-    EnumVisitData vd_enum = {
-      .g = vd,
-      .allocator = tmem,
-      .vals = {
-        .names = mem::temp_array(String, values_len).ptr,
-        .rhses = mem::temp_array(String, values_len).ptr,
-        .len = values_len,
-      }
-    };
-
-    switch (under_type.kind)
-    {
-      case clang::TYPE_UCHAR:
-      case clang::TYPE_USHORT: 
-      case clang::TYPE_UINT:      
-      case clang::TYPE_ULONG:
-      case clang::TYPE_ULONGLONG: 
-        vd_enum.is_unsigned = true;
-      default:
-        vd_enum.is_unsigned = false;
-    }
-
-    if (clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum) != 0) return 0;
-
-    return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.vals);
+  EnumVisitData vd_enum = {
+    .g = vd,
+    .allocator = tmem,
   };
+  vd_enum.members.tinit();
+
+  switch (under_type.kind)
+  {
+    case clang::TYPE_UCHAR:
+    case clang::TYPE_USHORT: 
+    case clang::TYPE_UINT:      
+    case clang::TYPE_ULONG:
+    case clang::TYPE_ULONGLONG: 
+      vd_enum.is_unsigned = true;
+    default:
+      vd_enum.is_unsigned = false;
+  }
+
+  if (clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum) != 0) return 0;
+
+  return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.members.array_view());
 }
 
 <*
@@ -186,14 +166,9 @@ fn usz? macroDef(
   CXCursor cursor) 
 @maydiscard
 {
-  if (clang::isMacroFunctionLike_Cursor(cursor))
-  {
-    return ttor::funcMacroDef(vd, cursor);
-  }
-  else
-  {
-    return ttor::constMacroDef(vd, cursor);
-  }
+  return clang::isMacroFunctionLike_Cursor(cursor) ? 
+    ttor::funcMacroDef(vd, cursor) :
+    ttor::constMacroDef(vd, cursor);
 }
 
 <*
@@ -202,49 +177,46 @@ fn usz? macroDef(
 fn usz? funcMacroDef(
   GlobalVisitData* vd,
   CXCursor cursor)
+=> @pool()
 {
-  @pool()
+  CXString macro_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(macro_spell);
+  String macro_str = misc::convStr(macro_spell);
+
+  String? trans_macro_str = trans::tapply(macro_str, vd.trans_fns.func_macro);
+  if (catch trans_macro_str)
   {
-    CXString macro_spell = clang::getCursorSpelling(cursor);
-    defer clang::disposeString(macro_spell);
-    String macro_str = misc::convStr(macro_spell);
+    err::warn("Functional macro '%s' is ignored", macro_str);
+    return 0;
+  }
 
-    String? trans_macro_str = trans::tapply(macro_str, vd.trans_fns.func_macro);
+  err::warn("Macro '%s' (@%s) is function-like so you should complete it's body manually", macro_str, trans_macro_str);
 
-    if (catch trans_macro_str)
+  List{String} params;
+  params.tinit();
+
+  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+  CXSourceRange sr = misc::getTrueCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
+  
+  CXToken* tokens_ptr; uint tokens_len;
+  clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
+  defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
+
+  // Make a small tweak here. TODO: get rid of it
+  if OUTER: (true) 
+  {
+    // First token is the name of a macro and second token is left brace so start from the third one
+    misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str)
     {
-      err::warn("Functional macro '%s' is ignored", macro_str);
-      return 0;
-    }
-
-    err::warn("Macro '%s' (@%s) is function-like so you should complete it's body manually", macro_str, trans_macro_str);
-
-    List{String} params;
-    params.tinit();
-
-    CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
-    CXSourceRange sr = misc::getTrueCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
-    
-    CXToken* tokens_ptr; uint tokens_len;
-    clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
-    defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
-
-    // Make a small tweak here. TODO: get rid of it
-    if OUTER: (true) 
-    {
-      // First token is the name of a macro and second token is left brace so start from the third one
-      misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str)
+      if (token_str == ")") break OUTER;
+      if (token_str != ",")
       {
-        if (token_str == ")") break OUTER;
-        if (token_str != ",")
-        {
-          params.push(token_str);
-        }
-      };
-    }
+        params.push(token_str);
+      }
+    };
+  }
 
-    return wter::funcMacro(vd.out, params.array_view(), trans_macro_str);
-  };
+  return wter::funcMacro(vd.out, params.array_view(), trans_macro_str);
 }
 
 <*
@@ -254,99 +226,31 @@ fn usz? funcMacroDef(
 fn usz? constMacroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
+=> @pool()
 {
-  @pool()
+  CXString macro_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(macro_spell);
+  String macro_str = misc::convStr(macro_spell);
+
+  String? trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
+  if (catch trans_macro_str)
   {
-    CXString macro_spell = clang::getCursorSpelling(cursor);
-    defer clang::disposeString(macro_spell);
-    String macro_str = misc::convStr(macro_spell);
+    err::warn("Constant '%s' is ignored", macro_str);
+  }
+
+  String? val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
+  if (catch exc = val)
+  {
+    switch (exc)
+    {
+      case trans::IGNORE:
+        err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", macro_str);
+      case trans::EMPTY:
+        err::warn("Macro '%s' doesn't have value, skipping...", macro_str);
+    }
+  }
  
-    String? trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
-    
-    if (catch trans_macro_str)
-    {
-      err::warn("Constant '%s' is ignored", macro_str);
-    }
-
-    String? val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
-    
-    if (catch exc = val)
-    {
-      switch (exc)
-      {
-        case trans::IGNORE:
-          err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", macro_str);
-        case trans::EMPTY:
-          err::warn("Macro %s doesn't have value, skipping...", macro_str);
-      }
-    }
-   
-    return wter::constDecl(vd.out, "", trans_macro_str, val);
-  };
-}
-
-<*
- Translates structure declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
- @returns "Number of bytes written"
-*>
-fn usz? structDecl(
-  GlobalVisitData* vd, 
-  CXCursor cursor) 
-@maydiscard => @pool()
-{
-  CXType type = clang::getCursorType(cursor);
-  String? type_name = trans::ctype(type, vd);
-
-  if (catch type_name)
-  {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String type_str = misc::convStr(type_spell);
-
-    err::warn("Struct '%s' is ignored", type_str);
-    return 0;
-  }
-
-
-  // Get fields quantity
-  usz fields_len;
-  clang::visitChildren(
-    cursor, 
-    fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
-    {
-      usz* fields_len = (usz*) client_data;
-      ++*fields_len;
-      return clang::CHILD_VISIT_CONTINUE;
-    },
-    (CXClientData) &fields_len
-  );
-  
-  // If no fields are defined, type is incomplete
-  if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
-
-  FieldsVisitData vd_struct = {
-    .g = vd,
-    .allocator = allocator::temp(),
-    .fields = {
-      .vals = mem::temp_array(VarDecl, fields_len).ptr,
-      .widths = mem::temp_array(CInt, fields_len).ptr,
-      .len = fields_len,
-    },
-  };
-
-  // Translate function parameters and store them into vd_struct.fields
-  if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
-
-  FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
-
-  if (catch c3_fields)
-  {
-    err::warn("Can't translate bit fields within struct '%s', skipping...", type_name);
-    return 0;
-  }
-
-  return wter::structDecl(vd.out, &c3_fields, type_name);
+  return wter::constDecl(vd.out, "", trans_macro_str, val);
 }
 
 <*
@@ -363,7 +267,6 @@ fn usz? typedefDecl(
   CXType under_type = clang::getTypedefDeclUnderlyingType(cursor);
 
   String? type_name = trans::ctype(type, vd);
-
   if (catch type_name)
   {
     CXString type_spell = clang::getTypeSpelling(type);
@@ -383,7 +286,6 @@ fn usz? typedefDecl(
   {
     // Translate alias
     String? under_type_name = trans::ctype(under_type, vd);
-
     if (catch under_type_name)
     {
       CXString type_spell = clang::getTypeSpelling(under_type);
@@ -394,10 +296,29 @@ fn usz? typedefDecl(
       return 0;
     }
 
-    return type_name != under_type_name 
-      ? wter::typedefAlias(vd.out, type_name, under_type_name)
-      : 0; // do not write if aliases are equal
+    if (type_name != under_type_name)
+    {
+      return wter::typedefAlias(vd.out, type_name, under_type_name);
+    }
+    else
+    {
+      // Do not write if aliases are equal
+      return 0;
+    }
   }
+}
+
+<*
+ Translates structure declaration and writes it to 'out'
+ @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
+ @returns "Number of bytes written"
+*>
+fn usz? structDecl(
+  GlobalVisitData* vd, 
+  CXCursor cursor) 
+@maydiscard => @pool()
+{
+  return ttor::fieldType(vd, cursor, false);
 }
 
 <*
@@ -408,6 +329,21 @@ fn usz? typedefDecl(
 fn usz? unionDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
+@maydiscard
+{
+  return ttor::fieldType(vd, cursor, true);
+}
+
+
+// ------- Helpers, which are not called directly from global visitor
+
+<*
+ @param $is_union : "Made to avoid code repetance"
+*>
+macro usz? fieldType(
+  GlobalVisitData* vd,
+  CXCursor cursor, 
+  bool $is_union)
 @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
@@ -419,49 +355,49 @@ fn usz? unionDecl(
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
 
-    err::warn("Union '%s' is ignored", type_str);
+    $if $is_union:
+      err::warn("Union '%s' is ignored", type_str);
+    $else
+      err::warn("Struct '%s' is ignored", type_str);
+    $endif
+
     return 0;
   }
 
-  // Get fields quantity
-  usz fields_len;
-  clang::visitChildren(
-    cursor, 
-    fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
-    {
-      usz* fields_len = (usz*) client_data;
-      ++*fields_len;
-      return clang::CHILD_VISIT_CONTINUE;
-    },
-    (CXClientData) &fields_len
-  );
+  usz fields_len = misc::getTopChildrenNumber(cursor);
   
   // If no fields are defined, type is incomplete
   if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
 
   FieldsVisitData vd_struct = {
     .g = vd,
-    .allocator = allocator::temp(),
-    .fields = {
-      .vals = mem::temp_array(VarDecl, fields_len).ptr,
-      .widths = mem::temp_array(CInt, fields_len).ptr,
-      .len = fields_len,
-    },
+    .allocator = tmem,
   };
+
+  vd_struct.fields.init(vd_struct.allocator);
 
   // Translate function parameters and store them into vd_struct.fields
   if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
 
-  FieldsC3? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
 
+  C3Fields? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
   if (catch c3_fields)
   {
-    err::warn("Can't translate bit fields within struct '%s', skipping...", type_name);
+    $if $is_union:
+      err::warn("Can't translate bit fields within union '%s', skipping...", type_name);
+    $else
+      err::warn("Can't translate bit fields within struct '%s', skipping...", type_name);
+    $endif
     return 0;
   }
 
-  return wter::unionDecl(vd.out, &c3_fields, type_name);
+  $if $is_union:
+    return wter::unionDecl(vd.out, type_name, &c3_fields);
+  $else
+    return wter::structDecl(vd.out, type_name, &c3_fields);
+  $endif
 }
+
 
 fn usz? pfnType(
   GlobalVisitData* vd, 
@@ -499,5 +435,3 @@ fn usz? pfnType(
 
   return wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view());
 }
-
-

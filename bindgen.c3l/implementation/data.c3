@@ -11,6 +11,7 @@ import std::io, std::collections::map, std::collections::list, clang;
 *>
 alias TransTable = HashMap{String, String};
 alias VarDeclList = List{VarDecl};
+alias EnumMemberList = List{EnumMember};
 
 struct VarDecl
 {
@@ -18,46 +19,133 @@ struct VarDecl
   String name;
 }
 
-struct EnumVals
+struct EnumMember
 {
-  String* rhses;
-  String* names;
-  usz len;
+  String name;
+  String val;
 }
 
-struct Fields
+<*
+ BIT : "Means bit field if used in CFields; means bitstruct when used in C3Fields"
+*>
+enum FieldKind : char
 {
-  VarDecl* vals;
-  CInt* widths; // bit field width. If widths[i] == -1 then it's not a bit field
-  usz len;
+  NORMAL, 
+  STRUCT,
+  UNION,
+  BIT,
 }
 
-struct FieldsC3
+struct CFieldBit
 {
-  FieldC3Kind* kinds;
-  VarDecl[] norm;
-  BitStructC3[] bit;
+  String type;
+  String name;
+  usz width;
 }
 
-fn usz FieldsC3.len(&self) @inline => self.norm.len + self.bit.len; 
-
-enum FieldC3Kind : char
+<*
+ name : "Optional, can be zero string"
+*>
+struct CFieldAnon
 {
-  NORMAL, BITSTRUCT
+  String name;
+  CFields fields;
 }
 
-struct BitStructC3
+<* 
+  kinds.len == sum of *.len 
+*>
+struct CFields
 {
-  String under_type; // bitstruct : under_type { ... }
-  BitFieldC3[] fields;
+  List{FieldKind} kinds;
+  List{VarDecl} norm;
+  List{CFieldBit} bit;
+  List{CFieldAnon} structs;
+  List{CFieldAnon} unions;
 }
 
-struct BitFieldC3
+macro void CFields.init(&self, Allocator alloc)
 {
-  VarDecl val;
+  $foreach $member : CFields.membersof:
+    self.$eval($member.nameof).init(alloc);
+  $endforeach
+}
+
+<*
+ Iterates through kinds and returns corresponding 
+ index for fields depending on the kind
+*>
+macro CFields.@foreach(&self; @body(FieldKind* kind, usz index))
+{
+  usz[FieldKind.elements] counters;
+
+  foreach (i, &k : self.kinds)
+  {
+    @body(k, counters[k.ordinal]);
+    ++counters[k.ordinal];
+  }
+}
+
+<*
+ name : "Optional, can be zero string"
+*>
+struct C3FieldAnon
+{
+  String name;
+  C3Fields fields;
+}
+
+struct BitstructMember
+{
+  String type;
+  String name;
   usz from;
   usz to;
 }
+
+<*
+ under_type : "Underlying type of a bitstruct (bitstruct : under_type { ... })"
+*>
+struct C3FieldBitstruct
+{
+  String under_type;
+  List{BitstructMember} fields;
+}
+
+<* 
+  kinds.len == sum of *.len 
+*>
+struct C3Fields
+{
+  List{FieldKind} kinds;
+  List{VarDecl} norm;
+  List{C3FieldBitstruct} bit;
+  List{C3FieldAnon} structs;
+  List{C3FieldAnon} unions;
+}
+
+macro void C3Fields.init(&self, Allocator alloc)
+{
+  $foreach $member : C3Fields.membersof:
+    self.$eval($member.nameof).init(alloc);
+  $endforeach
+}
+
+<*
+ Iterates through kinds and returns corresponding 
+ index for fields depending on the kind
+*>
+macro C3Fields.@foreach(&self; @body(FieldKind* kind, usz index))
+{
+  usz[FieldKind.elements] counters;
+
+  foreach (i, &k : self.kinds)
+  {
+    @body(k, counters[k.ordinal]);
+    ++counters[k.ordinal];
+  }
+}
+
 
 // --- Visit Data
 
@@ -70,7 +158,9 @@ struct GlobalVisitData
   usz anon_fns_counter;
 }
 
-// 'allocator' is for VarDecl.name allocations
+<*
+ allocator : "All string are allocated via it"
+*>
 struct FuncVisitData
 {
   VarDeclList params;
@@ -78,9 +168,13 @@ struct FuncVisitData
   GlobalVisitData* g;
 }
 
+<*
+ allocator : "All string are allocated via it"
+*>
 struct FieldsVisitData
 {
-  Fields fields;
+  CXCursor prev_anon;
+  CFields fields;
   Allocator allocator;
   GlobalVisitData* g;
   usz current;
@@ -91,6 +185,9 @@ struct TypedefVisitData
   GlobalVisitData* g;
 }
 
+<*
+ allocator : "val is allocated via it"
+*>
 struct ConstVisitData
 {
   String val;
@@ -98,12 +195,14 @@ struct ConstVisitData
   GlobalVisitData* g;
 }
 
+<*
+ allocator : "All string are allocated via it"
+*>
 struct EnumVisitData
 {
-  EnumVals vals;
+  EnumMemberList members;
   Allocator allocator;
   GlobalVisitData* g;
-  usz current;
   bool is_unsigned;
 }
 

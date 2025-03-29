@@ -51,3 +51,52 @@ fn bool isTypePFN(CXType type)
   return clang::getPointeeType(type).kind == clang::TYPE_FUNCTION_PROTO;
 }
 
+<*
+ Iterates thorugh the toppest children of cursor and returns
+ their quantity
+*>
+fn usz getTopChildrenNumber(CXCursor cursor)
+{
+  usz qty;
+
+  clang::visitChildren(
+    cursor, 
+    fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
+    {
+      usz* qty = (usz*) client_data;
+      ++*qty;
+      return clang::CHILD_VISIT_CONTINUE;
+    },
+    (CXClientData) &qty
+  );
+
+  return qty;
+}
+
+
+fn FieldKind getFieldKind(CXCursor cursor)
+{
+  FieldKind kind;
+
+  switch (clang::getCursorKind(cursor)) 
+  {
+    case clang::CURSOR_STRUCT_DECL: 
+      kind = STRUCT;
+
+    case clang::CURSOR_UNION_DECL: 
+      kind = UNION;
+
+    default: 
+      if (clang::getFieldDeclBitWidth(cursor) == -1) 
+      {
+        kind = NORMAL;
+      }
+      else
+      {
+        kind = BIT;
+      }
+  }
+
+  return kind;
+}
+

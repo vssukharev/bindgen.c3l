@@ -5,114 +5,78 @@ import std::collections::list;
 
 faultdef ERROR;
 
-alias RangeStrList @local = List{RangeStr};
-struct RangeStr @local
-{
-  String str;
-  usz left;
-  usz right;
-}
-
 <*
  The algorithm does the following:
  1. Cycles through C fields to especially detect bit fields
  2. During the loop it maps C bit fields to C3 bit structs according to the following logic:
    - If we have a segment of bit fields, we should check their accumulated width in bits
    - Once width is not power of 2, we can't detect the padding as it's implementation-defined, so throw an error
-   - Once width is power of 2, we set it in FieldsC3 with underlying type, which size equals to the accumulated width
+   - Once width is power of 2, we set it in C3Fields with underlying type, which size equals to the accumulated width
  3. Then it allocates everything that is needed via an allocator and returns the resulting structure
 *>
-fn FieldsC3? getC3Fields(Allocator alloc, Fields cfs) => @pool()
+fn C3Fields? getC3Fields(Allocator alloc, CFields cfs) => @pool()
 {
-  // Calculate length
-  usz norm_fields_count;
-  foreach (w : cfs.widths[:cfs.len]) if (w == -1) ++norm_fields_count;
-  usz bit_fields_count = cfs.len - norm_fields_count;
+  C3Fields res;
+  res.init(alloc);
 
-  // Detect bitstruct ranges
-  RangeStrList ranges;
-  ranges.tinit(2);
+  // usz.max means we're not in segment
+  usz bit_widths_acc;
+  usz bit_segment_start = usz.max;
+  List{BitstructMember} bit_fields;
+  bit_fields.init(alloc);
 
-  usz bit_field_seg;
-  CInt acc_bit_width;
-  bool is_in_range = false;
-  foreach (i, w : cfs.widths[:cfs.len])
+  cfs.@foreach(; FieldKind* kind, usz index)
   {
-    if (w != -1)
+    switch (*kind)
     {
-      if (!is_in_range) 
-      {
-        bit_field_seg = i;
-        acc_bit_width = 0;
-      }
+      // TODO: do it without pushes with plain copy 
+      // as res.norm practically equal cfs.norm
+      case NORMAL:
+        res.kinds.push(*kind);
+        res.norm.push(cfs.norm[index]);
 
-      acc_bit_width += w;
-      is_in_range = true;
+      case BIT:
+        CFieldBit cfield = cfs.bit[index];
+        if (bit_segment_start == usz.max) bit_segment_start = index;
+        bit_fields.push({cfield.type, cfield.name, bit_widths_acc, bit_widths_acc + cfield.width - 1});
+        bit_widths_acc += cfield.width;
+
+      case STRUCT:
+        res.kinds.push(*kind);
+        C3Fields c3fields = getC3Fields(alloc, cfs.structs[index].fields)!;
+        res.structs.push({cfs.structs[index].name, c3fields});
+
+      case UNION:
+        res.kinds.push(*kind);
+        C3Fields c3fields = getC3Fields(alloc, cfs.unions[index].fields)!;
+        res.unions.push({cfs.unions[index].name, c3fields});
     }
 
-    if (is_in_range && (w == -1 || i == cfs.len - 1))
+    // Finish bit range and reset things if needed
+    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != usz.max)
     {
-      switch (acc_bit_width)
+      res.kinds.push(BIT);
+      switch (bit_widths_acc)
       {
         case 8:
-          ranges.push({ .str = "char", .left = bit_field_seg, .right = i });               
+          res.bit.push({"char", bit_fields});
         case 16:
-          ranges.push({ .str = "ushort", .left = bit_field_seg, .right = i });               
+          res.bit.push({"ushort", bit_fields});
         case 32:
-          ranges.push({ .str = "uint", .left = bit_field_seg, .right = i });               
+          res.bit.push({"uint", bit_fields});
         case 64:
-          ranges.push({ .str = "ulong", .left = bit_field_seg, .right = i });               
+          res.bit.push({"ulong", bit_fields});
         case 128:
-          ranges.push({ .str = "uint128", .left = bit_field_seg, .right = i });               
+          res.bit.push({"uint128", bit_fields});
         default:
           return algo::ERROR?;
       }
 
-      is_in_range = false;
+      bit_fields = {};
+      bit_fields.init(alloc);
+      bit_segment_start = usz.max;
     }
-  }
-
-  // Analyze ranges
-  FieldsC3 res;
-  res.norm = allocator::alloc_array(alloc, VarDecl, norm_fields_count);
-  res.bit = allocator::alloc_array(alloc, BitStructC3, ranges.len());
-  res.kinds = allocator::alloc_array(alloc, FieldC3Kind, res.norm.len + res.bit.len).ptr;
-
-  // Kinds
-  {
-    usz i;
-    usz norm_c;
-    usz bit_c;
-    foreach (&kind : res.kinds[:res.len()])
-    {
-      if (cfs.widths[i] == -1)
-      {
-        res.norm[norm_c] = cfs.vals[i];
-        *kind = FieldC3Kind.NORMAL;
-        ++i;
-        ++norm_c;
-      }
-      else
-      {
-        res.bit[bit_c].under_type = ranges[bit_c].str;
-        res.bit[bit_c].fields = allocator::alloc_array(alloc, BitFieldC3, ranges[bit_c].right - i);
-
-        CInt prev_width = -1;
-        foreach (j, &bitfield : res.bit[bit_c].fields)
-        {
-          bitfield.val = cfs.vals[i + j];
-          bitfield.from = (usz) (prev_width + 1);
-          bitfield.to = (usz) (prev_width + cfs.widths[i + j]);
-
-          prev_width = (CInt) bitfield.to;
-        }
-
-        *kind = FieldC3Kind.BITSTRUCT;
-        while (cfs.widths[i] != -1) ++i;
-        ++bit_c;
-      }
-    }
-  }
+  };
 
   return res;
 }

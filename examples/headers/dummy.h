@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-/// --------------- Structs
+/// --------------- Records
 
 struct incomplete_Distinct_t;
 
@@ -38,7 +38,31 @@ struct HigherOrder
   int (*f)(int a, double b); 
 };
 
-/// --------------- Unions
+union AnonUnion
+{
+  int outer_a;
+
+  struct
+  {
+    int first_a;
+    int first_b;
+  } first;
+  
+  union 
+  {
+    int second_a;
+    int second_b;
+  } second;
+
+  struct 
+  {
+    int inner_a;
+    int inner_b;
+  };
+
+  char outer_b : 3;
+  char outer_c : 5;
+};
 
 union AUnion
 {

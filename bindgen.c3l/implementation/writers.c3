@@ -3,17 +3,19 @@ module bindgen::impl::wter @private;
 import bindgen::bg, bindgen::impl @public;
 import std::io, clang;
 
+const INDENT = "  ";
+
 <*
  Writes aliasing typedef to 'out'
  @returns "Number of bytes written"
 *>
 fn usz? typedefAlias(
   File* out,
-  String translated_name,
+  String name,
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "alias %s = %s;\n", translated_name, underlying_name);
+  return io::fprintfn(out, "\nalias %s = %s;", name, underlying_name);
 }
 
 <*
@@ -22,11 +24,11 @@ fn usz? typedefAlias(
 *>
 fn usz? typedefDist(
   File* out,
-  String translated_name,
+  String name,
   String underlying_name) 
 @maydiscard
 {
-  return io::fprintfn(out, "typedef %s = %s;\n", translated_name, underlying_name);
+  return io::fprintfn(out, "\ntypedef %s = %s;", name, underlying_name);
 }
 
 <*
@@ -35,28 +37,28 @@ fn usz? typedefDist(
 *>
 fn usz? typedefFunc(
   File* out,
-  String translated_name,
+  String name,
   String return_type,
   VarDecl[] params)
 @maydiscard
 {
-  usz acc;
+  usz? acc;
 
-  acc += io::fprintf(out, "alias %s = fn %s(", translated_name, return_type)!;
+  acc += io::fprintf(out, "\nalias %s = fn %s(", name, return_type);
   
-  if (params.len > 1) acc += io::fprintf(out, "\n")!;
+  if (params.len > 1) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params) 
   {
-    acc += io::fprintf(out, "  %s", p.type)!;
+    acc += io::fprintf(out, "  %s", p.type);
     if (p.name)
     {
-      acc += io::fprintf(out, " %s", p.name)!;
+      acc += io::fprintf(out, " %s", p.name);
     }
-    if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
+    if (i < params.len - 1) acc += io::fprintn(out, ", ");
   }
 
-  acc += io::fprintn(out, ");\n")!;
+  acc += io::fprintn(out, ");");
   
   return acc;
 }
@@ -68,19 +70,19 @@ fn usz? typedefFunc(
 fn usz? constDecl(
   File* out,
   String translated_type,
-  String translated_name,
+  String name,
   String value)
 @maydiscard
 {
-  usz acc;
+  usz? acc;
 
   if (translated_type == "")
   {
-    acc += io::fprintfn(out, "const %s = %s;", translated_name, value)!;
+    acc += io::fprintfn(out, "\nconst %s = %s;", name, value);
   }
   else
   {
-    acc += io::fprintfn(out, "const %s %s = %s;", translated_type, translated_name, value)!;
+    acc += io::fprintfn(out, "\nconst %s %s = %s;", translated_type, name, value);
   }
 
   return acc;
@@ -94,17 +96,16 @@ fn usz? enumDecl(
   File* out,
   String name,
   String type,
-  EnumVals vals)
+  EnumMember[] members)
 @maydiscard
 {
-  usz acc;
+  usz? acc;
   
-  acc += io::fprintfn(out, "typedef %s = inline %s;", name, type)!;
-  for (usz i; i < vals.len; ++i)
+  acc += io::fprintfn(out, "\ntypedef %s = inline %s;", name, type);
+  foreach (member : members)
   {
-    acc += io::fprintfn(out, "const %s %s = %s;", name, vals.names[i], vals.rhses[i])!;
+    acc += io::fprintfn(out, "const %s %s = %s;", name, member.name, member.val);
   }
-  acc += io::fprintn(out)!;
   
   return acc;
 }
@@ -118,20 +119,20 @@ fn usz? func(
   VarDecl[] params,
   String return_type,
   String original_name,
-  String translated_name) 
+  String name) 
 @maydiscard
 {
-  usz acc;
+  usz? acc;
 
-  acc += io::fprintf(out, "fn %s %s(", return_type, translated_name)!;
-  if (params.len > 0) acc += io::fprintf(out, "\n")!;
+  acc += io::fprintf(out, "\nfn %s %s(", return_type, name);
+  if (params.len > 0) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params) 
   {
-    acc += io::fprintf(out, "  %s %s", p.type, p.name)!;
-    if (i < params.len - 1) acc += io::fprintn(out, ", ")!;
+    acc += io::fprintf(out, "  %s %s", p.type, p.name);
+    if (i < params.len - 1) acc += io::fprintn(out, ", ");
   }
-  acc += io::fprintfn(out, ")\n@extern(\"%s\");\n", original_name)!;
+  acc += io::fprintfn(out, ")\n@extern(\"%s\");", original_name);
 
   return acc;
 }
@@ -146,15 +147,15 @@ fn usz? funcMacro(
   String name) 
 @maydiscard
 {
-  usz acc;
+  usz? acc;
 
-  acc += io::fprintf(out, "macro @%s(", name)!;
+  acc += io::fprintf(out, "\nmacro @%s(", name);
   foreach (i, p : params) 
   {
-    acc += io::fprintf(out, "#%s", p)!;
-    if (i < params.len - 1) acc += io::fprint(out, ", ")!;
+    acc += io::fprintf(out, "#%s", p);
+    if (i < params.len - 1) acc += io::fprint(out, ", ");
   }
-  acc += io::fprintfn(out, ") {}")!;
+  acc += io::fprintfn(out, ") {}");
 
   return acc;
 }
@@ -168,70 +169,125 @@ fn usz? moduleHead(
   String module_name)
 @maydiscard
 {
-  return io::fprintfn(out, "\nmodule %s;\n", module_name);
+  return io::fprintfn(out, "\nmodule %s;", module_name);
 }
 
-<*
- Writes structure to 'out'
- @returns "Number of bytes written"
-*>
+
 fn usz? structDecl(
   File* out,
-  FieldsC3* fields,
-  String translated_name) 
+  String name,
+  C3Fields* fields,
+  usz indent_level = 0) 
 @maydiscard
 {
-  usz acc;
+  usz? acc;
 
-  acc += io::fprintfn(out, "struct %s {", translated_name)!;
-  acc += wter::fields(out, fields)!;
-  acc += io::fprintfn(out, "}\n")!;
+  acc += printIndent(out, indent_level);
+  
+  if (indent_level == 0)
+  {
+    acc += io::fprintf(out, "\n");
+  }
+
+  if (name == "")
+  {
+    acc += io::fprintfn(out, "struct {");
+  }
+  else
+  {
+    acc += io::fprintfn(out, "struct %s {", name);
+  }
+
+  acc += wter::fields(out, fields, indent_level + 1);
+
+  acc += printIndent(out, indent_level);
+  acc += io::fprintfn(out, "}");
   
   return acc;
 }
+
 
 fn usz? unionDecl(
   File* out,
-  FieldsC3* fields,
-  String translated_name) 
+  String name,
+  C3Fields* fields,
+  usz indent_level = 0) 
 @maydiscard
 {
-  usz acc;
+  usz? acc;
 
-  acc += io::fprintfn(out, "union %s {", translated_name)!;
-  acc += wter::fields(out, fields)!;
-  acc += io::fprintfn(out, "}\n")!;
+  acc += printIndent(out, indent_level);
+
+  if (indent_level == 0)
+  {
+    acc += io::fprintf(out, "\n");
+  }
+
+  if (name == "")
+  {
+    acc += io::fprintfn(out, "union {");
+  }
+  else
+  {
+    acc += io::fprintfn(out, "union %s {", name);
+  }
+
+  acc += wter::fields(out, fields, indent_level + 1);
+
+  acc += printIndent(out, indent_level);
+  acc += io::fprintfn(out, "}");
   
   return acc;
 }
 
+
 fn usz? fields(
   File* out,
-  FieldsC3* fs)
+  C3Fields* fields,
+  usz indent_level)
 {
-  usz acc;
+  usz? acc;
 
-  usz norm_c;
-  usz bit_c;
-  foreach (FieldC3Kind k : fs.kinds[:fs.len()])
+  fields.@foreach(; FieldKind* kind, usz index)
   {
-    switch (k)
+    switch (*kind)
     {
       case NORMAL:
-        acc += io::fprintfn(out, "  %s %s;", fs.norm[norm_c].type, fs.norm[norm_c].name)!;
-        ++norm_c;
+        acc += printIndent(out, indent_level);
+        acc += io::fprintfn(out, "%s %s;", fields.norm[index].type, fields.norm[index].name);
 
-      case BITSTRUCT:
-        acc += io::fprintfn(out, "  bitstruct : %s {", fs.bit[bit_c].under_type)!;
-        foreach (BitFieldC3 bf : fs.bit[bit_c].fields)
+      case BIT:
+        acc += printIndent(out, indent_level);
+        acc += io::fprintfn(out, "bitstruct : %s {", fields.bit[index].under_type)!;
+
+        foreach (BitstructMember bitm : fields.bit[index].fields)
         {
-          acc += io::fprintfn(out, "    %s %s : %s..%s;", bf.val.type, bf.val.name, bf.from, bf.to)!;
+          acc += printIndent(out, indent_level + 1);
+          acc += io::fprintfn(out, "%s %s : %s..%s;", bitm.type, bitm.name, bitm.from, bitm.to)!;
         }
-        acc += io::fprintfn(out, "  }")!;
-        ++bit_c;
-    }
-  }
 
+        acc += printIndent(out, indent_level);
+        acc += io::fprintfn(out, "}")!;
+
+      case STRUCT:
+        acc += wter::structDecl(out, fields.structs[index].name, &fields.structs[index].fields, indent_level);
+
+      case UNION:
+        acc += wter::unionDecl(out, fields.unions[index].name, &fields.unions[index].fields, indent_level);
+    }
+  };
+
+  return acc;
+}
+
+// ------- Helpers
+
+fn usz? printIndent( 
+  File* out, 
+  usz indent_level = 1)
+{
+  usz? acc;
+  for (usz i; i < indent_level; ++i) acc += io::fprintf(out, INDENT);
   return acc;
 }
 
