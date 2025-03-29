@@ -69,23 +69,36 @@ fn usz? typedefFunc(
 *>
 fn usz? constDecl(
   File* out,
-  String translated_type,
+  String type,
   String name,
   String value)
 @maydiscard
 {
   usz? acc;
 
-  if (translated_type == "")
+  if (type == "")
   {
     acc += io::fprintfn(out, "\nconst %s = %s;", name, value);
   }
   else
   {
-    acc += io::fprintfn(out, "\nconst %s %s = %s;", translated_type, name, value);
+    acc += io::fprintfn(out, "\nconst %s %s = %s;", type, name, value);
   }
 
   return acc;
+}
+
+<*
+ Writes global variable to 'out'
+ @returns "Number of bytes written"
+*>
+fn usz? varDecl(
+  File* out,
+  String type,
+  String name)
+@maydiscard
+{
+  return io::fprintfn(out, "\n%s %s;", type, name);
 }
 
 <*

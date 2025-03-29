@@ -109,6 +109,11 @@ static const int another_const_1 = 123 + 2 - 2;
 
 const MyInt another_const_2 = 0ULL;
 
+/// --------------- Variables
+
+int some_var;
+int some_var_with_default = 2;
+
 /// --------------- Enums
 
 enum SomeEnum

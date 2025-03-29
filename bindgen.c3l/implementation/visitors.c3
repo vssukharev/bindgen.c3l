@@ -41,7 +41,7 @@ fn CXChildVisitResult global(
     case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
     case clang::CURSOR_STRUCT_DECL: ttor::structDecl(vd, cursor);
     case clang::CURSOR_TYPEDEF_DECL: ttor::typedefDecl(vd, cursor);
-    case clang::CURSOR_VAR_DECL: ttor::constDecl(vd, cursor);
+    case clang::CURSOR_VAR_DECL: ttor::varDecl(vd, cursor);
     case clang::CURSOR_ENUM_DECL: ttor::enumDecl(vd, cursor);
     case clang::CURSOR_MACRO_DEFINITION: ttor::macroDef(vd, cursor);
     case clang::CURSOR_UNION_DECL: ttor::unionDecl(vd, cursor);

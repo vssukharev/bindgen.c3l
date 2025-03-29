@@ -4,6 +4,55 @@ import bindgen::impl @public;
 import std::io, clang, std::collections::list;
 
 <*
+ Translates global variable declaration and writes it to 'out'
+ @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL "Cursor must point to variable declaration"
+ @return "Number of bytes written"
+*>
+fn usz? varDecl(
+  GlobalVisitData* vd,
+  CXCursor cursor)
+@maydiscard
+{
+  CXType type = clang::getCursorType(cursor);
+
+  if (clang::isConstQualifiedType(type))
+  {
+    return ttor::constDecl(vd, cursor);
+  }
+  else
+  {
+    CXString cursor_spell = clang::getCursorSpelling(cursor);
+    defer clang::disposeString(cursor_spell);
+    String cursor_str = misc::convStr(cursor_spell);
+
+    if (misc::getTopChildrenNumber(cursor) > 0)
+    {
+      err::warn("Global variable '%s' contains default value, so complete it manually", cursor_str);
+    }
+    
+    String? name = trans::apply(cursor_str, vd.trans_fns.variable);
+    if (catch name)
+    {
+      err::warn("Global variable '%s' is ignored", cursor_str);
+      return 0;
+    }
+
+    String? type_name = trans::ctypeWithPFN(cursor, vd);
+    if (catch type_name)
+    {
+      CXString type_spell = clang::getTypeSpelling(type);
+      defer clang::disposeString(type_spell);
+      String type_str = misc::convStr(type_spell);
+
+      err::warn("Can't translate global variable '%s' as it's type name '%s' is ignored", cursor_str, type_str);
+      return 0;
+    }
+
+    return wter::varDecl(vd.out, type_name, name);
+  }
+}
+
+<*
  Translates global constant declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL "Cursor must point to variable declaration"
  @return "Number of bytes written"
