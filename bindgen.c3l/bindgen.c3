@@ -9,19 +9,18 @@ import bindgen::impl::api @public;
 
 faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 
-
 <*
  General callback type for name translation
  name "Original string from C source. Should NOT be changed"
- alloc "Allocator for new returned string. Each allocation should be performed with that specific allocator"
- @return "Translated string, allocated via 'allocator', or empty string to skip the translation of a name"
+ alloc "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
+ @return "Translated string, allocated via 'allocator', or empty string to skip the translation of a name (ignore it)"
 *>
 alias BGTransFn = fn String(String name, Allocator alloc);
 
 <*
  General callbacks type for values generation for names done
  name "Original string from C source. Should NOT be changed"
- alloc "Allocator for new returned string. Each allocation should be performed with that specific allocator"
+ alloc "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
  @return "Generated value according to the name string, allocated via 'alloc'"
 *>
 alias BGGenFn = fn String(String name, Allocator alloc);
