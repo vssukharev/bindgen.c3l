@@ -95,10 +95,18 @@ fn usz? constDecl(
 fn usz? varDecl(
   File* out,
   String type,
-  String name)
+  String name,
+  String value)
 @maydiscard
 {
-  return io::fprintfn(out, "\n%s %s;", type, name);
+  if (value == "")
+  {
+    return io::fprintfn(out, "\n%s %s;", type, name);
+  }
+  else
+  {
+    return io::fprintfn(out, "\n%s %s = %s;", type, name, value);
+  }
 }
 
 <*
@@ -157,7 +165,8 @@ fn usz? func(
 fn usz? funcMacro(
   File* out,
   String[] params,
-  String name) 
+  String name,
+  String body) 
 @maydiscard
 {
   usz? acc;
@@ -168,7 +177,14 @@ fn usz? funcMacro(
     acc += io::fprintf(out, "#%s", p);
     if (i < params.len - 1) acc += io::fprint(out, ", ");
   }
-  acc += io::fprintfn(out, ") {}");
+  acc += io::fprintf(out, ") {");
+  
+  if (body != "")
+  {
+    acc += io::fprintfn(out, "\n%s%s", INDENT, body);
+  }
+
+  acc += io::fprintfn(out, "}");
 
   return acc;
 }

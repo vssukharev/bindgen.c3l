@@ -16,11 +16,12 @@ fn void main(String[] args)
       str.map_basic_type(alloc) ?? str.copy(alloc),
 
     .constant = fn String(String str, Allocator alloc) =>
-      str == "APIENTRY" ? "" : // ignore APIENTRY
+      str == "APIENTRY" ? "" :
+      str == "GLAPIENTRY" ? "" : // ignore APIENTRY
       str.strip("GLFW_").copy(alloc),
   };
 
-  bg::translate_headers({ "./examples/headers/glfw3.h" }, out, cb, "glfw", { "-DVK_VERSION_1_0" })!!;
+  bg::translate_headers({ "./examples/headers/glfw3.h" }, out, "glfw", cb, {}, { "-DVK_VERSION_1_0" })!!;
 }
 
 

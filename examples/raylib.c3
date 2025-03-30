@@ -45,6 +45,6 @@ fn void main(String[] args)
     }
   };
 
-  bg::translate_headers({"./examples/headers/raylib.h"}, out, cbs, "raylib::rl")!!;
+  bg::translate_headers({"./examples/headers/raylib.h"}, out, "raylib::rl", cbs)!!;
 }
 

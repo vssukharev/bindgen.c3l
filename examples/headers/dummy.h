@@ -93,7 +93,7 @@ int higher_order(int (*f)(int a, double b), double a);
 
 int (*getFunc(void))(int a, int b);
 
-#define FUNC_MACRO(a, b) a ## b
+#define FUNC_MACRO(A, B) A >> B
 
 /// --------------- Constants
 

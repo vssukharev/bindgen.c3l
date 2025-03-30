@@ -152,6 +152,7 @@ macro C3Fields.@foreach(&self; @body(FieldKind* kind, usz index))
 struct GlobalVisitData
 {
   BGTransCallbacks trans_fns;
+  BGGenCallbacks gen_fns;
   TransTable types_table;
   File* out;
   CXFile cxfile; // used to ignore nodes from other files 

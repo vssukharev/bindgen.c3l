@@ -11,7 +11,7 @@ import std::io, clang, std::collections::list;
 fn usz? varDecl(
   GlobalVisitData* vd,
   CXCursor cursor)
-@maydiscard
+@maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
 
@@ -25,9 +25,14 @@ fn usz? varDecl(
     defer clang::disposeString(cursor_spell);
     String cursor_str = misc::convStr(cursor_spell);
 
+    String rhs_val = "";
     if (misc::getTopChildrenNumber(cursor) > 0)
     {
-      err::warn("Global variable '%s' contains default value, so complete it manually", cursor_str);
+      rhs_val = valgen::apply(tmem, cursor_str, vd.gen_fns.global_var);
+      if (rhs_val == "")
+      {
+        err::warn("Global variable '%s' contains default value and value generator function return empty string, so complete it manually", cursor_str);
+      }
     }
     
     String? name = trans::apply(cursor_str, vd.trans_fns.variable);
@@ -48,7 +53,7 @@ fn usz? varDecl(
       return 0;
     }
 
-    return wter::varDecl(vd.out, type_name, name);
+    return wter::varDecl(vd.out, type_name, name, rhs_val);
   }
 }
 
@@ -226,7 +231,7 @@ fn usz? macroDef(
 fn usz? funcMacroDef(
   GlobalVisitData* vd,
   CXCursor cursor)
-=> @pool()
+@maydiscard => @pool()
 {
   CXString macro_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(macro_spell);
@@ -239,7 +244,11 @@ fn usz? funcMacroDef(
     return 0;
   }
 
-  err::warn("Macro '%s' (@%s) is function-like so you should complete it's body manually", macro_str, trans_macro_str);
+  String macro_body = valgen::apply(tmem, macro_str, vd.gen_fns.func_macro);
+  if (macro_body == "") 
+  {
+    err::warn("Macro '%s' (@%s) is function-like and generator function returned empty string so you should complete it's body manually", macro_str, trans_macro_str);
+  }
 
   List{String} params;
   params.tinit();
@@ -260,12 +269,19 @@ fn usz? funcMacroDef(
       if (token_str == ")") break OUTER;
       if (token_str != ",")
       {
-        params.push(token_str);
+        String? trans_token_str = trans::apply(token_str, vd.trans_fns.variable, tmem);
+        if (catch trans_token_str)
+        {
+          err::warn("Can't translate functional macro '%s' as it's parameter '%s' is ignored", macro_str, token_str);
+          return 0;
+        }
+
+        params.push(trans_token_str);
       }
     };
   }
 
-  return wter::funcMacro(vd.out, params.array_view(), trans_macro_str);
+  return wter::funcMacro(vd.out, params.array_view(), trans_macro_str, macro_body);
 }
 
 <*
@@ -275,7 +291,7 @@ fn usz? funcMacroDef(
 fn usz? constMacroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-=> @pool()
+@maydiscard => @pool()
 {
   CXString macro_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(macro_spell);

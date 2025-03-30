@@ -6,11 +6,10 @@ WIP C bindings generation library for C3 language.
 
 ## TODO
 
-1. Add non-const global variables translation
-2. Add FULL Vulkan headers translation example
-3. Add comprehensive test suite
-4. Add support for inlined enums
-5. Add C doc comments support 
+1. Add FULL Vulkan headers translation example
+2. Add comprehensive test suite
+3. Add support for inlined enums
+4. Add C doc comments support 
 
 ## Setup
 

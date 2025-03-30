@@ -16,9 +16,11 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
 fn void? translateHeaders(
   String[] header_file_names, 
   String output_file_name, 
-  BGTransCallbacks callbacks, 
   String module_name,
-  String[] command_options = {}) @inline
+  BGTransCallbacks trans_callbacks, 
+  BGGenCallbacks gen_callbacks,
+  String[] command_options) 
+@inline
 {
   err::log("Translating %s", header_file_names);
   err::log("Writing to %s", output_file_name);
@@ -36,11 +38,11 @@ fn void? translateHeaders(
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
 
-  if (callbacks.func == null) err::warn("Function translation will not be performed as function pointer is null");
-  if (callbacks.variable == null) err::warn("Variable translation will not be performed as function pointer is null");
-  if (callbacks.type == null) err::warn("Type translation will not be performed as function pointer is null");
-  if (callbacks.constant == null) err::warn("Constant translation will not be performed as function pointer is null");
-  if (callbacks.func_macro == null) err::warn("Functional macros translation will not be performed as function pointer is null");
+  if (trans_callbacks.func == null) err::warn("Function translation will not be performed as function pointer is null");
+  if (trans_callbacks.variable == null) err::warn("Variable translation will not be performed as function pointer is null");
+  if (trans_callbacks.type == null) err::warn("Type translation will not be performed as function pointer is null");
+  if (trans_callbacks.constant == null) err::warn("Constant translation will not be performed as function pointer is null");
+  if (trans_callbacks.func_macro == null) err::warn("Functional macros translation will not be performed as function pointer is null");
 
   wter::moduleHead(&out, module_name);
 
@@ -56,7 +58,8 @@ fn void? translateHeaders(
 
     GlobalVisitData visit_data = {
       .out = &out,
-      .trans_fns = callbacks,
+      .trans_fns = trans_callbacks,
+      .gen_fns = gen_callbacks,
       .cxfile = clang::getFile(tu, (ZString)header_name),
     };
 
