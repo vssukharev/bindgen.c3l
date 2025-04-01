@@ -207,3 +207,23 @@ struct EnumVisitData
   bool is_unsigned;
 }
 
+// --- Writers Data
+
+enum WriteAttrib : char (inline String str)
+{
+  PRIVATE = "@private",
+}
+
+typedef WriteAttribs (Printable) = inline WriteAttrib[];
+
+fn usz? WriteAttribs.to_format(&self, Formatter* form) @dynamic
+{
+  usz? acc;
+  foreach (a : self)
+  {
+    acc += form.printf(" %s", a.str);
+  }
+  return acc;
+}
+
+

@@ -237,7 +237,7 @@ fn usz? funcMacroDef(
   defer clang::disposeString(macro_spell);
   String macro_str = misc::convStr(macro_spell);
 
-  String? trans_macro_str = trans::tapply(macro_str, vd.trans_fns.func_macro);
+  String? trans_macro_str = trans::apply(macro_str, vd.trans_fns.func_macro, tmem);
   if (catch trans_macro_str)
   {
     err::warn("Functional macro '%s' is ignored", macro_str);
@@ -297,7 +297,7 @@ fn usz? constMacroDef(
   defer clang::disposeString(macro_spell);
   String macro_str = misc::convStr(macro_spell);
 
-  String? trans_macro_str = trans::tapply(macro_str, vd.trans_fns.constant); 
+  String? trans_macro_str = trans::apply(macro_str, vd.trans_fns.constant, tmem); 
   if (catch trans_macro_str)
   {
     err::warn("Constant '%s' is ignored", macro_str);
@@ -463,12 +463,12 @@ macro usz? fieldType(
   $endif
 }
 
-
 fn usz? pfnType(
   GlobalVisitData* vd, 
   String name,
   CXType type, 
-  CXCursor cursor) 
+  CXCursor cursor,
+  WriteAttribs attribs = {}) 
 => @pool()
 {
   FuncVisitData vd_func = {
@@ -498,5 +498,5 @@ fn usz? pfnType(
   // Translate function parameters and store them into vd_struct.fields
   if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0) return 0;
 
-  return wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view());
+  return wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view(), attribs: attribs);
 }

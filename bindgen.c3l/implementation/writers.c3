@@ -3,7 +3,7 @@ module bindgen::impl::wter @private;
 import bindgen::bg, bindgen::impl @public;
 import std::io, clang;
 
-const INDENT = "  ";
+const INDENT @local = "  ";
 
 <*
  Writes aliasing typedef to 'out'
@@ -12,10 +12,13 @@ const INDENT = "  ";
 fn usz? typedefAlias(
   File* out,
   String name,
-  String underlying_name) 
+  String underlying_name,
+  WriteAttribs attribs = {})
 @maydiscard
 {
-  return io::fprintfn(out, "\nalias %s = %s;", name, underlying_name);
+  usz? acc;
+  acc += io::fprintfn(out, "\nalias %s%s = %s;", name, attribs, underlying_name);
+  return acc;
 }
 
 <*
@@ -25,10 +28,13 @@ fn usz? typedefAlias(
 fn usz? typedefDist(
   File* out,
   String name,
-  String underlying_name) 
+  String underlying_name,
+  WriteAttribs attribs = {}) 
 @maydiscard
 {
-  return io::fprintfn(out, "\ntypedef %s = %s;", name, underlying_name);
+  usz? acc;
+  acc += io::fprintfn(out, "\ntypedef %s%s = %s;", name, attribs, underlying_name);
+  return acc;
 }
 
 <*
@@ -39,12 +45,13 @@ fn usz? typedefFunc(
   File* out,
   String name,
   String return_type,
-  VarDecl[] params)
+  VarDecl[] params,
+  WriteAttribs attribs = {})
 @maydiscard
 {
   usz? acc;
-
-  acc += io::fprintf(out, "\nalias %s = fn %s(", name, return_type);
+  
+  acc += io::fprintf(out, "\nalias %s%s = fn %s(", name, attribs, return_type);
   
   if (params.len > 1) acc += io::fprintf(out, "\n");
 
@@ -71,18 +78,19 @@ fn usz? constDecl(
   File* out,
   String type,
   String name,
-  String value)
+  String value,
+  WriteAttribs attribs = {})
 @maydiscard
 {
   usz? acc;
 
   if (type == "")
   {
-    acc += io::fprintfn(out, "\nconst %s = %s;", name, value);
+    acc += io::fprintfn(out, "\nconst %s%s = %s;", name, attribs, value);
   }
   else
   {
-    acc += io::fprintfn(out, "\nconst %s %s = %s;", type, name, value);
+    acc += io::fprintfn(out, "\nconst %s %s%s = %s;", type, name, attribs, value);
   }
 
   return acc;
@@ -96,17 +104,22 @@ fn usz? varDecl(
   File* out,
   String type,
   String name,
-  String value)
+  String value,
+  WriteAttribs attribs = {})
 @maydiscard
 {
+  usz? acc;
+
   if (value == "")
   {
-    return io::fprintfn(out, "\n%s %s;", type, name);
+    acc += io::fprintfn(out, "\n%s %s%s;", type, name, attribs);
   }
   else
   {
-    return io::fprintfn(out, "\n%s %s = %s;", type, name, value);
+    acc += io::fprintfn(out, "\n%s %s%s = %s;", type, name, attribs, value);
   }
+
+  return acc;
 }
 
 <*
@@ -117,15 +130,16 @@ fn usz? enumDecl(
   File* out,
   String name,
   String type,
-  EnumMember[] members)
+  EnumMember[] members,
+  WriteAttribs attribs = {})
 @maydiscard
 {
   usz? acc;
   
-  acc += io::fprintfn(out, "\ntypedef %s = inline %s;", name, type);
+  acc += io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
   foreach (member : members)
   {
-    acc += io::fprintfn(out, "const %s %s = %s;", name, member.name, member.val);
+    acc += io::fprintfn(out, "const %s %s%s = %s;", name, member.name, attribs, member.val);
   }
   
   return acc;
@@ -140,7 +154,8 @@ fn usz? func(
   VarDecl[] params,
   String return_type,
   String original_name,
-  String name) 
+  String name,
+  WriteAttribs attribs = {}) 
 @maydiscard
 {
   usz? acc;
@@ -153,7 +168,7 @@ fn usz? func(
     acc += io::fprintf(out, "  %s %s", p.type, p.name);
     if (i < params.len - 1) acc += io::fprintn(out, ", ");
   }
-  acc += io::fprintfn(out, ")\n@extern(\"%s\");", original_name);
+  acc += io::fprintfn(out, ")\n@extern(\"%s\")%s;", original_name, attribs);
 
   return acc;
 }
@@ -166,7 +181,8 @@ fn usz? funcMacro(
   File* out,
   String[] params,
   String name,
-  String body) 
+  String body,
+  WriteAttribs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -177,7 +193,7 @@ fn usz? funcMacro(
     acc += io::fprintf(out, "#%s", p);
     if (i < params.len - 1) acc += io::fprint(out, ", ");
   }
-  acc += io::fprintf(out, ") {");
+  acc += io::fprintf(out, ")%s {", attribs);
   
   if (body != "")
   {
@@ -206,7 +222,8 @@ fn usz? structDecl(
   File* out,
   String name,
   C3Fields* fields,
-  usz indent_level = 0) 
+  usz indent_level = 0,
+  WriteAttribs attribs = {}) 
 @maydiscard
 {
   usz? acc;
@@ -224,7 +241,7 @@ fn usz? structDecl(
   }
   else
   {
-    acc += io::fprintfn(out, "struct %s {", name);
+    acc += io::fprintfn(out, "struct %s%s {", name, attribs);
   }
 
   acc += wter::fields(out, fields, indent_level + 1);
@@ -240,7 +257,8 @@ fn usz? unionDecl(
   File* out,
   String name,
   C3Fields* fields,
-  usz indent_level = 0) 
+  usz indent_level = 0,
+  WriteAttribs attribs = {}) 
 @maydiscard
 {
   usz? acc;
@@ -258,7 +276,7 @@ fn usz? unionDecl(
   }
   else
   {
-    acc += io::fprintfn(out, "union %s {", name);
+    acc += io::fprintfn(out, "union %s%s {", name, attribs);
   }
 
   acc += wter::fields(out, fields, indent_level + 1);

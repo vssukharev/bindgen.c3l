@@ -23,11 +23,6 @@ fn String normTypeStr(String s, Allocator allocator = allocator::heap()) => @poo
   return dstr.copy_str(allocator);
 }
 
-fn String tnormTypeStr(String s) @inline
-{
-  return normTypeStr(s, allocator::temp());
-}
-
 fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
 {
   if (s.len == 0) return "";
@@ -40,14 +35,6 @@ fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @
   }
 
   return t;
-}
-
-fn String? tapply(
-  String s, 
-  BGTransFn fun) 
-@inline
-{
-  return trans::apply(s, fun)!;
 }
 
 <*
@@ -160,7 +147,7 @@ fn String? ctypeWithPFN(
     ++vd.anon_fns_counter;
     res = string::format(mem, "PrivateFn%s", vd.anon_fns_counter);
     vd.types_table[type_str] = res;
-    (void) ttor::pfnType(vd, res, type, cursor);
+    (void) ttor::pfnType(vd, res, type, cursor, (WriteAttribs){ PRIVATE });
   }
   else
   {
