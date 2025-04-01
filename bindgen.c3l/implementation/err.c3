@@ -30,6 +30,12 @@ macro void warn(String str = "", ...)
   io::eprintfn(str, $vasplat);
 } 
 
+macro void diag(String str = "", ...)
+{
+  io::eprintf("%sDiagnostic%s : ", ANSI_RED, ANSI_NONE);
+  io::eprintfn(str, $vasplat);
+}
+
 macro void? checkCode(CXErrorCode code)
 {
   switch (code)

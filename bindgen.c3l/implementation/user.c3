@@ -7,7 +7,7 @@ import std::os::process, std::io;
  @param extra_opts "Additional options for clang compiler"
  @return "ZString[], which and each element of which should be then freed via allocator"
 *>
-fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts) => @pool()
+fn ZString[]? getParseCommandArgs(Allocator allocator, String[] extra_opts) => @pool() 
 {
   const usz RESERVED_ARGS = 1;
 

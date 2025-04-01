@@ -19,7 +19,8 @@ fn void? translateHeaders(
   String module_name,
   BGTransCallbacks trans_callbacks, 
   BGGenCallbacks gen_callbacks,
-  String[] command_options) 
+  String[] command_options,
+  BGParseFlags parse_flags) 
 @inline
 {
   err::log("Translating %s", header_file_names);
@@ -53,6 +54,29 @@ fn void? translateHeaders(
     CXTranslationUnit tu;
     CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu);
     err::checkCode(code)!;
+
+    // Print diagnostics
+    CUInt diagnostics_count = clang::getNumDiagnostics(tu);
+    usz severe_count;
+    for (CUInt i; i < diagnostics_count; ++i)
+    {
+      CXDiagnostic diag = clang::getDiagnostic(tu, i); 
+      CXString diag_spell = clang::getDiagnosticSpelling(diag);
+      defer clang::disposeString(diag_spell);
+      String diag_str = misc::convStr(diag_spell);
+
+      if (clang::getDiagnosticSeverity(diag) >= clang::DIAGNOSTIC_ERROR)
+      {
+        ++severe_count;
+        err::diag(diag_str);
+      }
+    }
+
+    // Return if we everything is bad
+    if (severe_count > 0 && !parse_flags.skip_errors)
+    {
+      return bg::CLANG_PARSE_ERROR?;
+    }
 
     CXCursor cursor = clang::getTranslationUnitCursor(tu);
 

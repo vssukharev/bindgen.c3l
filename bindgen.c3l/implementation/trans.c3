@@ -30,10 +30,8 @@ fn String tnormTypeStr(String s) @inline
 
 fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
 {
-  if (fun == null)
-  {
-    return s.copy(alloc);                                   
-  }
+  if (s.len == 0) return "";
+  if (fun == null) return s.copy(alloc);
 
   String t = fun(s, alloc);
   if (t == "")

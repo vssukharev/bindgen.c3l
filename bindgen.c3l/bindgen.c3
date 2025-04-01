@@ -19,18 +19,18 @@ alias BGTransFn = fn String(String name, Allocator alloc);
 
 <*
  General callbacks type for values generation for names done
- name "Original string from C source. Should NOT be changed"
- alloc "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
+ name : "Original string from C source. Should NOT be changed"
+ alloc : "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
  @return "Generated value according to the name string, allocated via 'alloc'"
 *>
 alias BGGenFn = fn String(String name, Allocator alloc);
 
 <*
- func "Function"
- type "Type"
- variable "Function parameter or global variable"
- constant "Global constant"
- func_maro "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
+ func : "Function"
+ type : "Type"
+ variable : "Function parameter or global variable"
+ constant : "Global constant"
+ func_maro : "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
 *>
 struct BGTransCallbacks
 {
@@ -42,13 +42,21 @@ struct BGTransCallbacks
 }
 
 <*
- func_macro "Functional macro body. Note: all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
- global_var "Global non-const variable rhs value."
+ func_macro : "Functional macro body. Note: all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
+ global_var : "Global non-const variable rhs value."
 *>
 struct BGGenCallbacks
 {
   BGGenFn func_macro;
   BGGenFn global_var;
+}
+
+<*
+ skip_errors "Whether to skip clang's parse errors. Note, that 'missing files' while trying to include them errors are skipped by default and not controlled with this flag"
+*>
+bitstruct BGParseFlags : char
+{
+  bool skip_errors;
 }
 
 <* 
@@ -58,6 +66,7 @@ struct BGGenCallbacks
  @param trans_callbacks "Translation callbacks"
  @param gen_callbacks "Values generation callbacks"
  @param command_options "Command options for clang while parsing each header"
+ @param parse_flags "Special flags for bindgen"
  @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
 *>
 fn void? translate_headers(
@@ -66,8 +75,9 @@ fn void? translate_headers(
   String module_name,
   BGTransCallbacks trans_callbacks,
   BGGenCallbacks gen_callbacks = {},
-  String[] command_options = {})
-=> api::translateHeaders(header_file_names, output_file_name, module_name, trans_callbacks, gen_callbacks, command_options);
+  String[] command_options = {},
+  BGParseFlags parse_flags = {})
+=> api::translateHeaders(header_file_names, output_file_name, module_name, trans_callbacks, gen_callbacks, command_options, parse_flags);
 
 
 <*
