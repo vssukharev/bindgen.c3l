@@ -52,33 +52,50 @@ struct BGGenCallbacks
 }
 
 <*
- skip_errors "Whether to skip clang's parse errors. Note, that 'missing files' while trying to include them errors are skipped by default and not controlled with this flag"
+ Optional settings for translation.
+ clang_args : "Command-line args passed to clang when parsing each header. Default: no args are passed"
+ out_name : "Output file name into which a translation will be written. Default: result is written to stdout"
+ module_name : "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
+ skip_errors : "Whether to skip clang's parse errors. Note, that '<...> file not found' errors are skipped always and not controlled with this flag"
 *>
-bitstruct BGParseFlags : char
+struct BGOptions
 {
-  bool skip_errors;
+  String[] clang_args;
+  String out_name;
+  String module_name;
+  bitstruct : char
+  {
+    bool skip_errors;
+  }
 }
 
 <* 
- @param header_file_names "File names of headers to be translated"
- @param output_file_name "If set to 'stdout', write to stdout; otherwise, write to file under provided path"
- @param module_name "Name of a module appended on top of the file during translation"
- @param trans_callbacks "Translation callbacks"
- @param gen_callbacks "Values generation callbacks"
- @param command_options "Command options for clang while parsing each header"
- @param parse_flags "Special flags for bindgen"
+ Main bindgen function. Translates all headers and writes result to opts.out_name. 
+ Should be preferred over bg::translate_header.
+ @param header_file_names : "File names of headers to be translated"
+ @param trans_callbacks : "Translation callbacks"
+ @param opts : "Options to be passed to translator"
+ @param gen_callbacks : "Values generation callbacks"
  @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
 *>
 fn void? translate_headers(
   String[] header_file_names, 
-  String output_file_name, 
-  String module_name,
   BGTransCallbacks trans_callbacks,
-  BGGenCallbacks gen_callbacks = {},
-  String[] command_options = {},
-  BGParseFlags parse_flags = {})
-=> api::translateHeaders(header_file_names, output_file_name, module_name, trans_callbacks, gen_callbacks, command_options, parse_flags);
+  BGOptions opts = {},
+  BGGenCallbacks gen_callbacks = {})
+=> api::translateHeaders(header_file_names, trans_callbacks, opts, gen_callbacks);
 
+<*
+ The same as translate_headers but performs translation
+ only of one header. If you have multiple headers with
+ one resulting file, please use bg::translate_headers.
+*>
+fn void? translate_header(
+  String header_file_name, 
+  BGTransCallbacks trans_callbacks,
+  BGOptions opts = {},
+  BGGenCallbacks gen_callbacks = {})
+=> api::translateHeaders({header_file_name}, trans_callbacks, opts, gen_callbacks);
 
 <*
  This module is created for user comfort.

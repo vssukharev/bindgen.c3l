@@ -28,7 +28,7 @@ fn String varVals(String name, Allocator alloc)
 
 fn void main(String[] args)
 {
-  String out = args.len > 1 ? args[1] : "stdout";
+  String out = args.len > 1 ? args[1] : "";
 
   BGTransCallbacks tcb = {
     .func = &bgstr::snake_to_camel,
@@ -44,6 +44,12 @@ fn void main(String[] args)
     .global_var = &varVals,
   };
 
-  bg::translate_headers({ "./examples/headers/dummy.h" }, out, "dummy", tcb, gcb, { "-DTEST_COND" })!!;
+  BGOptions opts = {
+    .clang_args = { "-DTEST_COND" },
+    .out_name = out,
+    .module_name = "dummy",
+  };
+
+  bg::translate_header("./examples/headers/dummy.h", tcb, opts, gcb)!!;
 }
 

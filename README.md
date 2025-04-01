@@ -38,18 +38,11 @@ There are several examples located in `examples` directory. To check them out, r
 
 ## API
 
-All API functions are concentrated in *bindgen.c3l/bindgen.c3* file with detailed documentation.
+All API functions are concentrated in *bindgen.c3l/bindgen.c3* file with more detailed documentation.
 
 ### Main API
 
-Main library function is `bg::translate_headers`. It takes `header_file_names` slice of header names represented as `String`s, parse them, translates each entity via the corresponding `BGTransFn` function, a set of which is passed through the `trans_callbacks` parameter, and emits everything to `output_file_name`. Note that each `trans_callbacks` member (basically each `BGTransFn`) should return a string, *allocated* via an accepting allocator; it also works even if we return regular string literals - we must do `"mystring".copy(allocator)` unless it may cause undefined behaviour. **WARNING**: `bg::translate_headers` is not tested for usage on multiple threads yet.
-
-To make **bindgen** more declarative, there are additional parameters for `bg::translate_headers`:
-
-- `trans_callbacks` callback can return an empty string. It means that the passed name will be ignored everywhere in translation unit.
-- `module_name` - name of a module, prepended to the output file;
-- `gen_callbacks` - values generation callbacks, which can be used, for example, to generate bodies for functional macros, as it's impossible to parse function-like macros in C headers;
-- `command_options` - command options passed to `clang` when translating each header. For instance, it can be used to define macros.
+Main library function is `bg::translate_headers`. It takes `header_file_names` parse them, translates each entity via the corresponding `BGTransFn` function, a set of which is passed through the `trans_callbacks` parameter; all other parameters are passed as a `BGOptions` struct. Note that each `trans_callbacks` member (basically each `BGTransFn`) should return a string, *allocated* via an accepting allocator; it also works even if we return regular string literals - we must do `"mystring".copy(allocator)` unless it may cause undefined behaviour. **WARNING**: `bg::translate_headers` is not tested for usage on multiple threads yet.
 
 ### String API
 

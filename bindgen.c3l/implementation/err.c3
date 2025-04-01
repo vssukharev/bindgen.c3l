@@ -30,9 +30,9 @@ macro void warn(String str = "", ...)
   io::eprintfn(str, $vasplat);
 } 
 
-macro void diag(String str = "", ...)
+macro void diag(String file, CUInt line, CUInt col, String str, ...)
 {
-  io::eprintf("%sDiagnostic%s : ", ANSI_RED, ANSI_NONE);
+  io::eprintf("%sError at %s:%d:%d%s : ", ANSI_RED, file, line, col, ANSI_NONE);
   io::eprintfn(str, $vasplat);
 }
 

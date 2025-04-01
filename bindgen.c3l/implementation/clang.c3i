@@ -654,7 +654,7 @@ const CXDiagnosticDisplayOptions DIAGNOSTIC_DISPLAY_CATEGORY_ID = 0x10;
  * This option corresponds to the clang flag
  * \c -fdiagnostics-show-category=name.
  */
-const CXDiagnosticDisplayOptions DIAGNOSTIC_DISPLAY_CATEGORY_NAME = 0x2;
+const CXDiagnosticDisplayOptions DIAGNOSTIC_DISPLAY_CATEGORY_NAME = 0x20;
 
 /**
  * Format the given diagnostic in a manner that is suitable for display.

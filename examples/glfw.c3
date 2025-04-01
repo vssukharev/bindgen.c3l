@@ -4,7 +4,7 @@ import std::ascii, std::io;
 
 fn void main(String[] args)
 {
-  String out = args.len > 1 ? args[1] : "stdout";
+  String out = args.len > 1 ? args[1] : "";
   
   BGTransCallbacks cb = {
     .func = fn String(String str, Allocator alloc) =>
@@ -21,7 +21,14 @@ fn void main(String[] args)
       str.strip("GLFW_").copy(alloc),
   };
 
-  bg::translate_headers({ "./examples/headers/glfw3.h" }, out, "glfw", cb, {}, { "-DVK_VERSION_1_0" })!!;
+  BGOptions opts = {
+    .out_name = out,
+    .clang_args = { "-DGLFW_INCLUDE_VULKAN", "-I./examples/headers" },
+    .module_name = "glfw",
+    // .skip_errors = true,
+  };
+
+  bg::translate_header("./examples/headers/glfw3.h", cb, opts)!!;
 }
 
 

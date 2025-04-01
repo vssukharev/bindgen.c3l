@@ -8,46 +8,41 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
   clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
 | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
 | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
-// | clang::TRANSLATION_UNIT_KEEP_GOING
+| clang::TRANSLATION_UNIT_KEEP_GOING
 // | clang::TRANSLATION_UNIT_RETAIN_EXCLUDED_CONDITIONAL_BLOCKS
 // | clang::TRANSLATION_UNIT_SINGLE_FILE_PARSE
 ;
 
 fn void? translateHeaders(
   String[] header_file_names, 
-  String output_file_name, 
-  String module_name,
-  BGTransCallbacks trans_callbacks, 
-  BGGenCallbacks gen_callbacks,
-  String[] command_options,
-  BGParseFlags parse_flags) 
+  BGTransCallbacks trans_callbacks,
+  BGOptions opts,
+  BGGenCallbacks gen_callbacks)
 @inline
 {
   err::log("Translating %s", header_file_names);
-  err::log("Writing to %s", output_file_name);
+  err::log("Writing to %s", opts.out_name);
   
-  File out;
-  switch (output_file_name)
-  {
-    case "stdout":
-      out = *io::stdout();
-    default:
-      out = file::open(output_file_name, "w")!;
-  }
+  // Open file
+  File out = *io::stdout();
+  if (opts.out_name != "") out = file::open(opts.out_name, "w")!;
   defer (void) out.close();
 
-  CXIndex index = clang::createIndex(0, 0);
-  defer clang::disposeIndex(index);
-
+  // Check callbacks
   if (trans_callbacks.func == null) err::warn("Function translation will not be performed as function pointer is null");
   if (trans_callbacks.variable == null) err::warn("Variable translation will not be performed as function pointer is null");
   if (trans_callbacks.type == null) err::warn("Type translation will not be performed as function pointer is null");
   if (trans_callbacks.constant == null) err::warn("Constant translation will not be performed as function pointer is null");
   if (trans_callbacks.func_macro == null) err::warn("Functional macros translation will not be performed as function pointer is null");
 
-  wter::moduleHead(&out, module_name);
+  // Write module name
+  if (opts.module_name != "") wter::moduleHead(&out, opts.module_name);
 
-  ZString[] cargs = user::getParseCommandArgs(tmem, command_options)!;
+  // Get command args for clang
+  ZString[] cargs = user::getParseCommandArgs(tmem, opts.clang_args)!;
+
+  CXIndex index = clang::createIndex(0, 0);
+  defer clang::disposeIndex(index);
 
   foreach (header_name : header_file_names)
   {
@@ -61,24 +56,29 @@ fn void? translateHeaders(
     for (CUInt i; i < diagnostics_count; ++i)
     {
       CXDiagnostic diag = clang::getDiagnostic(tu, i); 
+      defer clang::disposeDiagnostic(diag);
+
+      CXSourceLocation diag_loc = clang::getDiagnosticLocation(diag);
+      CUInt line, col;
+      clang::getFileLocation(diag_loc, null, &line, &col, null);
+
       CXString diag_spell = clang::getDiagnosticSpelling(diag);
       defer clang::disposeString(diag_spell);
       String diag_str = misc::convStr(diag_spell);
 
       if (clang::getDiagnosticSeverity(diag) >= clang::DIAGNOSTIC_ERROR)
       {
-        ++severe_count;
-        err::diag(diag_str);
+        // Do not count if some file is not found
+        if (!diag_str.ends_with("file not found")) ++severe_count;
+        err::diag(header_name, line, col, diag_str);
       }
     }
 
-    // Return if we everything is bad
-    if (severe_count > 0 && !parse_flags.skip_errors)
+    // Return if everything is bad
+    if (severe_count > 0 && !opts.skip_errors)
     {
       return bg::CLANG_PARSE_ERROR?;
     }
-
-    CXCursor cursor = clang::getTranslationUnitCursor(tu);
 
     GlobalVisitData visit_data = {
       .out = &out,
@@ -90,6 +90,7 @@ fn void? translateHeaders(
     visit_data.types_table.init(mem);
     defer visit_data.types_table.free();
 
+    CXCursor cursor = clang::getTranslationUnitCursor(tu);
     clang::visitChildren(cursor, &vtor::global, (CXClientData) &visit_data);
   }
 

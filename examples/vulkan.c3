@@ -4,7 +4,7 @@ import std::ascii, std::io;
 
 fn void main(String[] args)
 {
-  String out = args.len > 1 ? args[1] : "stdout";
+  String out = args.len > 1 ? args[1] : "";
   
   BGTransCallbacks trans_cbs = {
     .func = fn String(String str, Allocator alloc) =>
@@ -36,7 +36,6 @@ fn void main(String[] args)
     }
   };
 
-
   BGGenCallbacks gen_cbs = {
     .func_macro = fn String(String name, Allocator alloc)
     {
@@ -62,7 +61,14 @@ fn void main(String[] args)
     }
   };
 
-  bg::translate_headers({ "./examples/headers/vulkan-part.h" }, out, "vulkan::vk", trans_cbs, gen_cbs, { "-DVK_ENABLE_BETA_EXTENSIONS" })!!;
+  BGOptions opts = {
+    .clang_args = { "-DVK_ENABLE_BETA_EXTENSIONS" },
+    .module_name = "vulkan::vk",
+    .out_name = out,
+    .skip_errors = true,
+  }; 
+
+  bg::translate_header("./examples/headers/vulkan-part.h", trans_cbs, opts, gen_cbs)!!;
 }
 
 

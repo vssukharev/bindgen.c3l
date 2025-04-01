@@ -1,6 +1,6 @@
 
 # TODO
 
-- Add support for coditional inclusions
-
+- Conditional inclusions
+- Constants value generation
 

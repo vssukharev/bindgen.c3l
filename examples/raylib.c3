@@ -11,7 +11,7 @@ import bindgen;
 
 fn void main(String[] args)
 {
-  String out = args.len > 1 ? args[1] : "stdout";
+  String out = args.len > 1 ? args[1] : "";
   
   BGTransCallbacks cbs = {
     .func = &bgstr::pascal_to_camel,
@@ -45,6 +45,11 @@ fn void main(String[] args)
     }
   };
 
-  bg::translate_headers({"./examples/headers/raylib.h"}, out, "raylib::rl", cbs)!!;
+  BGOptions opts = {
+    .out_name = out,
+    .module_name = "raylib::rl",
+  };
+
+  bg::translate_header("./examples/headers/raylib.h", cbs, opts)!!;
 }
 
