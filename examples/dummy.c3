@@ -4,7 +4,9 @@ import std::ascii, std::io;
 
 fn String translateType(String str, Allocator alloc)
 {
+  // Ignore IgnoreMeToo type
   if (str == "IgnoreMeToo") return "";
+  // If the type is not basic, just return a copy
   return str.map_basic_type(alloc) ?? bgstr::snake_to_pascal(str, alloc);
 }
 
@@ -13,6 +15,7 @@ fn String macroBodies(String name, Allocator alloc)
   switch (name)
   {
     case "FUNC_MACRO": return "return #a >> #b;";
+    // Do not return body
     default: return "";
   }
 }

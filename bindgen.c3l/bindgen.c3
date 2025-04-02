@@ -72,6 +72,7 @@ struct BGOptions
 <* 
  Main bindgen function. Translates all headers and writes result to opts.out_name. 
  Should be preferred over bg::translate_header.
+ WARNING: function is not tested for usage on multiple threads yet.
  @param header_file_names : "File names of headers to be translated"
  @param trans_callbacks : "Translation callbacks"
  @param opts : "Options to be passed to translator"

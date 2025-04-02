@@ -9,6 +9,27 @@ import bindgen;
 // So the solution is to modify 'raylib.h' to avoid performing of
 // modifications manually every time
 
+fn String transConst(String name, Allocator alloc)
+{
+  switch (name)
+  {
+    // Ignore these constants (constant macros)
+    case "GetMouseRay":
+    case "MOUSE_LEFT_BUTTON":
+    case "MOUSE_RIGHT_BUTTON":
+    case "MOUSE_MIDDLE_BUTTON":
+    case "MATERIAL_MAP_DIFFUSE":
+    case "MATERIAL_MAP_SPECULAR":
+    case "SHADER_LOC_MAP_DIFFUSE":
+    case "SHADER_LOC_MAP_SPECULAR":
+      return "";
+
+    default:
+      return name.strip("RAYLIB_").snake_to_screaming(alloc);
+  }
+}
+
+
 fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "";
@@ -25,24 +46,7 @@ fn void main(String[] args)
     .variable = fn String(String str, Allocator alloc) =>
       str == "alias" ? "" : str.copy(alloc),
 
-    .constant = fn String(String str, Allocator alloc)
-    {
-      switch (str)
-      {
-        case "GetMouseRay":
-        case "MOUSE_LEFT_BUTTON":
-        case "MOUSE_RIGHT_BUTTON":
-        case "MOUSE_MIDDLE_BUTTON":
-        case "MATERIAL_MAP_DIFFUSE":
-        case "MATERIAL_MAP_SPECULAR":
-        case "SHADER_LOC_MAP_DIFFUSE":
-        case "SHADER_LOC_MAP_SPECULAR":
-          return "";
-
-        default:
-          return str.strip("RAYLIB_").snake_to_screaming(alloc);
-      }
-    }
+    .constant = &transConst,
   };
 
   BGOptions opts = {
