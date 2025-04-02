@@ -86,6 +86,8 @@ fn String? strMapBasicType(String str, Allocator alloc) @inline
     case "float":         return "float".copy(alloc);
     case "double":        return "double".copy(alloc);
 
+    case "va_list":       return "void*".copy(alloc);
+
     default:              return bgstr::NOT_BASIC_TYPE?;
   }
 }

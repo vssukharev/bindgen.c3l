@@ -43,12 +43,14 @@ struct BGTransCallbacks
 
 <*
  func_macro : "Functional macro body. Note: all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
- global_var : "Global non-const variable rhs value."
+ variable : "Global non-const variable rhs value."
+ constant : "Global const rhs value."
 *>
 struct BGGenCallbacks
 {
   BGGenFn func_macro;
-  BGGenFn global_var;
+  BGGenFn variable;
+  BGGenFn constant;
 }
 
 <*
@@ -111,6 +113,7 @@ faultdef NOT_BASIC_TYPE;
 
 <*
  Maps basic C type (str) to corresponding C3 ones.
+ NOT_BASIC_TYPE fault is returned if type is not basic.
  All matches:
   - some_type -> Some_type
   - void -> void (no change)
@@ -135,8 +138,7 @@ faultdef NOT_BASIC_TYPE;
   - size_t -> usz
   - ptrdiff_t -> isz
   - _Bool -> bool
- NOTE: if some standard type is not written above, please look at 
- bindgen.c3l/implementation/api_utils.c3 and submit an issue on github.
+  - va_list -> void*
  @return? NOT_BASIC_TYPE
 *>
 fn String? map_basic_type(String str, Allocator alloc) => api::strMapBasicType(str, alloc);

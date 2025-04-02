@@ -197,6 +197,7 @@ fn String? tokensUnderCursor(
   Allocator alloc, 
   CXCursor cursor, 
   BGTransCallbacks* tfns)
+=> @pool()
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
@@ -220,8 +221,8 @@ fn String? tokensUnderCursor(
   DString res;
   res.init(mem); // res.append() falls into infinite loop if use temp allocator
   defer res.free();
-
-  bool is_func_macro_ignored;
+  
+  bool is_in_func_macro;
   foreach (&token : tokens_ptr[start_from..tokens_len-1])
   {
     CXTokenKind token_kind = clang::getTokenKind(*token);
@@ -229,62 +230,62 @@ fn String? tokensUnderCursor(
     defer clang::disposeString(token_spell);
     String token_str = misc::convStr(token_spell);
 
-    if (is_func_macro_ignored)
+    if (token_str == ")") is_in_func_macro = false;
+
+    bool is_func_macro;
+    switch (token_kind)
     {
-      if (token_str == ")") is_func_macro_ignored = false;
-      continue;
+      // Assume that identifier is one of:
+      // 1. Constant (macro)
+      // 2. Functional macro
+      case clang::TOKEN_IDENTIFIER:
+        usz i = token - tokens_ptr;
+        if (i < tokens_len - 1)
+        {
+          CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
+          defer clang::disposeString(token_spell_2);
+          String token_str_2 = misc::convStr(token_spell_2);
+          if (token_str_2 == "(") 
+          {
+            is_func_macro = true;
+            is_in_func_macro = true;
+          }
+        }
+
+        if (is_func_macro)
+        {
+          if (try t = trans::apply(token_str, tfns.func_macro, tmem)) 
+          {
+            res.append("@");
+            res.append(t);
+          }
+        }
+        else
+        {
+          if (try t = trans::apply(token_str, tfns.constant, tmem))
+          {
+            res.append(t);
+          }
+        }
+
+      case clang::TOKEN_LITERAL:
+        res.append(trans::intSuf(token_str, tmem));
+
+      case clang::TOKEN_KEYWORD:
+      case clang::TOKEN_PUNCTUATION:
+      case clang::TOKEN_COMMENT:
+        res.append(token_str);
     }
-
-    String trans_token_str;
-    @pool()
-    {
-      bool is_func_macro;
-      switch (token_kind)
-      {
-        // Assume that identifier is one of:
-        // 1. Constant (macro)
-        // 2. Functional macro
-        case clang::TOKEN_IDENTIFIER:
-          usz i = token - tokens_ptr;
-          if (i < tokens_len - 1)
-          {
-            CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
-            defer clang::disposeString(token_spell_2);
-            String token_str_2 = misc::convStr(token_spell_2);
-
-            if (token_str_2 == "(")
-            {
-              is_func_macro = true;
-              if (try t = trans::apply(token_str, tfns.func_macro, tmem)) 
-              {
-                trans_token_str = t;
-                res.append("@");
-              }
-              else
-              {
-                is_func_macro_ignored = true;
-                trans_token_str = "";
-              }
-            }
-          }
-
-          if (!is_func_macro)
-          {
-            trans_token_str = trans::apply(token_str, tfns.constant, tmem) ?? "";
-          }
-
-        case clang::TOKEN_LITERAL:
-          trans_token_str = trans::intSuf(token_str, tmem);
-
-        case clang::TOKEN_KEYWORD:
-        case clang::TOKEN_PUNCTUATION:
-        case clang::TOKEN_COMMENT:
-          trans_token_str = token_str;
-      }
-
-      res.append(trans_token_str);
-    };
   };
+
+  // If we finished tokenizing but we haven't encountered
+  // ')' at the end, append it to result. Probably a bug of
+  // a libclang that it skips ')' if macro is expanded at the
+  // end of a line.
+  if (is_in_func_macro)
+  {
+    res.append(")");
+  }
 
   return res.copy_str(alloc);
 }

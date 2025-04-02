@@ -52,7 +52,7 @@ fn bool isTypePFN(CXType type)
 }
 
 <*
- Iterates thorugh the toppest children of cursor and returns
+ Iterates through the toppest children of cursor and returns
  their quantity
 *>
 fn usz getTopChildrenNumber(CXCursor cursor)
@@ -73,7 +73,9 @@ fn usz getTopChildrenNumber(CXCursor cursor)
   return qty;
 }
 
-
+<*
+ Retrives FieldKind from a cursor
+*>
 fn FieldKind getFieldKind(CXCursor cursor)
 {
   FieldKind kind;

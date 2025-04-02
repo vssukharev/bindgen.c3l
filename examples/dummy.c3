@@ -14,9 +14,8 @@ fn String macroBodies(String name, Allocator alloc)
 {
   switch (name)
   {
-    case "FUNC_MACRO": return "return #a >> #b;";
-    // Do not return body
-    default: return "";
+    case "FUNC_MACRO":  return "return #a >> #b;";
+    default:            return "";
   }
 }
 
@@ -25,7 +24,16 @@ fn String varVals(String name, Allocator alloc)
   switch (name)
   {
     case "some_var_with_default": return "2";
-    default: return "";
+    default:                      return "";
+  }
+}
+
+fn String varConst(String name, Allocator alloc)
+{
+  switch (name)
+  {
+    case "hard_const": return "(uint)(~0U)";
+    default:           return "";
   }
 }
 
@@ -44,7 +52,8 @@ fn void main(String[] args)
 
   BGGenCallbacks gcb = {
     .func_macro = &macroBodies,
-    .global_var = &varVals,
+    .variable = &varVals,
+    .constant = &varConst,
   };
 
   BGOptions opts = {

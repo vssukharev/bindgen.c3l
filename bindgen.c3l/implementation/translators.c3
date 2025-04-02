@@ -28,7 +28,7 @@ fn usz? varDecl(
     String rhs_val = "";
     if (misc::getTopChildrenNumber(cursor) > 0)
     {
-      rhs_val = valgen::apply(tmem, cursor_str, vd.gen_fns.global_var);
+      rhs_val = valgen::apply(tmem, cursor_str, vd.gen_fns.variable);
       if (rhs_val == "")
       {
         err::warn("Global variable '%s' contains default value and value generator function return empty string, so complete it manually", cursor_str);
@@ -74,11 +74,17 @@ fn usz? constDecl(
   ConstVisitData vd_const = { 
     .g = vd,
     .allocator = tmem,
+    .val = valgen::apply(tmem, cursor_str, vd.gen_fns.constant),
   };
 
-  // Visit rhs of var declaration and translate 
-  // there everything, that is identifier
-  if (clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const) != 0) return 0;
+  // If value is not generated manually, visit tokens.
+  if (vd_const.val == "")
+  {
+    // Visit rhs of var declaration and translate 
+    // there everything, that is identifier
+    clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
+  }
+
 
   String? name = trans::apply(cursor_str, vd.trans_fns.constant);
   if (catch name)

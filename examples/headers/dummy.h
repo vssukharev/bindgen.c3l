@@ -105,9 +105,11 @@ int (*getFunc(void))(int a, int b);
 
 #define ONE_MORE_CONST (0x23 | 0x24 >> 2)
 
-static const int another_const_1 = 123 + 2 - 2;
+static const int another_const_1 = 123 + FUNC_MACRO(8,2);
 
 const MyInt another_const_2 = 0ULL;
+
+const uint32_t hard_const = (uint32_t)(~0U);
 
 /// --------------- Variables
 
