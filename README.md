@@ -42,7 +42,7 @@ All API functions are concentrated in *bindgen.c3l/bindgen.c3* file with more de
 
 ### Main API
 
-Main library function is `bg::translate_headers`. It takes `header_file_names` parse them, translates each entity via the corresponding `BGTransFn` function, a set of which is passed through the `trans_callbacks` parameter; all other parameters are passed as a `BGOptions` struct. Note that each `trans_callbacks` member (basically each `BGTransFn`) should return a string, *allocated* via an accepting allocator; it also works even if we return regular string literals - we must do `"mystring".copy(allocator)` unless it may cause undefined behaviour. **WARNING**: `bg::translate_headers` is not tested for usage on multiple threads yet.
+Main library function is `bg::translate_headers`. It takes `header_file_names` parse them, translates each entity via the corresponding `BGTransFn` function, a set of which is passed through the `trans_callbacks` parameter; all other parameters are passed as a `BGOptions` struct. Note that each `trans_callbacks` member (basically each `BGTransFn`) should return a string, *allocated* via an accepting allocator; it also works even if we return regular string literals - we must do `"mystring".copy(allocator)` otherwise it may cause undefined behaviour. **WARNING**: `bg::translate_headers` is not tested for usage on multiple threads yet.
 
 ### String API
 
