@@ -85,7 +85,6 @@ fn usz? constDecl(
     clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
   }
 
-
   String? name = trans::apply(cursor_str, vd.trans_fns.constant);
   if (catch name)
   {
@@ -299,29 +298,37 @@ fn usz? constMacroDef(
   CXCursor cursor) 
 @maydiscard => @pool()
 {
-  CXString macro_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(macro_spell);
-  String macro_str = misc::convStr(macro_spell);
+  CXString cursor_spell = clang::getCursorSpelling(cursor);
+  defer clang::disposeString(cursor_spell);
+  String cursor_str = misc::convStr(cursor_spell);
 
-  String? trans_macro_str = trans::apply(macro_str, vd.trans_fns.constant, tmem); 
-  if (catch trans_macro_str)
+  String? trans_cursor_str = trans::apply(cursor_str, vd.trans_fns.constant, tmem); 
+  if (catch trans_cursor_str)
   {
-    err::warn("Constant '%s' is ignored", macro_str);
+    err::warn("Constant '%s' is ignored", cursor_str);
+    return 0;
   }
 
-  String? val = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
-  if (catch exc = val)
+  String val = valgen::apply(tmem, cursor_str, vd.gen_fns.constant); 
+  if (val == "")
   {
-    switch (exc)
+    String? t = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
+    if (catch exc = t)
     {
-      case trans::IGNORE:
-        err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", macro_str);
-      case trans::EMPTY:
-        err::warn("Macro '%s' doesn't have value, skipping...", macro_str);
+      switch (exc)
+      {
+        case trans::IGNORE:
+          err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", cursor_str);
+        case trans::EMPTY:
+          err::warn("Macro '%s' doesn't have value, skipping...", cursor_str);
+      }
+      return 0;
     }
+
+    val = t;
   }
  
-  return wter::constDecl(vd.out, "", trans_macro_str, val);
+  return wter::constDecl(vd.out, "", trans_cursor_str, val);
 }
 
 <*
@@ -343,9 +350,7 @@ fn usz? typedefDecl(
     CXString type_spell = clang::getTypeSpelling(type);
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
-
     err::warn("Alias '%s' is ignored", type_str);
-
     return 0;
   }
 

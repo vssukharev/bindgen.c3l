@@ -170,6 +170,36 @@
 #define RL_QUATERNION_TYPE
 #define RL_MATRIX_TYPE
 
+// Some Basic Colors
+// NOTE: Custom raylib color palette for amazing visuals on WHITE background
+#define LIGHTGRAY  CLITERAL(Color){ 200, 200, 200, 255 }   // Light Gray
+#define GRAY       CLITERAL(Color){ 130, 130, 130, 255 }   // Gray
+#define DARKGRAY   CLITERAL(Color){ 80, 80, 80, 255 }      // Dark Gray
+#define YELLOW     CLITERAL(Color){ 253, 249, 0, 255 }     // Yellow
+#define GOLD       CLITERAL(Color){ 255, 203, 0, 255 }     // Gold
+#define ORANGE     CLITERAL(Color){ 255, 161, 0, 255 }     // Orange
+#define PINK       CLITERAL(Color){ 255, 109, 194, 255 }   // Pink
+#define RED        CLITERAL(Color){ 230, 41, 55, 255 }     // Red
+#define MAROON     CLITERAL(Color){ 190, 33, 55, 255 }     // Maroon
+#define GREEN      CLITERAL(Color){ 0, 228, 48, 255 }      // Green
+#define LIME       CLITERAL(Color){ 0, 158, 47, 255 }      // Lime
+#define DARKGREEN  CLITERAL(Color){ 0, 117, 44, 255 }      // Dark Green
+#define SKYBLUE    CLITERAL(Color){ 102, 191, 255, 255 }   // Sky Blue
+#define BLUE       CLITERAL(Color){ 0, 121, 241, 255 }     // Blue
+#define DARKBLUE   CLITERAL(Color){ 0, 82, 172, 255 }      // Dark Blue
+#define PURPLE     CLITERAL(Color){ 200, 122, 255, 255 }   // Purple
+#define VIOLET     CLITERAL(Color){ 135, 60, 190, 255 }    // Violet
+#define DARKPURPLE CLITERAL(Color){ 112, 31, 126, 255 }    // Dark Purple
+#define BEIGE      CLITERAL(Color){ 211, 176, 131, 255 }   // Beige
+#define BROWN      CLITERAL(Color){ 127, 106, 79, 255 }    // Brown
+#define DARKBROWN  CLITERAL(Color){ 76, 63, 47, 255 }      // Dark Brown
+
+#define WHITE      CLITERAL(Color){ 255, 255, 255, 255 }   // White
+#define BLACK      CLITERAL(Color){ 0, 0, 0, 255 }         // Black
+#define BLANK      CLITERAL(Color){ 0, 0, 0, 0 }           // Blank (Transparent)
+#define MAGENTA    CLITERAL(Color){ 255, 0, 255, 255 }     // Magenta
+#define RAYWHITE   CLITERAL(Color){ 245, 245, 245, 255 }   // My own White (raylib logo)
+
 //----------------------------------------------------------------------------------
 // Structures Definition
 //----------------------------------------------------------------------------------
@@ -501,36 +531,6 @@ typedef struct AutomationEventList {
     unsigned int count;             // Events entries count
     AutomationEvent *events;        // Events entries
 } AutomationEventList;
-
-// Some Basic Colors
-// NOTE: Custom raylib color palette for amazing visuals on WHITE background
-const Color LIGHTGRAY  = { 200, 200, 200, 255 };   // Light Gray
-const Color GRAY       = { 130, 130, 130, 255 };   // Gray
-const Color DARKGRAY   = { 80, 80, 80, 255 };      // Dark Gray
-const Color YELLOW     = { 253, 249, 0, 255 };     // Yellow
-const Color GOLD       = { 255, 203, 0, 255 };     // Gold
-const Color ORANGE     = { 255, 161, 0, 255 };     // Orange
-const Color PINK       = { 255, 109, 194, 255 };   // Pink
-const Color RED        = { 230, 41, 55, 255 };     // Red
-const Color MAROON     = { 190, 33, 55, 255 };     // Maroon
-const Color GREEN      = { 0, 228, 48, 255 };      // Green
-const Color LIME       = { 0, 158, 47, 255 };      // Lime
-const Color DARKGREEN  = { 0, 117, 44, 255 };      // Dark Green
-const Color SKYBLUE    = { 102, 191, 255, 255 };   // Sky Blue
-const Color BLUE       = { 0, 121, 241, 255 };     // Blue
-const Color DARKBLUE   = { 0, 82, 172, 255 };      // Dark Blue
-const Color PURPLE     = { 200, 122, 255, 255 };   // Purple
-const Color VIOLET     = { 135, 60, 190, 255 };    // Violet
-const Color DARKPURPLE = { 112, 31, 126, 255 };    // Dark Purple
-const Color BEIGE      = { 211, 176, 131, 255 };   // Beige
-const Color BROWN      = { 127, 106, 79, 255 };    // Brown
-const Color DARKBROWN  = { 76, 63, 47, 255 };      // Dark Brown
-
-const Color WHITE      = { 255, 255, 255, 255 };   // White
-const Color BLACK      = { 0, 0, 0, 255 };         // Black
-const Color BLANK      = { 0, 0, 0, 0 };           // Blank (Transparent)
-const Color MAGENTA    = { 255, 0, 255, 255 };     // Magenta
-const Color RAYWHITE   = { 245, 245, 245, 255 };   // My own White (raylib logo)
 
 //----------------------------------------------------------------------------------
 // Enumerators Definition
@@ -987,7 +987,7 @@ RLAPI void ToggleFullscreen(void);                                // Toggle wind
 RLAPI void ToggleBorderlessWindowed(void);                        // Toggle window state: borderless windowed, resizes window to match monitor resolution
 RLAPI void MaximizeWindow(void);                                  // Set window state: maximized, if resizable
 RLAPI void MinimizeWindow(void);                                  // Set window state: minimized, if resizable
-RLAPI void RestoreWindow(void);                                   // Set window state: not minimized/maximized
+RLAPI void RestoreWindow(void);                                   // Restore window from being minimized/maximized
 RLAPI void SetWindowIcon(Image image);                            // Set icon for window (single image, RGBA 32bit)
 RLAPI void SetWindowIcons(Image *images, int count);              // Set icon for window (multiple images, RGBA 32bit)
 RLAPI void SetWindowTitle(const char *title);                     // Set title for window
