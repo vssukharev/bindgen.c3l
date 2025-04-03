@@ -89,6 +89,12 @@ int will_be_declared(uint32_t a, uint32_t b);
 int wont_be_declared();
 #endif
 
+#ifdef SOME_PLATFORM
+int func_platform1(uint32_t a, uint32_t b);
+#else
+int func_platform2(uint32_t a, uint32_t b);
+#endif
+
 int higher_order(int (*f)(int a, double b), double a);
 
 int (*getFunc(void))(int a, int b);

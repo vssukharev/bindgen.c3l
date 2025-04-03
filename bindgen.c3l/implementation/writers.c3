@@ -13,7 +13,7 @@ fn usz? typedefAlias(
   File* out,
   String name,
   String underlying_name,
-  WriteAttribs attribs = {})
+  WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -29,7 +29,7 @@ fn usz? typedefDist(
   File* out,
   String name,
   String underlying_name,
-  WriteAttribs attribs = {}) 
+  WriteAttrs attribs = {}) 
 @maydiscard
 {
   usz? acc;
@@ -46,7 +46,7 @@ fn usz? typedefFunc(
   String name,
   String return_type,
   VarDecl[] params,
-  WriteAttribs attribs = {})
+  WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -79,7 +79,7 @@ fn usz? constDecl(
   String type,
   String name,
   String value,
-  WriteAttribs attribs = {})
+  WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -105,7 +105,7 @@ fn usz? varDecl(
   String type,
   String name,
   String value,
-  WriteAttribs attribs = {})
+  WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -131,7 +131,7 @@ fn usz? enumDecl(
   String name,
   String type,
   EnumMember[] members,
-  WriteAttribs attribs = {})
+  WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -155,7 +155,7 @@ fn usz? func(
   String return_type,
   String original_name,
   String name,
-  WriteAttribs attribs = {}) 
+  WriteAttrs attribs = {}) 
 @maydiscard
 {
   usz? acc;
@@ -182,7 +182,7 @@ fn usz? funcMacro(
   String[] params,
   String name,
   String body,
-  WriteAttribs attribs = {})
+  WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
@@ -223,7 +223,7 @@ fn usz? structDecl(
   String name,
   C3Fields* fields,
   usz indent_level = 0,
-  WriteAttribs attribs = {}) 
+  WriteAttrs attribs = {}) 
 @maydiscard
 {
   usz? acc;
@@ -258,7 +258,7 @@ fn usz? unionDecl(
   String name,
   C3Fields* fields,
   usz indent_level = 0,
-  WriteAttribs attribs = {}) 
+  WriteAttrs attribs = {}) 
 @maydiscard
 {
   usz? acc;

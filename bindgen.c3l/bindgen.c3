@@ -10,7 +10,6 @@ import bindgen::impl::api @public;
 faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 
 <*
- General callback type for name translation
  name "Original string from C source. Should NOT be changed"
  alloc "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
  @return "Translated string, allocated via 'allocator', or empty string to skip the translation of a name (ignore it)"
@@ -18,7 +17,6 @@ faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 alias BGTransFn = fn String(String name, Allocator alloc);
 
 <*
- General callbacks type for values generation for names done
  name : "Original string from C source. Should NOT be changed"
  alloc : "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
  @return "Generated value according to the name string, allocated via 'alloc'"
@@ -26,6 +24,10 @@ alias BGTransFn = fn String(String name, Allocator alloc);
 alias BGGenFn = fn String(String name, Allocator alloc);
 
 <*
+ Translation callbacks is the set of functions, each of 
+ which will be called when translating the corresponding 
+ C entity. For instance, 'func' is invoked when we translate functions.
+
  func : "Function"
  type : "Type"
  variable : "Function parameter or global variable"
@@ -42,19 +44,26 @@ struct BGTransCallbacks
 }
 
 <*
- func_macro : "Functional macro body. Note: all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
- variable : "Global non-const variable rhs value."
- constant : "Global const rhs value."
+ Generation callbacks is a set of functions which will be invoked, for instance, 
+ for generating problematic bodies or values for function-like 
+ macros and global constants respectively
+
+ func_macro : "Functional macro body. Called for each function-like macro. Note that all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
+ variable : "Global non-const variable rhs value. Called for global variables"
+ constant : "Global const rhs value. Called for global constants"
+ if_condition : "Generates the first argument for @if conditional compilation attribute. Called for each entity"
 *>
 struct BGGenCallbacks
 {
   BGGenFn func_macro;
   BGGenFn variable;
   BGGenFn constant;
+  BGGenFn if_condition;
 }
 
 <*
  Optional settings for translation.
+
  clang_args : "Command-line args passed to clang when parsing each header. Default: no args are passed"
  out_name : "Output file name into which a translation will be written. Default: result is written to stdout"
  module_name : "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
@@ -75,6 +84,7 @@ struct BGOptions
  Main bindgen function. Translates all headers and writes result to opts.out_name. 
  Should be preferred over bg::translate_header.
  WARNING: function is not tested for usage on multiple threads yet.
+
  @param header_file_names : "File names of headers to be translated"
  @param trans_callbacks : "Translation callbacks"
  @param opts : "Options to be passed to translator"
@@ -139,6 +149,7 @@ faultdef NOT_BASIC_TYPE;
   - ptrdiff_t -> isz
   - _Bool -> bool
   - va_list -> void*
+
  @return? NOT_BASIC_TYPE
 *>
 fn String? map_basic_type(String str, Allocator alloc) => api::strMapBasicType(str, alloc);

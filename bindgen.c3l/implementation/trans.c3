@@ -147,7 +147,12 @@ fn String? ctypeWithPFN(
     ++vd.anon_fns_counter;
     res = string::format(mem, "PrivateFn%s", vd.anon_fns_counter);
     vd.types_table[type_str] = res;
-    (void) ttor::pfnType(vd, res, type, cursor, (WriteAttribs){ PRIVATE });
+    
+    WriteAttrs attrs;
+    attrs.init(tmem);
+    attrs.push(PRIVATE);
+
+    ttor::pfnType(vd, res, type, cursor, attrs);
   }
   else
   {

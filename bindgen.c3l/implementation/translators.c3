@@ -53,7 +53,8 @@ fn usz? varDecl(
       return 0;
     }
 
-    return wter::varDecl(vd.out, type_name, name, rhs_val);
+    WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
+    return wter::varDecl(vd.out, type_name, name, rhs_val, attrs);
   }
 }
 
@@ -103,7 +104,8 @@ fn usz? constDecl(
     return 0;
   }
 
-  return wter::constDecl(vd.out, type_name, name, vd_const.val);
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
+  return wter::constDecl(vd.out, type_name, name, vd_const.val, attrs);
 }
 
 <*
@@ -160,7 +162,8 @@ fn usz? enumDecl(
 
   if (clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum) != 0) return 0;
 
-  return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.members.array_view());
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_type_str, vd.gen_fns);
+  return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.members.array_view(), attrs);
 }
 
 <*
@@ -212,7 +215,8 @@ fn usz? func(
     return 0;
   }
 
-  return wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str);
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, func_str, vd.gen_fns);
+  return wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str, attrs);
 }
 
 <*
@@ -286,7 +290,8 @@ fn usz? funcMacroDef(
     };
   }
 
-  return wter::funcMacro(vd.out, params.array_view(), trans_macro_str, macro_body);
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, macro_str, vd.gen_fns);
+  return wter::funcMacro(vd.out, params.array_view(), trans_macro_str, macro_body, attrs);
 }
 
 <*
@@ -328,7 +333,8 @@ fn usz? constMacroDef(
     val = t;
   }
  
-  return wter::constDecl(vd.out, "", trans_cursor_str, val);
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
+  return wter::constDecl(vd.out, "", trans_cursor_str, val, attrs);
 }
 
 <*
@@ -344,19 +350,22 @@ fn usz? typedefDecl(
   CXType type = clang::getCursorType(cursor);
   CXType under_type = clang::getTypedefDeclUnderlyingType(cursor);
 
-  String? type_name = trans::ctype(type, vd);
-  if (catch type_name)
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = misc::convStr(type_spell);
+
+  String? trans_type_str = trans::ctype(type, vd);
+  if (catch trans_type_str)
   {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String type_str = misc::convStr(type_spell);
     err::warn("Alias '%s' is ignored", type_str);
     return 0;
   }
 
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
+
   if (misc::isTypePFN(under_type))
   {
-    return ttor::pfnType(vd, type_name, under_type, cursor);
+    return ttor::pfnType(vd, trans_type_str, under_type, cursor, attrs);
   }
   else
   {
@@ -364,17 +373,13 @@ fn usz? typedefDecl(
     String? under_type_name = trans::ctype(under_type, vd);
     if (catch under_type_name)
     {
-      CXString type_spell = clang::getTypeSpelling(under_type);
-      defer clang::disposeString(type_spell);
-      String type_str = misc::convStr(type_spell);
-
       err::warn("Can't translate alias as it's underlying type '%s' is ignored", type_str);
       return 0;
     }
 
-    if (type_name != under_type_name)
+    if (trans_type_str != under_type_name)
     {
-      return wter::typedefAlias(vd.out, type_name, under_type_name);
+      return wter::typedefAlias(vd.out, trans_type_str, under_type_name, attrs);
     }
     else
     {
@@ -425,12 +430,12 @@ macro usz? fieldType(
   CXType type = clang::getCursorType(cursor);
   String? type_name = trans::ctype(type, vd);
 
+  CXString type_spell = clang::getTypeSpelling(type);
+  defer clang::disposeString(type_spell);
+  String type_str = misc::convStr(type_spell);
+
   if (catch type_name)
   {
-    CXString type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String type_str = misc::convStr(type_spell);
-
     $if $is_union:
       err::warn("Union '%s' is ignored", type_str);
     $else
@@ -440,10 +445,11 @@ macro usz? fieldType(
     return 0;
   }
 
-  usz fields_len = misc::getTopChildrenNumber(cursor);
-  
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
+
   // If no fields are defined, type is incomplete
-  if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void");
+  usz fields_len = misc::getTopChildrenNumber(cursor);
+  if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void", attrs);
 
   FieldsVisitData vd_struct = {
     .g = vd,
@@ -468,9 +474,9 @@ macro usz? fieldType(
   }
 
   $if $is_union:
-    return wter::unionDecl(vd.out, type_name, &c3_fields);
+    return wter::unionDecl(vd.out, type_name, &c3_fields, 0, attrs);
   $else
-    return wter::structDecl(vd.out, type_name, &c3_fields);
+    return wter::structDecl(vd.out, type_name, &c3_fields, 0, attrs);
   $endif
 }
 
@@ -479,8 +485,8 @@ fn usz? pfnType(
   String name,
   CXType type, 
   CXCursor cursor,
-  WriteAttribs attribs = {}) 
-=> @pool()
+  WriteAttrs attribs = {}) 
+@maydiscard => @pool()
 {
   FuncVisitData vd_func = {
     .g = vd,

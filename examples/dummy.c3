@@ -19,7 +19,7 @@ fn String macroBodies(String name, Allocator alloc)
   }
 }
 
-fn String varVals(String name, Allocator alloc)
+fn String genVarVal(String name, Allocator alloc)
 {
   switch (name)
   {
@@ -28,12 +28,22 @@ fn String varVals(String name, Allocator alloc)
   }
 }
 
-fn String varConst(String name, Allocator alloc)
+fn String genConstVal(String name, Allocator alloc)
 {
   switch (name)
   {
     case "hard_const": return "(uint)(~0U)";
     default:           return "";
+  }
+}
+
+fn String genIfArg(String name, Allocator alloc)
+{
+  switch (name) 
+  {
+    case "func_platform1":  return "$defined(env::SOME_PLATFORM)";
+    case "func_platform2":  return "!$defined(env::SOME_PLATFORM)";
+    default:                return "";
   }
 }
 
@@ -52,8 +62,9 @@ fn void main(String[] args)
 
   BGGenCallbacks gcb = {
     .func_macro = &macroBodies,
-    .variable = &varVals,
-    .constant = &varConst,
+    .variable = &genVarVal,
+    .constant = &genConstVal,
+    .if_condition = &genIfArg,
   };
 
   BGOptions opts = {

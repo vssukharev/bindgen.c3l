@@ -38,9 +38,9 @@ enum FieldKind : char
 
 struct CFieldBit
 {
-  String type;
-  String name;
-  usz width;
+  String  type;
+  String  name;
+  usz     width;
 }
 
 <*
@@ -48,7 +48,7 @@ struct CFieldBit
 *>
 struct CFieldAnon
 {
-  String name;
+  String  name;
   CFields fields;
 }
 
@@ -57,11 +57,11 @@ struct CFieldAnon
 *>
 struct CFields
 {
-  List{FieldKind} kinds;
-  List{VarDecl} norm;
-  List{CFieldBit} bit;
-  List{CFieldAnon} structs;
-  List{CFieldAnon} unions;
+  List{FieldKind}   kinds;
+  List{VarDecl}     norm;
+  List{CFieldBit}   bit;
+  List{CFieldAnon}  structs;
+  List{CFieldAnon}  unions;
 }
 
 macro void CFields.init(&self, Allocator alloc)
@@ -91,16 +91,16 @@ macro CFields.@foreach(&self; @body(FieldKind* kind, usz index))
 *>
 struct C3FieldAnon
 {
-  String name;
-  C3Fields fields;
+  String    name;
+  C3Fields  fields;
 }
 
 struct BitstructMember
 {
-  String type;
-  String name;
-  usz from;
-  usz to;
+  String  type;
+  String  name;
+  usz     from;
+  usz     to;
 }
 
 <*
@@ -108,7 +108,7 @@ struct BitstructMember
 *>
 struct C3FieldBitstruct
 {
-  String under_type;
+  String                under_type;
   List{BitstructMember} fields;
 }
 
@@ -117,11 +117,11 @@ struct C3FieldBitstruct
 *>
 struct C3Fields
 {
-  List{FieldKind} kinds;
-  List{VarDecl} norm;
-  List{C3FieldBitstruct} bit;
-  List{C3FieldAnon} structs;
-  List{C3FieldAnon} unions;
+  List{FieldKind}         kinds;
+  List{VarDecl}           norm;
+  List{C3FieldBitstruct}  bit;
+  List{C3FieldAnon}       structs;
+  List{C3FieldAnon}       unions;
 }
 
 macro void C3Fields.init(&self, Allocator alloc)
@@ -151,12 +151,12 @@ macro C3Fields.@foreach(&self; @body(FieldKind* kind, usz index))
 
 struct GlobalVisitData
 {
-  BGTransCallbacks trans_fns;
-  BGGenCallbacks gen_fns;
-  TransTable types_table;
-  File* out;
-  CXFile cxfile; // used to ignore nodes from other files 
-  usz anon_fns_counter;
+  BGTransCallbacks  trans_fns;
+  BGGenCallbacks    gen_fns;
+  TransTable        types_table;
+  File*             out;
+  CXFile            cxfile; // used to ignore nodes from other files 
+  usz               anon_fns_counter;
 }
 
 <*
@@ -164,9 +164,9 @@ struct GlobalVisitData
 *>
 struct FuncVisitData
 {
-  VarDeclList params;
-  Allocator allocator;
-  GlobalVisitData* g;
+  VarDeclList       params;
+  Allocator         allocator;
+  GlobalVisitData*  g;
 }
 
 <*
@@ -174,11 +174,11 @@ struct FuncVisitData
 *>
 struct FieldsVisitData
 {
-  CXCursor prev_anon;
-  CFields fields;
-  Allocator allocator;
-  GlobalVisitData* g;
-  usz current;
+  CXCursor          prev_anon;
+  CFields           fields;
+  Allocator         allocator;
+  GlobalVisitData*  g;
+  usz               current;
 }
 
 struct TypedefVisitData
@@ -191,9 +191,9 @@ struct TypedefVisitData
 *>
 struct ConstVisitData
 {
-  String val;
-  Allocator allocator;
-  GlobalVisitData* g;
+  String            val;
+  Allocator         allocator;
+  GlobalVisitData*  g;
 }
 
 <*
@@ -201,27 +201,61 @@ struct ConstVisitData
 *>
 struct EnumVisitData
 {
-  EnumMemberList members;
-  Allocator allocator;
-  GlobalVisitData* g;
-  bool is_unsigned;
+  EnumMemberList    members;
+  Allocator         allocator;
+  GlobalVisitData*  g;
+  bool              is_unsigned;
 }
 
 // --- Writers Data
 
-enum WriteAttrib : char (inline String str)
+enum WriteAttrKind : char (inline String str, bool has_arg)
 {
-  PRIVATE = "@private",
+  PRIVATE = { "@private", false },
+  IF      = { "@if"     , true  },
 }
 
-typedef WriteAttribs (Printable) = inline WriteAttrib[];
+<*
+ Only kind with kind.has_arg == true can have an arg
+*>
+struct WriteAttrs (Printable)
+{
+  List{WriteAttrKind} kinds;
+  List{String}        args;
+}
 
-fn usz? WriteAttribs.to_format(&self, Formatter* form) @dynamic
+macro WriteAttrs* WriteAttrs.init(&self, Allocator alloc)
+{
+  self.kinds.init(alloc, 2);
+  self.args.init(alloc, 1);
+  return self;
+}
+
+macro void WriteAttrs.push(&self, WriteAttrKind $kind, String val = "")
+{
+  self.kinds.push($kind);
+  $switch $kind:
+    $case IF:
+      self.args.push(val);
+  $endswitch
+}
+
+fn usz? WriteAttrs.to_format(&self, Formatter* form) @dynamic
 {
   usz? acc;
-  foreach (a : self)
+
+  usz i;
+  foreach (k : self.kinds)
   {
-    acc += form.printf(" %s", a.str);
+    if (k.has_arg)
+    {
+      acc += form.printf(" %s(%s)", k.str, self.args[i]);
+      ++i;
+    }
+    else
+    {
+      acc += form.printf(" %s", k.str);
+    }
   }
   return acc;
 }
