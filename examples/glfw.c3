@@ -23,7 +23,7 @@ fn void main(String[] args)
 
   BGOptions opts = {
     .out_name = out,
-    .clang_args = { "-DGLFW_INCLUDE_VULKAN", "-I./examples/headers" },
+    .clang_args = { /* "-DGLFW_INCLUDE_VULKAN", */ "-I./examples/headers" },
     .module_name = "glfw",
     // .skip_errors = true,
   };
