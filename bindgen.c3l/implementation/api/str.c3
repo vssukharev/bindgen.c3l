@@ -3,6 +3,7 @@ module bindgen::impl::api @private;
 import bindgen::impl @public;
 import bindgen::bgstr;
 import std::collections::list, std::ascii;
+import std::collections::map;
 
 alias ListString = List{String};
 
@@ -90,6 +91,27 @@ fn String? strMapBasicType(String str, Allocator alloc) @inline
 
     default:              return bgstr::NOT_BASIC_TYPE?;
   }
+}
+
+fn bool strIsBetween(String str, String a, String b) @inline
+{
+  static HashMap{String, bool} map;
+  if (!map.is_initialized()) map.init(mem);
+
+  bool current = map[a] ?? false;
+
+  if (str == a)
+  {
+    map[a] = true;
+    current = true;
+  }
+
+  if (str == b)
+  {
+    map[a] = false;
+  }
+
+  return current;
 }
 
 

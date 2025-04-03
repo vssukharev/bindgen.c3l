@@ -154,6 +154,18 @@ faultdef NOT_BASIC_TYPE;
 *>
 fn String? map_basic_type(String str, Allocator alloc) => api::strMapBasicType(str, alloc);
 
+<*
+ Detects wheter the given 'str' (name) is between 'a' and 'b' in declaration order.
+ For example if we have something like:
+
+ inf f1();
+ int f2();
+ int f3();
+
+ bgstr::is_between("f2", "f1", "f3") will return true
+*>
+fn bool is_between(String str, String a, String b) => api::strIsBetween(str, a, b);
+
 fn String snake_to_camel(String str, Allocator alloc) => api::strSnakeToCamel(str, alloc);
 fn String snake_to_pascal(String str, Allocator alloc) => api::strSnakeToPascal(str, alloc);
 fn String snake_to_screaming(String str, Allocator alloc) => api::strSnakeToScreaming(str, alloc);
@@ -172,6 +184,8 @@ fn String screaming_to_pascal(String str, Allocator alloc) => api::strScreamingT
 
 // Just aliases to above functions made for convenience
 macro String? String.map_basic_type(String str, Allocator alloc) => map_basic_type(str, alloc);
+
+fn bool String.is_between(String str, String a, String b) => is_between(str, a, b);
 
 macro String String.snake_to_camel(String str, Allocator alloc) => snake_to_camel(str, alloc);
 macro String String.snake_to_pascal(String str, Allocator alloc) => snake_to_pascal(str, alloc);
