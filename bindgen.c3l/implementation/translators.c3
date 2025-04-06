@@ -200,7 +200,7 @@ fn usz? func(
   CXType ret_type = clang::getCursorResultType(cursor); 
   if (misc::isTypePFN(ret_type))
   {
-    err::warn("Function '%s' returns pointer to function, which I can't translate, skipping...", func_str);
+    err::warn("Function '%s' returns a pointer to function, which I can't translate, skipping...", func_str);
     return 0;
   }
 
@@ -461,16 +461,24 @@ macro usz? fieldType(
   // Translate function parameters and store them into vd_struct.fields
   if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
 
-
   C3Fields? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
   if (catch c3_fields)
   {
     $if $is_union:
-      err::warn("Can't translate bit fields within union '%s', skipping...", type_name);
+      err::warn("Can't translate bit fields within union '%s', skipping...", type_str);
     $else
-      err::warn("Can't translate bit fields within struct '%s', skipping...", type_name);
+      err::warn("Can't translate bit fields within struct '%s', skipping...", type_str);
     $endif
     return 0;
+  }
+
+  if (c3_fields.bit.len() > 0)
+  {
+    $if $is_union:
+      err::warn("Check the result of translation of bit fields within union '%s'!", type_str);
+    $else
+      err::warn("Check the result of translation of bit fields within struct '%s'!", type_str);
+    $endif
   }
 
   $if $is_union:

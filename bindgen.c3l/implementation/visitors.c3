@@ -231,7 +231,7 @@ fn CXChildVisitResult fields(
   CXType prev_type = clang::getCursorType(vd.prev_anon);
 
   // If previous cursor is anonymous and current is the name of a field
-  if (clang::isAnonymous_Cursor(vd.prev_anon) && clang::equalTypes(canon_type, prev_type))
+  if (clang::equalTypes(canon_type, prev_type))
   {
     switch (misc::getFieldKind(vd.prev_anon))
     {
@@ -252,7 +252,7 @@ fn CXChildVisitResult fields(
     defer clang::disposeString(parent_spell);
     String parent_str = misc::convStr(parent_spell);
 
-    err::warn("Can't translate struct/union '%s' as it's return type '%s' is ignored", parent_str, type_str);
+    err::warn("Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
     return clang::CHILD_VISIT_BREAK;
   }
 

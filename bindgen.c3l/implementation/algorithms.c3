@@ -58,15 +58,15 @@ fn C3Fields? getC3Fields(Allocator alloc, CFields cfs) => @pool()
       res.kinds.push(BIT);
       switch (bit_widths_acc)
       {
-        case 8:
+        case 1..8:
           res.bit.push({"char", bit_fields});
-        case 16:
+        case 9..16:
           res.bit.push({"ushort", bit_fields});
-        case 32:
+        case 17..32:
           res.bit.push({"uint", bit_fields});
-        case 64:
+        case 33..64:
           res.bit.push({"ulong", bit_fields});
-        case 128:
+        case 65..128:
           res.bit.push({"uint128", bit_fields});
         default:
           return algo::ERROR?;

@@ -21,7 +21,7 @@ struct BitfieldsTranslation
   double d;
 };
 
-struct NoBitfieldsTranslation
+struct SuspicialBitfields
 {
   int a : 12;
   int b : 12;
@@ -68,6 +68,16 @@ union AUnion
 {
   union unknownT* a;
   float b;
+};
+
+struct AlignedBitfields
+{
+  uint8_t a : 1;
+  uint8_t b : 1;
+  uint8_t c : 1;
+  uint8_t d : 1;
+  uint8_t e : 1;
+  uint8_t f : 1;
 };
 
 /// --------------- Aliases
