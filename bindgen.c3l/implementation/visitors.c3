@@ -257,16 +257,19 @@ fn CXChildVisitResult fields(
   }
 
   // Handle normal and bit fields
-  vd.fields.kinds.push(kind);
   switch (kind)
   {
     case NORMAL:
       vd.fields.norm.push({trans_type_str, trans_name_str});
+      vd.fields.kinds.push(NORMAL);
     case BIT:
       CInt width = clang::getFieldDeclBitWidth(cursor);
       vd.fields.bit.push({trans_type_str, trans_name_str, (usz)width});
+      vd.fields.kinds.push(BIT);
+    // Otherwise it's a declaration of incomplete record    
     default:
-      unreachable();
+      WriteAttrs attrs = valgen::getWriteAttrs(vd.allocator, name_str, vd.g.gen_fns);
+      wter::typedefDist(vd.g.out, trans_type_str, "void", attrs);
   }
 
   return clang::CHILD_VISIT_CONTINUE;

@@ -66,7 +66,7 @@ union AnonUnion
 
 union AUnion
 {
-  int a;
+  union unknownT* a;
   float b;
 };
 

@@ -17,8 +17,6 @@
 extern "C" {
 #endif
 
-
-
 // VK_VERSION_1_0 is a preprocessor guard. Do not pass it to API calls.
 #define VK_VERSION_1_0 1
 #include "vulkan/vk_platform.h"
