@@ -21,7 +21,7 @@ struct BitfieldsTranslation
   double d;
 };
 
-struct SuspicialBitfields
+struct SuspiciousBitfields
 {
   int a : 12;
   int b : 12;

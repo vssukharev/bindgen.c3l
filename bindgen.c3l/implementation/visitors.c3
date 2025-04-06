@@ -269,6 +269,7 @@ fn CXChildVisitResult fields(
     // Otherwise it's a declaration of incomplete record    
     default:
       WriteAttrs attrs = valgen::getWriteAttrs(vd.allocator, name_str, vd.g.gen_fns);
+      attrs.push(PRIVATE);
       wter::typedefDist(vd.g.out, trans_type_str, "void", attrs);
   }
 
