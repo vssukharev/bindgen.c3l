@@ -162,12 +162,14 @@ fn String? map_basic_type(String str, Allocator alloc) => api::strMapBasicType(s
 <*
  Detects wheter the given 'str' (name) is between 'a' and 'b' in declaration order.
  For example if we have something like:
-
  inf f1();
  int f2();
  int f3();
-
  bgstr::is_between("f2", "f1", "f3") will return true
+
+ WARNING: do not use in combination with macros and some other entities
+ as ALL macros are translated first so the actual order (like in header)
+ is broken;
 *>
 fn bool is_between(String str, String a, String b) => api::strIsBetween(str, a, b);
 
