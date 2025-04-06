@@ -475,9 +475,9 @@ macro usz? fieldType(
   if (c3_fields.bit.len() > 0)
   {
     $if $is_union:
-      err::warn("Check the result of translation of bit fields within union '%s'!", type_str);
+      err::warn("Bit fields encountered within union '%s'!", type_str);
     $else
-      err::warn("Check the result of translation of bit fields within struct '%s'!", type_str);
+      err::warn("Bit fields encountered within struct '%s'!", type_str);
     $endif
   }
 
