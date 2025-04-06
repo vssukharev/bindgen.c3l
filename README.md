@@ -50,6 +50,10 @@ To get **bindgen.c3l** working, make the following steps:
 ```
 4. Import module `bindgen` into your project. NOTICE: you must prefix functions with `bg`, not `bindgen` module name, for instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
 
+## Bit fields translation warning
+
+Bit fields in C are not really ABI-compatible with C3. One thing **bindgen** do is the summing of the sequence of bit fields and emitting the bitstruct represented by a type, which size equals the size of these bit fields. Currently **bindgen** can't consider all the platform ABIs to generate the correct layout, but at least tries to do it in the most simple way. To be confident about the correctness of bit fields translation you need to test the bindings out on various platforms.
+
 ## Adding new targets to manifest.json
 
 If your platform is not currently supported, you are free to submit an issue or PR. I am using linux so I don't know how to link with libclang under various platforms, so I would really appreciate your help with that.
