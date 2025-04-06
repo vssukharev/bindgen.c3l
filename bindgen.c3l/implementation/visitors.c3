@@ -90,7 +90,7 @@ fn CXChildVisitResult enumDecl(
   String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, vd.allocator);
   if (catch trans_cursor_str)
   {
-    err::warn("Enum value '%s' is ignored", cursor_str);
+    err::warn(vd.g.no_verbose, "Enum value '%s' is ignored", cursor_str);
     return clang::CHILD_VISIT_CONTINUE;
   }
   
@@ -157,7 +157,7 @@ fn CXChildVisitResult func(
   String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g);
   if (catch trans_type_str)
   {
-    err::warn("Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
+    err::warn(vd.g.no_verbose, "Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
     return clang::CHILD_VISIT_BREAK;
   }
 
@@ -217,7 +217,7 @@ fn CXChildVisitResult fields(
   String? trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator);
   if (catch trans_name_str)
   {
-    err::warn("Field (variable) '%s' is ignored", name_str);
+    err::warn(vd.g.no_verbose, "Field (variable) '%s' is ignored", name_str);
     return clang::CHILD_VISIT_BREAK;
   }
 
@@ -252,7 +252,7 @@ fn CXChildVisitResult fields(
     defer clang::disposeString(parent_spell);
     String parent_str = misc::convStr(parent_spell);
 
-    err::warn("Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
+    err::warn(vd.g.no_verbose, "Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
     return clang::CHILD_VISIT_BREAK;
   }
 

@@ -31,14 +31,14 @@ fn usz? varDecl(
       rhs_val = valgen::apply(tmem, cursor_str, vd.gen_fns.variable);
       if (rhs_val == "")
       {
-        err::warn("Global variable '%s' contains default value and value generator function return empty string, so complete it manually", cursor_str);
+        err::warn(vd.no_verbose, "Global variable '%s' contains default value and value generator function return empty string, so complete it manually", cursor_str);
       }
     }
     
     String? name = trans::apply(cursor_str, vd.trans_fns.variable);
     if (catch name)
     {
-      err::warn("Global variable '%s' is ignored", cursor_str);
+      err::warn(vd.no_verbose, "Global variable '%s' is ignored", cursor_str);
       return 0;
     }
 
@@ -49,7 +49,7 @@ fn usz? varDecl(
       defer clang::disposeString(type_spell);
       String type_str = misc::convStr(type_spell);
 
-      err::warn("Can't translate global variable '%s' as it's type name '%s' is ignored", cursor_str, type_str);
+      err::warn(vd.no_verbose, "Can't translate global variable '%s' as it's type name '%s' is ignored", cursor_str, type_str);
       return 0;
     }
 
@@ -89,7 +89,7 @@ fn usz? constDecl(
   String? name = trans::apply(cursor_str, vd.trans_fns.constant);
   if (catch name)
   {
-    err::warn("Constant '%s' is ignored", cursor_str);
+    err::warn(vd.no_verbose, "Constant '%s' is ignored", cursor_str);
     return 0;
   }
 
@@ -100,7 +100,7 @@ fn usz? constDecl(
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
 
-    err::warn("Can't translate constant '%s' as it's type name '%s' is ignored", cursor_str, type_str);
+    err::warn(vd.no_verbose, "Can't translate constant '%s' as it's type name '%s' is ignored", cursor_str, type_str);
     return 0;
   }
 
@@ -126,7 +126,7 @@ fn usz? enumDecl(
   String? type_str = trans::ctype(type, vd);
   if (catch type_str)
   {
-    err::warn("Enum '%s' is ignored", orig_type_str);
+    err::warn(vd.no_verbose, "Enum '%s' is ignored", orig_type_str);
     return 0;
   }
 
@@ -138,7 +138,7 @@ fn usz? enumDecl(
     defer clang::disposeString(type_spell);
     String orig_under_type_str = misc::convStr(type_spell);
 
-    err::warn("Can't translate enum '%s' as it's underlying type is ignored", orig_type_str, orig_under_type_str);
+    err::warn(vd.no_verbose, "Can't translate enum '%s' as it's underlying type is ignored", orig_type_str, orig_under_type_str);
     return 0;
   }
 
@@ -193,14 +193,14 @@ fn usz? func(
   String? trans_func_str = trans::apply(func_str, vd.trans_fns.func);
   if (catch trans_func_str)
   {
-    err::warn("Function '%s' is ignored", func_str);
+    err::warn(vd.no_verbose, "Function '%s' is ignored", func_str);
     return 0;
   }
 
   CXType ret_type = clang::getCursorResultType(cursor); 
   if (misc::isTypePFN(ret_type))
   {
-    err::warn("Function '%s' returns a pointer to function, which I can't translate, skipping...", func_str);
+    err::warn(vd.no_verbose, "Function '%s' returns a pointer to function, which I can't translate, skipping...", func_str);
     return 0;
   }
 
@@ -211,7 +211,7 @@ fn usz? func(
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
 
-    err::warn("Can't translate function '%s' as it's return type '%s' is ignored", func_str, type_str);
+    err::warn(vd.no_verbose, "Can't translate function '%s' as it's return type '%s' is ignored", func_str, type_str);
     return 0;
   }
 
@@ -249,14 +249,14 @@ fn usz? funcMacroDef(
   String? trans_macro_str = trans::apply(macro_str, vd.trans_fns.func_macro, tmem);
   if (catch trans_macro_str)
   {
-    err::warn("Functional macro '%s' is ignored", macro_str);
+    err::warn(vd.no_verbose, "Functional macro '%s' is ignored", macro_str);
     return 0;
   }
 
   String macro_body = valgen::apply(tmem, macro_str, vd.gen_fns.func_macro);
   if (macro_body == "") 
   {
-    err::warn("Macro '%s' (@%s) is function-like and generator function returned empty string so you should complete it's body manually", macro_str, trans_macro_str);
+    err::warn(vd.no_verbose, "Macro '%s' (@%s) is function-like and generator function returned empty string so you should complete it's body manually", macro_str, trans_macro_str);
   }
 
   List{String} params;
@@ -281,7 +281,7 @@ fn usz? funcMacroDef(
         String? trans_token_str = trans::apply(token_str, vd.trans_fns.variable, tmem);
         if (catch trans_token_str)
         {
-          err::warn("Can't translate functional macro '%s' as it's parameter '%s' is ignored", macro_str, token_str);
+          err::warn(vd.no_verbose, "Can't translate functional macro '%s' as it's parameter '%s' is ignored", macro_str, token_str);
           return 0;
         }
 
@@ -310,7 +310,7 @@ fn usz? constMacroDef(
   String? trans_cursor_str = trans::apply(cursor_str, vd.trans_fns.constant, tmem); 
   if (catch trans_cursor_str)
   {
-    err::warn("Constant '%s' is ignored", cursor_str);
+    err::warn(vd.no_verbose, "Constant '%s' is ignored", cursor_str);
     return 0;
   }
 
@@ -323,9 +323,9 @@ fn usz? constMacroDef(
       switch (exc)
       {
         case trans::IGNORE:
-          err::warn("Can't translate constant '%s' as it's rhs comprises ignored name", cursor_str);
+          err::warn(vd.no_verbose, "Can't translate constant '%s' as it's rhs comprises ignored name", cursor_str);
         case trans::EMPTY:
-          err::warn("Macro '%s' doesn't have value, skipping...", cursor_str);
+          err::warn(vd.no_verbose, "Macro '%s' doesn't have value, skipping...", cursor_str);
       }
       return 0;
     }
@@ -357,7 +357,7 @@ fn usz? typedefDecl(
   String? trans_type_str = trans::ctype(type, vd);
   if (catch trans_type_str)
   {
-    err::warn("Alias '%s' is ignored", type_str);
+    err::warn(vd.no_verbose, "Alias '%s' is ignored", type_str);
     return 0;
   }
 
@@ -373,7 +373,7 @@ fn usz? typedefDecl(
     String? under_type_name = trans::ctype(under_type, vd);
     if (catch under_type_name)
     {
-      err::warn("Can't translate alias as it's underlying type '%s' is ignored", type_str);
+      err::warn(vd.no_verbose, "Can't translate alias as it's underlying type '%s' is ignored", type_str);
       return 0;
     }
 
@@ -437,9 +437,9 @@ macro usz? fieldType(
   if (catch type_name)
   {
     $if $is_union:
-      err::warn("Union '%s' is ignored", type_str);
+      err::warn(vd.no_verbose, "Union '%s' is ignored", type_str);
     $else
-      err::warn("Struct '%s' is ignored", type_str);
+      err::warn(vd.no_verbose, "Struct '%s' is ignored", type_str);
     $endif
 
     return 0;
@@ -465,9 +465,9 @@ macro usz? fieldType(
   if (catch c3_fields)
   {
     $if $is_union:
-      err::warn("Can't translate bit fields within union '%s', skipping...", type_str);
+      err::warn(vd.no_verbose, "Can't translate bit fields within union '%s', skipping...", type_str);
     $else
-      err::warn("Can't translate bit fields within struct '%s', skipping...", type_str);
+      err::warn(vd.no_verbose, "Can't translate bit fields within struct '%s', skipping...", type_str);
     $endif
     return 0;
   }
@@ -475,9 +475,9 @@ macro usz? fieldType(
   if (c3_fields.bit.len() > 0)
   {
     $if $is_union:
-      err::warn("Bit fields encountered within union '%s'!", type_str);
+      err::warn(vd.no_verbose, "Bit fields encountered within union '%s'!", type_str);
     $else
-      err::warn("Bit fields encountered within struct '%s'!", type_str);
+      err::warn(vd.no_verbose, "Bit fields encountered within struct '%s'!", type_str);
     $endif
   }
 
@@ -516,7 +516,7 @@ fn usz? pfnType(
     defer clang::disposeString(cursor_spell);
     String cursor_str = misc::convStr(cursor_spell);
 
-    err::warn("Can't translate function pointer alias '%s' as it's return type '%s' is ignored", cursor_str, ret_type_str);
+    err::warn(vd.no_verbose, "Can't translate function pointer alias '%s' as it's return type '%s' is ignored", cursor_str, ret_type_str);
     return 0;
   }
 

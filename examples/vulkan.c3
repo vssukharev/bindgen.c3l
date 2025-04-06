@@ -75,8 +75,9 @@ fn void main(String[] args)
     .clang_args = { "-DVK_ENABLE_BETA_EXTENSIONS" },
     .module_name = "vulkan::vk",
     .out_name = out,
-    .skip_errors = true,
     .include_file = &includeFile,
+    .skip_errors = true,
+    .no_verbose = true,
   }; 
 
   bg::translate_header("./examples/headers/vulkan-part.h", trans_cbs, opts, gen_cbs)!!;

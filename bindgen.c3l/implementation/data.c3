@@ -158,6 +158,10 @@ struct GlobalVisitData
   File*             out;
   CXFile            cxfile; // used to ignore nodes from other files 
   usz               anon_fns_counter;
+  bitstruct : char
+  {
+    bool            no_verbose;
+  }
 }
 
 <*

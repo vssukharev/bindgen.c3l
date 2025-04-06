@@ -25,18 +25,18 @@ fn void? translateHeaders(
 {
   err::info("Translating %s", header_file_names);
   err::info("Writing to %s", opts.out_name);
-  
+ 
   // Open file
   File out = *io::stdout();
   if (opts.out_name != "") out = file::open(opts.out_name, "w")!;
   defer (void) out.close();
 
   // Check callbacks
-  if (trans_callbacks.func == null) err::warn("Function translation will not be performed as function pointer is null");
-  if (trans_callbacks.variable == null) err::warn("Variable translation will not be performed as function pointer is null");
-  if (trans_callbacks.type == null) err::warn("Type translation will not be performed as function pointer is null");
-  if (trans_callbacks.constant == null) err::warn("Constant translation will not be performed as function pointer is null");
-  if (trans_callbacks.func_macro == null) err::warn("Functional macros translation will not be performed as function pointer is null");
+  if (trans_callbacks.func == null) err::warn(opts.no_verbose, "Function translation will not be performed as function pointer is null");
+  if (trans_callbacks.variable == null) err::warn(opts.no_verbose, "Variable translation will not be performed as function pointer is null");
+  if (trans_callbacks.type == null) err::warn(opts.no_verbose, "Type translation will not be performed as function pointer is null");
+  if (trans_callbacks.constant == null) err::warn(opts.no_verbose, "Constant translation will not be performed as function pointer is null");
+  if (trans_callbacks.func_macro == null) err::warn(opts.no_verbose, "Functional macros translation will not be performed as function pointer is null");
 
   // Write module name
   if (opts.module_name != "") wter::moduleHead(&out, opts.module_name);
@@ -87,8 +87,9 @@ fn void? translateHeaders(
       .out = &out,
       .trans_fns = trans_callbacks,
       .gen_fns = gen_callbacks,
-      .include_file = opts.include_file,
       .cxfile = clang::getFile(tu, (ZString)header_name),
+      .include_file = opts.include_file,
+      .no_verbose = opts.no_verbose,
     };
 
     visit_data.types_table.init(mem);

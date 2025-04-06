@@ -85,6 +85,7 @@ struct BGOptions
   bitstruct : char
   {
     bool skip_errors;
+    bool no_verbose;
   }
 }
 

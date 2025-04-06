@@ -24,10 +24,13 @@ macro void flog(File* out, String str = "", ...)
   io::fprintfn(out, str, $vasplat)!!;
 } 
 
-macro void warn(String str = "", ...) 
+macro void warn(bool no_verbose, String str = "", ...) 
 {
-  io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);
-  io::eprintfn(str, $vasplat);
+  if (!no_verbose)
+  {
+    io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);
+    io::eprintfn(str, $vasplat);
+  }
 }
 
 macro void info(String str = "", ...) 
