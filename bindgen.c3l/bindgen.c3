@@ -88,35 +88,31 @@ struct BGOptions
   }
 }
 
-<* 
+<*
  Main bindgen function. Translates all headers and writes result to opts.out_name. 
  Should be preferred over bg::translate_header.
  WARNING: function is not tested for usage on multiple threads yet.
 
- @param header_file_names : "File names of headers to be translated"
+ @param header_name : "Header name to be translated"
  @param trans_callbacks : "Translation callbacks"
  @param opts : "Options to be passed to translator"
  @param gen_callbacks : "Values generation callbacks"
  @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
 *>
+fn void? translate_header(
+  String header_name, 
+  BGTransCallbacks trans_callbacks,
+  BGOptions opts = {},
+  BGGenCallbacks gen_callbacks = {})
+=> api::translateHeaders({header_name}, trans_callbacks, opts, gen_callbacks);
+
 fn void? translate_headers(
   String[] header_file_names, 
   BGTransCallbacks trans_callbacks,
   BGOptions opts = {},
   BGGenCallbacks gen_callbacks = {})
+@deprecated("Use bg::translate_header") 
 => api::translateHeaders(header_file_names, trans_callbacks, opts, gen_callbacks);
-
-<*
- The same as translate_headers but performs translation
- only of one header. If you have multiple headers with
- one resulting file, please use bg::translate_headers.
-*>
-fn void? translate_header(
-  String header_file_name, 
-  BGTransCallbacks trans_callbacks,
-  BGOptions opts = {},
-  BGGenCallbacks gen_callbacks = {})
-=> api::translateHeaders({header_file_name}, trans_callbacks, opts, gen_callbacks);
 
 <*
  This module is created for user comfort.

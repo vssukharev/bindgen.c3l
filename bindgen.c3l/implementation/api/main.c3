@@ -23,8 +23,8 @@ fn void? translateHeaders(
   BGGenCallbacks gen_callbacks)
 @inline
 {
-  err::log("Translating %s", header_file_names);
-  err::log("Writing to %s", opts.out_name);
+  err::info("Translating %s", header_file_names);
+  err::info("Writing to %s", opts.out_name);
   
   // Open file
   File out = *io::stdout();

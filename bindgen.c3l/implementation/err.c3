@@ -28,6 +28,12 @@ macro void warn(String str = "", ...)
 {
   io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);
   io::eprintfn(str, $vasplat);
+}
+
+macro void info(String str = "", ...) 
+{
+  io::eprintf("%sInfo%s : ", ANSI_GREEN, ANSI_NONE);
+  io::eprintfn(str, $vasplat);
 } 
 
 macro void diag(String file, CUInt line, CUInt col, String str, ...)
