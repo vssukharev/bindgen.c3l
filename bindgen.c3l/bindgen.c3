@@ -24,6 +24,12 @@ alias BGTransFn = fn String(String name, Allocator alloc);
 alias BGGenFn = fn String(String name, Allocator alloc);
 
 <*
+ name : "Original string from C source. Should NOT be changed"
+ @return "Boolean connected with the passed name"
+*>
+alias BGCheckFn = fn bool(String name);
+
+<*
  Translation callbacks is the set of functions, each of 
  which will be called when translating the corresponding 
  C entity. For instance, 'func' is invoked when we translate functions.
@@ -67,6 +73,7 @@ struct BGGenCallbacks
  clang_args : "Command-line args passed to clang when parsing each header. Default: no args are passed"
  out_name : "Output file name into which a translation will be written. Default: result is written to stdout"
  module_name : "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
+ include_file : "By default, bindgen ignore `#include` directives as C stdlib headers are usually not needed to be translated. This option is a function which returns true if we want to '#include' file passed to 'name' parameter. Note that 'name' is either relative or absolute path to a file"
  skip_errors : "Whether to skip clang's parse errors. Note, that '<...> file not found' errors are skipped always and not controlled with this flag"
 *>
 struct BGOptions
@@ -74,6 +81,7 @@ struct BGOptions
   String[] clang_args;
   String out_name;
   String module_name;
+  BGCheckFn include_file;
   bitstruct : char
   {
     bool skip_errors;

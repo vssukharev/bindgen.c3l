@@ -42,6 +42,10 @@ fn String transFuncMacro(String name, Allocator alloc)
   return name.strip("VK_").screaming_to_snake(alloc);
 }
 
+fn bool includeFile(String name)
+{
+  return name.contains("vulkan/");
+}
 
 fn void main(String[] args)
 {
@@ -72,6 +76,7 @@ fn void main(String[] args)
     .module_name = "vulkan::vk",
     .out_name = out,
     .skip_errors = true,
+    .include_file = &includeFile,
   }; 
 
   bg::translate_header("./examples/headers/vulkan-part.h", trans_cbs, opts, gen_cbs)!!;

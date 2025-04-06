@@ -154,6 +154,7 @@ struct GlobalVisitData
   BGTransCallbacks  trans_fns;
   BGGenCallbacks    gen_fns;
   TransTable        types_table;
+  BGCheckFn         include_file;
   File*             out;
   CXFile            cxfile; // used to ignore nodes from other files 
   usz               anon_fns_counter;

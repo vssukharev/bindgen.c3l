@@ -15,27 +15,26 @@ fn CXChildVisitResult global(
 {
   GlobalVisitData* vd = (GlobalVisitData*) client_data;
 
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-  String cursor_str = misc::convStr(cursor_spell);
-
   CXCursorKind cursor_kind = clang::getCursorKind(cursor);
-  CXString cursor_kind_spell = clang::getCursorKindSpelling(cursor_kind);
-  defer clang::disposeString(cursor_kind_spell);
 
+  // Check whether the included file is applicable to us
   CXFile cursor_file;
   clang::getExpansionLocation(clang::getCursorLocation(cursor), &cursor_file, null, null, null);
 
-  // If cursor file is not equal to the parsed one,
-  // it's either inside of an included header or
-  // macro defined by compiler so that it returns 
-  // null pointer to a file
+  // Ignore null file as it might be a macro included by a compiler
+  if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
+
+  // If file is not equal to ours and it's not permitted, skip it
   if (!clang::isEqual_File(cursor_file, vd.cxfile))
   {
-    return clang::CHILD_VISIT_CONTINUE; 
+    CXString file_spell = clang::getFileName(cursor_file);
+    defer clang::disposeString(file_spell);
+    String file_str = misc::convStr(file_spell);
+
+    if (!check::apply(file_str, vd.include_file)) return clang::CHILD_VISIT_CONTINUE; 
   }
 
-  // TODO: make non-const global variables translation
+
   switch (cursor_kind)
   {
     case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);

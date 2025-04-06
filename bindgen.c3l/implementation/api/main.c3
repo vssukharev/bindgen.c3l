@@ -87,6 +87,7 @@ fn void? translateHeaders(
       .out = &out,
       .trans_fns = trans_callbacks,
       .gen_fns = gen_callbacks,
+      .include_file = opts.include_file,
       .cxfile = clang::getFile(tu, (ZString)header_name),
     };
 
