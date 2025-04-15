@@ -14,5 +14,15 @@
       "link-args" : [ "-L /Library/Developer/CommandLineTools/usr/lib -rpath /Library/Developer/CommandLineTools/usr/lib" ],
       "sources" : [ "**" ]
     },
+    "windows-x64": {
+      "link-args": [ ],
+      "dependencies": [  ],
+      "linked-libraries": [ "libclang" ]
+    },
+    "windows-aarch64": {
+      "link-args": [ ],
+      "dependencies": [  ],
+      "linked-libraries": [ "libclang" ]
+    },
   }
 }

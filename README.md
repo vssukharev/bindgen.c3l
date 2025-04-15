@@ -64,3 +64,8 @@ First of all, read a [short article](https://c3-lang.org/misc-advanced/library-p
 
 Join and contact me in [C3 discord channel](https://discord.com/channels/650345951868747808/1324455225028775946).
 
+## TODO
+
+- Add one more parameter if_condition and module_wrap functions: name kind, like function, structure, member, etc.
+
+
