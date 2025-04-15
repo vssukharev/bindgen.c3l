@@ -49,6 +49,12 @@ fn void? translateHeaders(
 
   foreach (header_name : header_file_names)
   {
+    if (!file::exists(header_name)) 
+    {
+      err::erro("Could not find input header file '%s'. Please, check your current directory", header_name);
+      return bg::INVALID_ARGUMENTS?;
+    }
+
     CXTranslationUnit tu;
     CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu);
     err::checkCode(code)!;

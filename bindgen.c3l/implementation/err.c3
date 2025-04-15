@@ -39,6 +39,12 @@ macro void info(String str = "", ...)
   io::eprintfn(str, $vasplat);
 } 
 
+macro void erro(String str = "", ...) 
+{
+  io::eprintf("%sError%s : ", ANSI_RED, ANSI_NONE);
+  io::eprintfn(str, $vasplat);
+} 
+
 macro void diag(String file, CUInt line, CUInt col, String str, ...)
 {
   io::eprintf("%sError at %s:%d:%d%s : ", ANSI_RED, file, line, col, ANSI_NONE);
