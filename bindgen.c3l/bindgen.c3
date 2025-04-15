@@ -158,39 +158,6 @@ import bindgen::impl::api @public;
 faultdef NOT_BASIC_TYPE;
 
 <*
- Maps basic C type (str) to corresponding C3 ones.
- NOT_BASIC_TYPE fault is returned if type is not basic.
- All matches:
-  - some_type -> Some_type
-  - void -> void (no change)
-  - uint32_t -> uint
-  - long long -> CLongLong
-  - short -> CShort
-  - char -> CChar
-  - float -> float
-  - double -> double
-  - unsigned -> CUInt
-  - unsigned int -> CUInt
-  - unsigned short -> CUShort
-  - unsigned char -> CUChar
-  - int8_t -> ichar
-  - int16_t -> short
-  - int32_t -> int
-  - int64_t -> long
-  - uint8_t -> char
-  - uint16_t -> ushort
-  - uint32_t -> uint
-  - uint64_t -> ulong
-  - size_t -> usz
-  - ptrdiff_t -> isz
-  - _Bool -> bool
-  - va_list -> void*
-
- @return? NOT_BASIC_TYPE
-*>
-fn String? map_basic_type(String str, Allocator alloc) => api::strMapBasicType(str, alloc);
-
-<*
  Detects wheter the given 'str' (name) is between 'a' and 'b' in declaration order.
  For example if we have something like:
  inf f1();
@@ -219,9 +186,6 @@ fn String camel_to_pascal(String str, Allocator alloc) => api::strCamelToPascal(
 fn String screaming_to_snake(String str, Allocator alloc) => api::strScreamingToSnake(str, alloc);
 fn String screaming_to_camel(String str, Allocator alloc) => api::strScreamingToCamel(str, alloc);
 fn String screaming_to_pascal(String str, Allocator alloc) => api::strScreamingToPascal(str, alloc);
-
-// Just aliases to above functions made for convenience
-macro String? String.map_basic_type(String str, Allocator alloc) => map_basic_type(str, alloc);
 
 fn bool String.is_between(String str, String a, String b) => is_between(str, a, b);
 

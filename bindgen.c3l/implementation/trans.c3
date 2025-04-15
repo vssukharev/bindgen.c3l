@@ -108,7 +108,7 @@ fn String? ctype(
   // Here, translation is performed under inner type and it's worth to cache also.
   // For example, if we have something like 'CXType*', 'CXType' already must be 
   // defined somewhere and, hence, cached.
-  String trans_inner_type_str = trans::capply(inner_type_str, vd.trans_fns.type, &vd.types_table)!;
+  String trans_inner_type_str = misc::mapBasicType(inner_type_str) ?? trans::capply(inner_type_str, vd.trans_fns.type, &vd.types_table)!;
 
   // enum MyFoo -> Enum MyFoo
   DString res_dstr;

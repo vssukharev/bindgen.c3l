@@ -55,9 +55,6 @@ fn void main(String[] args)
     .func = fn String(String str, Allocator alloc) =>
       str.strip("vk").camel_to_snake(alloc),
 
-    .type = fn String(String str, Allocator alloc) =>
-      str.map_basic_type(alloc) ?? str.copy(alloc),
-
     .variable = fn String(String str, Allocator alloc) =>
       str == "module" ? "mod" : str.camel_to_snake(alloc),
       

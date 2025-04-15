@@ -13,9 +13,6 @@ fn void main(String[] args)
 
     .variable = &bgstr::camel_to_snake,
 
-    .type = fn String(String str, Allocator alloc) => 
-      str.map_basic_type(alloc) ?? str.copy(alloc),
-
     .constant = fn String(String str, Allocator alloc) =>
       str == "APIENTRY" ? "" :
       str == "GLAPIENTRY" ? "" : // ignore APIENTRY

@@ -3,6 +3,8 @@ module bindgen::impl::misc @private;
 import bindgen::impl @public;
 import clang, std::io;
 
+faultdef NOT_BASIC_TYPE;
+
 fn String convStr(CXString s) @inline
 {
   return clang::getCString(s).str_view();
@@ -101,4 +103,58 @@ fn FieldKind getFieldKind(CXCursor cursor)
 
   return kind;
 }
+
+<*
+ Returns fault if type is not basic
+*>
+fn String? mapBasicType(String str)
+{
+  switch (str)
+  {
+    case "void":          return "void";
+    case "_Bool":         return "bool";
+    case "ptrdiff_t":     return "isz";
+    case "size_t":        return "usz";
+
+    case "char":          return "CChar";
+    case "short":         return "CShort";
+    case "int":           return "CInt";
+    case "long":          return "CLong";
+    case "long long":     return "CLongLong";
+
+    case "unsigned char":       return "char";
+    case "unsigned short":      return "CUShort";
+    case "unsigned":            return "CUInt";
+    case "unsigned int":        return "CUInt";
+    case "unsigned long":       return "CULong";
+    case "unsigned long long":  return "CULongLong";
+    
+    case "signed char":       return "ichar";
+    case "signed short":      return "CShort";
+    case "signed":            return "CUInt";
+    case "signed int":        return "CInt";
+    case "signed long":       return "CLong";
+    case "signed long long":  return "CLongLong";
+
+    case "int8_t":        return "ichar";
+    case "int16_t":       return "short";
+    case "int32_t":       return "int";
+    case "int64_t":       return "long";
+    case "intptr_t":      return "iptr";
+
+    case "uint8_t":       return "char";
+    case "uint16_t":      return "ushort";
+    case "uint32_t":      return "uint";
+    case "uint64_t":      return "ulong";
+    case "uintptr_t":     return "uptr";
+
+    case "float":         return "float";
+    case "double":        return "double";
+
+    case "va_list":       return "void*";
+
+    default:              return NOT_BASIC_TYPE?;
+  }
+}
+
 

@@ -70,8 +70,7 @@ fn void main(String[] args)
   BGTransCallbacks trans_fns = {
     .func = &bgstr::pascal_to_camel,
 
-    .type = fn String(String str, Allocator alloc) =>
-      str.map_basic_type(alloc) ?? str.camel_to_pascal(alloc),
+    .type = &bgstr::camel_to_pascal,
 
     .func_macro = fn String(String str, Allocator alloc) =>
        str == "CLITERAL" || str[:3] == "RL_" ? "" : 
