@@ -11,18 +11,11 @@ import std::io, std::collections::map, std::collections::list, clang;
 *>
 alias TransTable = HashMap{String, String};
 alias VarDeclList = List{VarDecl};
-alias EnumMemberList = List{EnumMember};
 
 struct VarDecl
 {
   String type;
   String name;
-}
-
-struct EnumMember
-{
-  String name;
-  String val;
 }
 
 <*
@@ -153,11 +146,15 @@ struct GlobalVisitData
 {
   BGTransCallbacks  trans_fns;
   BGGenCallbacks    gen_fns;
-  TransTable        types_table;
   BGCheckFn         include_file;
+  String            module_name;
+  BGModuleWrap      prev_module_wrap;
+
+  TransTable        types_table;
   File*             out;
   CXFile            cxfile; // used to ignore nodes from other files 
   usz               anon_fns_counter;
+
   bitstruct : char
   {
     bool            no_verbose;
@@ -206,9 +203,8 @@ struct ConstVisitData
 *>
 struct EnumVisitData
 {
-  EnumMemberList    members;
-  Allocator         allocator;
   GlobalVisitData*  g;
+  String            enum_name;
   bool              is_unsigned;
 }
 
@@ -228,6 +224,8 @@ struct WriteAttrs (Printable)
   List{WriteAttrKind} kinds;
   List{String}        args;
 }
+
+/// --- Helper modules
 
 macro WriteAttrs* WriteAttrs.init(&self, Allocator alloc)
 {
@@ -263,6 +261,11 @@ fn usz? WriteAttrs.to_format(&self, Formatter* form) @dynamic
     }
   }
   return acc;
+}
+
+fn bool BGModuleWrap.equals(&self, BGModuleWrap* other)
+{
+  return self.if_condition == other.if_condition;
 }
 
 

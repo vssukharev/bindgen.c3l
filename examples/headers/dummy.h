@@ -99,9 +99,11 @@ int will_be_declared(uint32_t a, uint32_t b);
 int wont_be_declared();
 #endif
 
-#ifdef SOME_PLATFORM
+#ifdef SOME_PLATFORM_1
 int func_platform1(uint32_t a, uint32_t b);
-#else
+#endif
+
+#ifdef SOME_PLATFORM_2
 int func_platform2(uint32_t a, uint32_t b);
 #endif
 
@@ -138,5 +140,6 @@ enum SomeEnum
 {
   SOME_MEMBER_1 = 3,
   SOME_MEMBER_2 = 24,
+  SOME_MEMBER_3 = 45,
 };
 

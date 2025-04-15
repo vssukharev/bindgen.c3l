@@ -41,9 +41,19 @@ fn String genIfArg(String name, Allocator alloc)
 {
   switch (name) 
   {
-    case "func_platform1":  return "$defined(env::SOME_PLATFORM)";
-    case "func_platform2":  return "!$defined(env::SOME_PLATFORM)";
+    case "SOME_MEMBER_1":   return "$defined(env::SOME_PLATFORM_1) &&& env::SOME_PLATFORM_1";
+    case "SOME_MEMBER_2":   return "$defined(env::SOME_PLATFORM_2) &&& env::SOME_PLATFORM_2";
     default:                return "";
+  }
+}
+
+fn BGModuleWrap genModuleWrap(String name, Allocator alloc)
+{
+  switch (name) 
+  {
+    case "func_platform1":  return { "$defined(env::SOME_PLATFORM_1) &&& env::SOME_PLATFORM_1", "some_platform_1" };
+    case "func_platform2":  return { "$defined(env::SOME_PLATFORM_2) &&& env::SOME_PLATFORM_2", "some_platform_2" };
+    default:                return {};
   }
 }
 
@@ -65,10 +75,11 @@ fn void main(String[] args)
     .variable = &genVarVal,
     .constant = &genConstVal,
     .if_condition = &genIfArg,
+    .module_wrap = &genModuleWrap,
   };
 
   BGOptions opts = {
-    .clang_args = { "-DTEST_COND" },
+    .clang_args = { "-DTEST_COND", "-DSOME_PLATFORM_1", "-DSOME_PLATFORM_2" },
     .out_name = out,
     .module_name = "dummy",
   };

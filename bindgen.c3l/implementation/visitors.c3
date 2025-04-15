@@ -87,7 +87,7 @@ fn CXChildVisitResult enumDecl(
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
   
-  String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, vd.allocator);
+  String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, tmem);
   if (catch trans_cursor_str)
   {
     err::warn(vd.g.no_verbose, "Enum value '%s' is ignored", cursor_str);
@@ -96,7 +96,7 @@ fn CXChildVisitResult enumDecl(
   
   ConstVisitData vd_const = {
     .g = vd.g,
-    .allocator = vd.allocator,
+    .allocator = tmem,
   };
 
   clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
@@ -107,16 +107,17 @@ fn CXChildVisitResult enumDecl(
     if (vd.is_unsigned)
     {
       CULongLong ival = clang::getEnumConstantDeclUnsignedValue(cursor);
-      vd_const.val = string::format(vd.allocator, "%s", ival);
+      vd_const.val = string::tformat("%s", ival);
     }
     else
     {
       CLongLong ival = clang::getEnumConstantDeclValue(cursor);
-      vd_const.val = string::format(vd.allocator, "%s", ival);
+      vd_const.val = string::tformat("%s", ival);
     }
   }
 
-  vd.members.push({trans_cursor_str, vd_const.val});
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.g.gen_fns);
+  wter::constDecl(vd.g.out, vd.enum_name, trans_cursor_str, vd_const.val, attrs);
 
   return clang::CHILD_VISIT_CONTINUE;
 }

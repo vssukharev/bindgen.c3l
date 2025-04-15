@@ -42,8 +42,8 @@ fn usz? varDecl(
       return 0;
     }
 
-    String? type_name = trans::ctypeWithPFN(cursor, vd);
-    if (catch type_name)
+    String? trans_type_str = trans::ctypeWithPFN(cursor, vd);
+    if (catch trans_type_str)
     {
       CXString type_spell = clang::getTypeSpelling(type);
       defer clang::disposeString(type_spell);
@@ -53,8 +53,10 @@ fn usz? varDecl(
       return 0;
     }
 
+    valgen::moduleWrap(vd, cursor_str);
+
     WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
-    return wter::varDecl(vd.out, type_name, name, rhs_val, attrs);
+    return wter::varDecl(vd.out, trans_type_str, name, rhs_val, attrs);
   }
 }
 
@@ -93,8 +95,8 @@ fn usz? constDecl(
     return 0;
   }
 
-  String? type_name = trans::ctypeWithPFN(cursor, vd);
-  if (catch type_name)
+  String? trans_type_str = trans::ctypeWithPFN(cursor, vd);
+  if (catch trans_type_str)
   {
     CXString type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
     defer clang::disposeString(type_spell);
@@ -105,7 +107,7 @@ fn usz? constDecl(
   }
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
-  return wter::constDecl(vd.out, type_name, name, vd_const.val, attrs);
+  return wter::constDecl(vd.out, trans_type_str, name, vd_const.val, attrs);
 }
 
 <*
@@ -144,9 +146,8 @@ fn usz? enumDecl(
 
   EnumVisitData vd_enum = {
     .g = vd,
-    .allocator = tmem,
+    .enum_name = type_str,
   };
-  vd_enum.members.tinit();
 
   switch (under_type.kind)
   {
@@ -160,10 +161,13 @@ fn usz? enumDecl(
       vd_enum.is_unsigned = false;
   }
 
-  if (clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum) != 0) return 0;
+  valgen::moduleWrap(vd, orig_type_str);
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_type_str, vd.gen_fns);
-  return wter::enumDecl(vd.out, type_str, under_type_str, vd_enum.members.array_view(), attrs);
+  usz? acc = wter::enumDecl(vd.out, type_str, under_type_str);
+
+  clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
+  return acc;
 }
 
 <*
@@ -214,6 +218,8 @@ fn usz? func(
     err::warn(vd.no_verbose, "Can't translate function '%s' as it's return type '%s' is ignored", func_str, type_str);
     return 0;
   }
+
+  valgen::moduleWrap(vd, func_str);
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, func_str, vd.gen_fns);
   return wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str, attrs);
@@ -290,6 +296,8 @@ fn usz? funcMacroDef(
     };
   }
 
+  valgen::moduleWrap(vd, macro_str);
+
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, macro_str, vd.gen_fns);
   return wter::funcMacro(vd.out, params.array_view(), trans_macro_str, macro_body, attrs);
 }
@@ -333,6 +341,8 @@ fn usz? constMacroDef(
     val = t;
   }
  
+  valgen::moduleWrap(vd, cursor_str);
+
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
   return wter::constDecl(vd.out, "", trans_cursor_str, val, attrs);
 }
@@ -361,6 +371,7 @@ fn usz? typedefDecl(
     return 0;
   }
 
+  valgen::moduleWrap(vd, type_str);
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
 
   if (misc::isTypePFN(under_type))
@@ -428,13 +439,13 @@ macro usz? fieldType(
 @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
-  String? type_name = trans::ctype(type, vd);
+  String? trans_type_str = trans::ctype(type, vd);
 
   CXString type_spell = clang::getTypeSpelling(type);
   defer clang::disposeString(type_spell);
   String type_str = misc::convStr(type_spell);
 
-  if (catch type_name)
+  if (catch trans_type_str)
   {
     $if $is_union:
       err::warn(vd.no_verbose, "Union '%s' is ignored", type_str);
@@ -445,11 +456,16 @@ macro usz? fieldType(
     return 0;
   }
 
+
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
 
   // If no fields are defined, type is incomplete
   usz fields_len = misc::getTopChildrenNumber(cursor);
-  if (fields_len == 0) return wter::typedefDist(vd.out, type_name, "void", attrs);
+  if (fields_len == 0) 
+  {
+    valgen::moduleWrap(vd, type_str);
+    return wter::typedefDist(vd.out, trans_type_str, "void", attrs);
+  }
 
   FieldsVisitData vd_struct = {
     .g = vd,
@@ -458,7 +474,7 @@ macro usz? fieldType(
 
   vd_struct.fields.init(vd_struct.allocator);
 
-  // Translate function parameters and store them into vd_struct.fields
+  // Translate record fields and store them into vd_struct.fields
   if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
 
   C3Fields? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
@@ -481,10 +497,11 @@ macro usz? fieldType(
     $endif
   }
 
+  valgen::moduleWrap(vd, type_str);
   $if $is_union:
-    return wter::unionDecl(vd.out, type_name, &c3_fields, 0, attrs);
+    return wter::unionDecl(vd.out, trans_type_str, &c3_fields, 0, attrs);
   $else
-    return wter::structDecl(vd.out, type_name, &c3_fields, 0, attrs);
+    return wter::structDecl(vd.out, trans_type_str, &c3_fields, 0, attrs);
   $endif
 }
 

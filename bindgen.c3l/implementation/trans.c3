@@ -117,7 +117,7 @@ fn String? ctype(
   trans::normTypeDStr(&res_dstr);
   res_dstr.replace(inner_type_str, trans_inner_type_str);
 
-  String res = res_dstr.copy_str(mem);
+  String res = res_dstr.copy_str(mem); // TODO: get rid of leak
   vd.types_table[type_str] = res;
 
   return res;

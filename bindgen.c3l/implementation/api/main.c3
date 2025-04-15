@@ -84,11 +84,14 @@ fn void? translateHeaders(
     }
 
     GlobalVisitData visit_data = {
-      .out = &out,
       .trans_fns = trans_callbacks,
       .gen_fns = gen_callbacks,
-      .cxfile = clang::getFile(tu, (ZString)header_name),
       .include_file = opts.include_file,
+      .module_name = opts.module_name,
+
+      .out = &out,
+      .cxfile = clang::getFile(tu, (ZString)header_name),
+
       .no_verbose = opts.no_verbose,
     };
 

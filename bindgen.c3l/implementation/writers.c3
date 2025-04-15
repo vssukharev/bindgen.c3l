@@ -130,17 +130,17 @@ fn usz? enumDecl(
   File* out,
   String name,
   String type,
-  EnumMember[] members,
+  // EnumMember[] members,
   WriteAttrs attribs = {})
 @maydiscard
 {
   usz? acc;
   
   acc += io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
-  foreach (member : members)
-  {
-    acc += io::fprintfn(out, "const %s %s%s = %s;", name, member.name, attribs, member.val);
-  }
+  // foreach (member : members)
+  // {
+  //   acc += io::fprintfn(out, "const %s %s%s = %s;", name, member.name, attribs, member.val);
+  // }
   
   return acc;
 }
@@ -211,10 +211,19 @@ fn usz? funcMacro(
 *>
 fn usz? moduleHead(
   File* out,
+  String module_name,
+  WriteAttrs attribs = {})
+@maydiscard
+{
+  return io::fprintfn(out, "\nmodule %s%s;", module_name, attribs);
+}
+
+fn usz? importModule(
+  File* out,
   String module_name)
 @maydiscard
 {
-  return io::fprintfn(out, "\nmodule %s;", module_name);
+  return io::fprintfn(out, "import %s;", module_name);
 }
 
 

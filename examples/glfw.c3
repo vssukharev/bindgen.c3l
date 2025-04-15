@@ -23,9 +23,12 @@ fn void main(String[] args)
   };
 
   BGGenCallbacks gen_fns = {
-    .if_condition = fn String(String str, Allocator alloc) =>
-      !bgstr::is_between(str, "glfwGetInstanceProcAddress", "glfwCreateWindowSurface") ? "" : 
-      "$defined(env::GLFW_INCLUDE_VULKAN) &&& env::GLFW_INCLUDE_VULKAN",
+    .module_wrap = fn BGModuleWrap(String str, Allocator alloc) =>
+      !bgstr::is_between(str, "glfwGetInstanceProcAddress", "glfwCreateWindowSurface") ? {} :
+      {
+        .if_condition = "$defined(env::GLFW_INCLUDE_VULKAN) &&& env::GLFW_INCLUDE_VULKAN",
+        .imports = "vulkan",
+      },
   };
   
   BGOptions opts = {

@@ -877,8 +877,7 @@ GLFWAPI int glfwGetPhysicalDevicePresentationSupport(VkInstance instance, VkPhys
 GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance, GLFWwindow* window, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface);
  
 #endif /*VK_VERSION_1_0*/
- 
- 
+
 /*************************************************************************
  * Global definition cleanup
  *************************************************************************/

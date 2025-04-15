@@ -30,6 +30,14 @@ alias BGGenFn = fn String(String name, Allocator alloc);
 alias BGCheckFn = fn bool(String name);
 
 <*
+ Module wrapper function
+
+ name : "Original string from C source. Should NOT be changed"
+ @return "Module properties, with all strings of which allocated via 'alloc'"
+*>
+alias BGModuleWrapFn = fn BGModuleWrap(String name, Allocator alloc);
+
+<*
  Translation callbacks is the set of functions, each of 
  which will be called when translating the corresponding 
  C entity. For instance, 'func' is invoked when we translate functions.
@@ -47,24 +55,6 @@ struct BGTransCallbacks
   BGTransFn variable; 
   BGTransFn constant;
   BGTransFn func_macro;
-}
-
-<*
- Generation callbacks is a set of functions which will be invoked, for instance, 
- for generating problematic bodies or values for function-like 
- macros and global constants respectively
-
- func_macro : "Functional macro body. Called for each function-like macro. Note that all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
- variable : "Global non-const variable rhs value. Called for global variables"
- constant : "Global const rhs value. Called for global constants"
- if_condition : "Generates the first argument for @if conditional compilation attribute. Called for each entity"
-*>
-struct BGGenCallbacks
-{
-  BGGenFn func_macro;
-  BGGenFn variable;
-  BGGenFn constant;
-  BGGenFn if_condition;
 }
 
 <*
@@ -90,6 +80,44 @@ struct BGOptions
 }
 
 <*
+ Generation callbacks is a set of functions which will be invoked, for instance, 
+ for generating problematic bodies or values for function-like 
+ macros and global constants respectively
+
+ func_macro : "Functional macro body. Called for each function-like macro. Note that all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
+ variable : "Global non-const variable rhs value. Called for global variables"
+ constant : "Global const rhs value. Called for global constants"
+ if_condition : "Generates the first argument for @if conditional compilation attribute. Called for each entity"
+ module_wrap : "Pretty similar to the 'if_condition' function on top-level declarations like functions, structures, etc. It wraps the name into a separate module section with it's attributes (including @if conditional compilation attribute), imports and other functions. Note that using 'module_wrap' on f.e. structure fields or function parameters is impossible - in that case ues 'if_condition'. Called for each top-level declaration"
+*>
+struct BGGenCallbacks
+{
+  BGGenFn func_macro;
+  BGGenFn variable;
+  BGGenFn constant;
+  BGGenFn if_condition;
+  BGModuleWrapFn module_wrap;
+}
+
+<*
+ For example `(BGModuleWrap){ .if_condition = "env::GLFW_INCLUDE_VULKAN", .imports = "vulkan; opengl" } }`
+ will emit the following:
+ ```
+ module mname @if(env::GLFW_INCLUDE_VULKAN);
+ import vulkan;
+ import opengl;
+ ```
+
+ if_condition : "Content of @if attribute of a generated module"
+ imports : "A set of imports of a generated module, separated by ';'. Note that all whitespaces after ';' till the beginning of a word are skipped"
+*>
+struct BGModuleWrap
+{
+  String if_condition;
+  String imports;
+}
+
+<*
  Main bindgen function. Translates all headers and writes result to opts.out_name. 
  Should be preferred over bg::translate_header.
  WARNING: function is not tested for usage on multiple threads yet.
@@ -98,6 +126,9 @@ struct BGOptions
  @param trans_callbacks : "Translation callbacks"
  @param opts : "Options to be passed to translator"
  @param gen_callbacks : "Values generation callbacks"
+
+ @require gen_callbacks.if_condition == null || opts.module_name "I can't create an unnamed module section for conditional compilation, so specify module name, please."
+
  @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
 *>
 fn void? translate_header(
