@@ -66,6 +66,6 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
-- FIX translation of array function parameters. For example, do the following `int[10]` -> `CInt[10]*` instead of keeping it unchanged. Also, translate undefined size arrays as plain pointers: `int[]` -> `CInt*`.
 - Add kind parameter to if_condition and module_wrap functions: function, structure, member, etc.
+- Make the outpt format neater
 
