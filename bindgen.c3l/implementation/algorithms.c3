@@ -1,9 +1,79 @@
 
 module bindgen::impl::algo @private;
 import bindgen::impl @public; 
-import std::collections::list;
+import std::collections::list, clang;
 
 faultdef ERROR;
+
+<*
+ The only translation is substituting 'LL' or 'll' to 'L' and 'l' respectively.
+ Technically, suffix can be mixed, e.g. 'LLu', 'ull', 'llU' - only 'll'
+ and 'LL' must be together and in the same case.
+*>
+fn String normIntSuf(
+  String lit, 
+  Allocator alloc = allocator::heap())
+{
+  if (lit.len == 0 || lit[0] == '"') return lit.copy(alloc);
+
+  usz? loc = lit.index_of("LL") ?? lit.index_of("ll");
+  if (catch loc) return lit.copy(alloc); // It doesn't contain LL or ll
+
+  String new = (String) allocator::alloc_array(alloc, char, lit.len-1);
+
+  // copy left side
+  mem::copy(new.ptr, lit.ptr, loc + 1);
+
+  // copy right side
+  if (new.len - loc - 1 > 0) 
+  {
+    mem::copy(
+      new.ptr + (loc + 1), 
+      lit.ptr + (loc + 2), 
+      new.len - loc - 1
+    );
+  }
+
+  return new;
+}
+
+
+fn TypeTokens getTypeTokens(Allocator alloc, CXType type)
+{
+  TypeTokens tokens;
+  tokens.init(alloc);
+
+  while LOOP: (true) 
+  {
+    switch (type.kind)
+    {
+      case clang::TYPE_POINTER: 
+        tokens.push(POINTER);
+        type = clang::getPointeeType(type);
+
+      case clang::TYPE_CONSTANT_ARRAY:
+        CLongLong size = clang::getArraySize(type);
+        String str = string::format(tmem, "[%d]", size);
+        tokens.push(SIZED_ARRAY, str);
+        type = clang::getElementType(type);
+
+      case clang::TYPE_INCOMPLETE_ARRAY:
+        tokens.push(UNSIZED_ARRAY);
+        type = clang::getElementType(type);
+
+      default:
+        CXString type_spell = clang::getTypeSpelling(type);
+        defer clang::disposeString(type_spell);
+        String type_str = misc::convStr(type_spell);
+
+        type_str = type_str.strip("const ").strip("struct ").strip("enum ").strip("union ");
+        tokens.push(NAME, type_str.copy(tmem));
+        break LOOP;
+    }
+  }
+
+  return tokens;
+}
 
 <*
  The algorithm does the following:
@@ -80,4 +150,6 @@ fn C3Fields? getC3Fields(Allocator alloc, CFields cfs) => @pool()
 
   return res;
 }
+
+
 

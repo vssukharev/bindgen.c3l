@@ -139,6 +139,68 @@ macro C3Fields.@foreach(&self; @body(FieldKind* kind, usz index))
   }
 }
 
+enum TypeTokenKind : char
+{
+  NAME,           // 'struct' or 'MyType'
+  POINTER,        // *
+  SIZED_ARRAY,    // [10]
+  UNSIZED_ARRAY,  // []
+}
+
+struct TypeTokens
+{
+  List{TypeTokenKind} kinds;
+  List{String}        strs; // everything that is unknown at compile-time
+}
+
+macro void TypeTokens.init(&self, Allocator alloc)
+{
+  self.kinds.init(alloc);
+  self.strs.init(alloc);
+}
+
+macro void TypeTokens.free(&self)
+{
+  self.kinds.free();
+  self.strs.free();
+}
+
+<*
+ Iterates through kinds and returns corresponding 
+ index for fields depending on the kind
+*>
+macro TypeTokens.@foreach(&self; @body(TypeTokenKind kind, String str))
+{
+  usz str_counter;
+  usz str_len = self.strs.len();
+  foreach_r (k : self.kinds)
+  {
+    String str;
+    switch (k)
+    {
+      case NAME:
+      case SIZED_ARRAY:
+        str = self.strs[str_len - ++str_counter];
+      case UNSIZED_ARRAY:
+      case POINTER:
+        str = "*";
+    }
+
+    @body(k, str);
+  }
+}
+
+macro void TypeTokens.push(&self, TypeTokenKind $kind, String val = "")
+{
+  self.kinds.push($kind);
+
+  $switch $kind:
+    $case NAME:
+    $case SIZED_ARRAY:
+      self.strs.push(val);
+    $default:
+  $endswitch
+}
 
 // --- Visit Data
 

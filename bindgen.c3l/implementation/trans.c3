@@ -5,24 +5,10 @@ import clang, std::io;
 
 faultdef EMPTY, IGNORE;
 
-fn DString* normTypeDStr(DString* ds)
-{
-  ds.replace("const ", "");
-  ds.replace("struct ", "");
-  ds.replace("enum ", "");
-  ds.replace("union ", "");
-  return ds;
-}
-
-fn String normTypeStr(String s, Allocator allocator = allocator::heap()) => @pool()
-{
-  DString dstr;
-  dstr.tinit();
-  dstr.append(s);
-  trans::normTypeDStr(&dstr);
-  return dstr.copy_str(allocator);
-}
-
+<*
+ Applies function 'fun' to string 's' and allocate it via 'alloc'.
+ @return? IGNORE
+*>
 fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
 {
   if (s.len == 0) return "";
@@ -31,7 +17,7 @@ fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @
   String t = fun(s, alloc);
   if (t == "")
   {
-    return trans::IGNORE?;
+    return IGNORE?;
   }
 
   return t;
@@ -46,11 +32,7 @@ fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @
  @param s "String to translate"
  @param key "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
-fn String? capply(
-  String s, 
-  BGTransFn fun, 
-  TransTable* table, 
-  String key = "")
+fn String? capply(String s, BGTransFn fun, TransTable* table, String key = "")
 {
   String translated;
   
@@ -70,57 +52,47 @@ fn String? capply(
 }
 
 <*
- Translates type to a string
+ Translates type to a string, caching it also.
+ It has a special behaviour when translating a function parameter for ABI compatibility:
+ int[] -> CInt*; int[]* -> CInt*; int[10] -> CInt[10]* (as function parameter); int[10] ->
+ CInt[10] (as structure field or typedef).
+
+ @param is_func_param : "Whether this is a type of function parameter (made for arrays)"
 *>
-fn String? ctype(
-  CXType type,
-  GlobalVisitData* vd)
-=> @pool()
+fn String? ctype(CXType type, GlobalVisitData* vd, bool is_func_param = false) => @pool()
 {
-  // Here we also need to recursively retrieve inner-most type,
-  // like: int[]* -> int. Inner types are those we will be translating
-  CXType inner_type = type;
-  while LOOP: (true) 
-  {
-    switch (inner_type.kind)
-    {
-      case clang::TYPE_POINTER: 
-        inner_type = clang::getPointeeType(inner_type);
-      case clang::TYPE_CONSTANT_ARRAY:
-      case clang::TYPE_INCOMPLETE_ARRAY:
-      case clang::TYPE_COMPLEX:
-      case clang::TYPE_DEPENDENT_SIZED_ARRAY:
-      case clang::TYPE_VECTOR:
-        inner_type = clang::getElementType(inner_type);
-      default:
-        break LOOP;
-    }
-  }
-
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  String type_str = misc::convStr(type_spell);
-
-  CXString inner_type_spell = clang::getTypeSpelling(inner_type);
-  defer clang::disposeString(inner_type_spell);
-  String inner_type_str = trans::normTypeStr(misc::convStr(inner_type_spell), tmem);
-
-  // Here, translation is performed under inner type and it's worth to cache also.
-  // For example, if we have something like 'CXType*', 'CXType' already must be 
-  // defined somewhere and, hence, cached.
-  String trans_inner_type_str = misc::mapBasicType(inner_type_str) ?? trans::capply(inner_type_str, vd.trans_fns.type, &vd.types_table)!;
+  TypeTokens tokens = algo::getTypeTokens(tmem, type);
 
   // enum MyFoo -> Enum MyFoo
   DString res_dstr;
   res_dstr.tinit();
-  res_dstr.append(type_str);
-  trans::normTypeDStr(&res_dstr);
-  res_dstr.replace(inner_type_str, trans_inner_type_str);
 
-  String res = res_dstr.copy_str(mem); // TODO: get rid of leak
-  vd.types_table[type_str] = res;
+  // err::log("------------");
+  TypeTokenKind prev_kind = NAME; // We will never check NAME for previoud kind
+  tokens.@foreach(;TypeTokenKind kind, String str) 
+  {
+    // err::log("%s %s", kind, str);
+    switch (kind)
+    {
+      case NAME:
+        String trans_str = misc::mapBasicType(str) ?? trans::capply(str, vd.trans_fns.type, &vd.types_table)!;
+        res_dstr.append(trans_str);
 
-  return res;
+      case POINTER:
+        if (prev_kind != SIZED_ARRAY || !is_func_param) res_dstr.append(str);
+
+      case SIZED_ARRAY:
+        res_dstr.append(str);
+        if (is_func_param) res_dstr.append("*");
+
+      case UNSIZED_ARRAY:
+        if (prev_kind != POINTER) res_dstr.append(str);
+    }
+    prev_kind = kind;
+  };
+  // err::log("For type '%s'", misc::convStr(clang::getTypeSpelling(type)));
+
+  return res_dstr.copy_str(mem); // TODO: get rid of leak
 }
 
 <*
@@ -128,10 +100,7 @@ fn String? ctype(
  which can possibly be pointers to functions. It is a superset
  of trans::ctype
 *>
-fn String? ctypeWithPFN(
-  CXCursor cursor,
-  GlobalVisitData* vd)
-=> @pool()
+fn String? ctypeWithPFN(CXCursor cursor, GlobalVisitData* vd) => @pool()
 {
   CXType type = clang::getCursorType(cursor);
   CXString type_spell = clang::getTypeSpelling(type);
@@ -160,38 +129,6 @@ fn String? ctypeWithPFN(
   }
 
   return res;
-}
-
-<*
- The only translation is substituting 'LL' or 'll' to 'L' and 'l' respectively.
- Technically, suffix can be mixed, e.g. 'LLu', 'ull', 'llU' - only 'll'
- and 'LL' must be together and in the same case.
-*>
-fn String intSuf(
-  String lit, 
-  Allocator alloc = allocator::heap())
-{
-  if (lit.len == 0 || lit[0] == '"') return lit.copy(alloc);
-
-  usz? loc = lit.index_of("LL") ?? lit.index_of("ll");
-  if (catch loc) return lit.copy(alloc); // It doesn't contain LL or ll
-
-  String new = (String) allocator::alloc_array(alloc, char, lit.len-1);
-
-  // copy left side
-  mem::copy(new.ptr, lit.ptr, loc + 1);
-
-  // copy right side
-  if (new.len - loc - 1 > 0) 
-  {
-    mem::copy(
-      new.ptr + (loc + 1), 
-      lit.ptr + (loc + 2), 
-      new.len - loc - 1
-    );
-  }
-
-  return new;
 }
 
 <*
@@ -268,7 +205,7 @@ fn String? tokensUnderCursor(
         }
 
       case clang::TOKEN_LITERAL:
-        res.append(trans::intSuf(token_str, tmem));
+        res.append(algo::normIntSuf(token_str, tmem));
 
       case clang::TOKEN_KEYWORD:
       case clang::TOKEN_PUNCTUATION:

@@ -53,7 +53,7 @@ fn usz? typedefFunc(
   
   acc += io::fprintf(out, "\nalias %s%s = fn %s(", name, attribs, return_type);
   
-  if (params.len > 1) acc += io::fprintf(out, "\n");
+  if (params.len > 0) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params) 
   {

@@ -40,7 +40,7 @@ struct HigherOrder
 
 union AnonUnion
 {
-  int outer_a;
+  int outer_a[10];
 
   struct
   {
@@ -94,7 +94,7 @@ int one_more_func(const char** description);
 void consequently_ignored(struct IgnoreMeToo a);
 
 #ifdef TEST_COND
-int will_be_declared(uint32_t a, uint32_t b);
+int will_be_declared(uint32_t a[10], uint32_t (*b)[]);
 #else
 int wont_be_declared();
 #endif
