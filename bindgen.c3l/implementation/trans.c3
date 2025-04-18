@@ -67,11 +67,9 @@ fn String? ctype(CXType type, GlobalVisitData* vd, bool is_func_param = false) =
   DString res_dstr;
   res_dstr.tinit();
 
-  // err::log("------------");
   TypeTokenKind prev_kind = NAME; // We will never check NAME for previoud kind
   tokens.@foreach(;TypeTokenKind kind, String str) 
   {
-    // err::log("%s %s", kind, str);
     switch (kind)
     {
       case NAME:
@@ -79,18 +77,17 @@ fn String? ctype(CXType type, GlobalVisitData* vd, bool is_func_param = false) =
         res_dstr.append(trans_str);
 
       case POINTER:
-        if (prev_kind != SIZED_ARRAY || !is_func_param) res_dstr.append(str);
+        if (prev_kind != SIZED_ARRAY || !is_func_param) res_dstr.append("*");
 
       case SIZED_ARRAY:
         res_dstr.append(str);
         if (is_func_param) res_dstr.append("*");
 
       case UNSIZED_ARRAY:
-        if (prev_kind != POINTER) res_dstr.append(str);
+        if (prev_kind != POINTER) res_dstr.append("*");
     }
     prev_kind = kind;
   };
-  // err::log("For type '%s'", misc::convStr(clang::getTypeSpelling(type)));
 
   return res_dstr.copy_str(mem); // TODO: get rid of leak
 }
@@ -100,7 +97,7 @@ fn String? ctype(CXType type, GlobalVisitData* vd, bool is_func_param = false) =
  which can possibly be pointers to functions. It is a superset
  of trans::ctype
 *>
-fn String? ctypeWithPFN(CXCursor cursor, GlobalVisitData* vd) => @pool()
+fn String? ctypeWithPFN(CXCursor cursor, GlobalVisitData* vd, bool is_func_param = false) => @pool()
 {
   CXType type = clang::getCursorType(cursor);
   CXString type_spell = clang::getTypeSpelling(type);
@@ -125,7 +122,7 @@ fn String? ctypeWithPFN(CXCursor cursor, GlobalVisitData* vd) => @pool()
   }
   else
   {
-    res = trans::ctype(type, vd)!;
+    res = trans::ctype(type, vd, is_func_param)!;
   }
 
   return res;

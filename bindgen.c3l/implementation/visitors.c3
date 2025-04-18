@@ -155,7 +155,7 @@ fn CXChildVisitResult func(
   // Make parameter empty if it's ignored
   String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator) ?? "";
  
-  String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g);
+  String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g, is_func_param: true);
   if (catch trans_type_str)
   {
     err::warn(vd.g.no_verbose, "Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
