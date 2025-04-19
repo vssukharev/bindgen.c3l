@@ -117,7 +117,7 @@ fn CXChildVisitResult enumDecl(
   }
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.g.gen_fns);
-  wter::constDecl(vd.g.out, vd.enum_name, trans_cursor_str, vd_const.val, attrs);
+  wter::constDecl(vd.g.out, &vd.g.write_state, vd.enum_name, trans_cursor_str, vd_const.val, attrs, new_line: false);
 
   return clang::CHILD_VISIT_CONTINUE;
 }
@@ -271,7 +271,7 @@ fn CXChildVisitResult fields(
     default:
       WriteAttrs attrs = valgen::getWriteAttrs(vd.allocator, name_str, vd.g.gen_fns);
       attrs.push(PRIVATE);
-      wter::typedefDist(vd.g.out, trans_type_str, "void", attrs);
+      wter::typedefDist(vd.g.out, &vd.g.write_state, trans_type_str, "void", attrs);
   }
 
   return clang::CHILD_VISIT_CONTINUE;

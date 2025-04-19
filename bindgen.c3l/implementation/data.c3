@@ -202,6 +202,21 @@ macro void TypeTokens.push(&self, TypeTokenKind $kind, String val = "")
   $endswitch
 }
 
+enum WriteKind
+{
+  ALIAS, TYPEDEF,
+  FUNC, CONST, 
+  UNION, ENUM,
+  MACRO, MODULE,
+  IMPORT, STRUCT,
+  VAR, BITSTRUCT,
+}
+
+struct WriteState
+{
+  WriteKind kind;
+}
+
 // --- Visit Data
 
 struct GlobalVisitData
@@ -216,6 +231,7 @@ struct GlobalVisitData
   File*             out;
   CXFile            cxfile; // used to ignore nodes from other files 
   usz               anon_fns_counter;
+  WriteState        write_state;
 
   bitstruct : char
   {

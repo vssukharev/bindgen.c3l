@@ -35,14 +35,14 @@ fn void moduleWrap(GlobalVisitData* vd, String name) => @pool()
     attrs.init(tmem);
     if (curr.if_condition != "") attrs.push(IF, curr.if_condition);
 
-    wter::moduleHead(vd.out, vd.module_name, attrs);
+    wter::moduleHead(vd.out, &vd.write_state, vd.module_name, attrs);
 
     if (curr.imports != "")
     {
       String[] imports_arr = curr.imports.tsplit(";", skip_empty: true);
       foreach (imp : imports_arr)
       {
-        wter::importModule(vd.out, imp.trim_left());
+        wter::importModule(vd.out, &vd.write_state, imp.trim_left());
       }
     }
   }

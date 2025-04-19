@@ -136,15 +136,7 @@ fn void? translate_header(
   BGTransCallbacks trans_callbacks,
   BGOptions opts = {},
   BGGenCallbacks gen_callbacks = {})
-=> api::translateHeaders({header_name}, trans_callbacks, opts, gen_callbacks);
-
-fn void? translate_headers(
-  String[] header_file_names, 
-  BGTransCallbacks trans_callbacks,
-  BGOptions opts = {},
-  BGGenCallbacks gen_callbacks = {})
-@deprecated("Use bg::translate_header") 
-=> api::translateHeaders(header_file_names, trans_callbacks, opts, gen_callbacks);
+=> api::translateHeader(header_name, trans_callbacks, opts, gen_callbacks);
 
 <*
  This module is created for user comfort.

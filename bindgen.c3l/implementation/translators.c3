@@ -56,7 +56,7 @@ fn usz? varDecl(
     valgen::moduleWrap(vd, cursor_str);
 
     WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
-    return wter::varDecl(vd.out, trans_type_str, name, rhs_val, attrs);
+    return wter::varDecl(vd.out, &vd.write_state, trans_type_str, name, rhs_val, attrs);
   }
 }
 
@@ -107,7 +107,7 @@ fn usz? constDecl(
   }
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
-  return wter::constDecl(vd.out, trans_type_str, name, vd_const.val, attrs);
+  return wter::constDecl(vd.out, &vd.write_state, trans_type_str, name, vd_const.val, attrs);
 }
 
 <*
@@ -164,7 +164,7 @@ fn usz? enumDecl(
   valgen::moduleWrap(vd, orig_type_str);
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_type_str, vd.gen_fns);
-  usz? acc = wter::enumDecl(vd.out, type_str, under_type_str);
+  usz? acc = wter::enumDecl(vd.out, &vd.write_state, type_str, under_type_str);
 
   clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
   return acc;
@@ -222,7 +222,7 @@ fn usz? func(
   valgen::moduleWrap(vd, func_str);
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, func_str, vd.gen_fns);
-  return wter::func(vd.out, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str, attrs);
+  return wter::func(vd.out, &vd.write_state, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str, attrs);
 }
 
 <*
@@ -299,7 +299,7 @@ fn usz? funcMacroDef(
   valgen::moduleWrap(vd, macro_str);
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, macro_str, vd.gen_fns);
-  return wter::funcMacro(vd.out, params.array_view(), trans_macro_str, macro_body, attrs);
+  return wter::funcMacro(vd.out, &vd.write_state, params.array_view(), trans_macro_str, macro_body, attrs);
 }
 
 <*
@@ -344,7 +344,7 @@ fn usz? constMacroDef(
   valgen::moduleWrap(vd, cursor_str);
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.gen_fns);
-  return wter::constDecl(vd.out, "", trans_cursor_str, val, attrs);
+  return wter::constDecl(vd.out, &vd.write_state, "", trans_cursor_str, val, attrs);
 }
 
 <*
@@ -390,7 +390,7 @@ fn usz? typedefDecl(
 
     if (trans_type_str != under_type_name)
     {
-      return wter::typedefAlias(vd.out, trans_type_str, under_type_name, attrs);
+      return wter::typedefAlias(vd.out, &vd.write_state, trans_type_str, under_type_name, attrs);
     }
     else
     {
@@ -464,7 +464,7 @@ macro usz? fieldType(
   if (fields_len == 0) 
   {
     valgen::moduleWrap(vd, type_str);
-    return wter::typedefDist(vd.out, trans_type_str, "void", attrs);
+    return wter::typedefDist(vd.out, &vd.write_state, trans_type_str, "void", attrs);
   }
 
   FieldsVisitData vd_struct = {
@@ -499,9 +499,9 @@ macro usz? fieldType(
 
   valgen::moduleWrap(vd, type_str);
   $if $is_union:
-    return wter::unionDecl(vd.out, trans_type_str, &c3_fields, 0, attrs);
+    return wter::unionDecl(vd.out, &vd.write_state, trans_type_str, &c3_fields, 0, attrs);
   $else
-    return wter::structDecl(vd.out, trans_type_str, &c3_fields, 0, attrs);
+    return wter::structDecl(vd.out, &vd.write_state, trans_type_str, &c3_fields, 0, attrs);
   $endif
 }
 
@@ -540,5 +540,5 @@ fn usz? pfnType(
   // Translate function parameters and store them into vd_struct.fields
   if (clang::visitChildren(cursor, &vtor::func, (CXClientData) &vd_func) != 0) return 0;
 
-  return wter::typedefFunc(vd.out, name, trans_ret_type_str, vd_func.params.array_view(), attribs: attribs);
+  return wter::typedefFunc(vd.out, &vd.write_state, name, trans_ret_type_str, vd_func.params.array_view(), attribs: attribs);
 }
