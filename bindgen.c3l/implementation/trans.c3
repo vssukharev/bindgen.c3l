@@ -29,8 +29,8 @@ fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @
  table. String itself is always allocated on the
  heap and should NOT be freed as it would cause
  dangerous dead nodes in table.
- @param s "String to translate"
- @param key "String to be used as a key in the 'table'. By default, equals to 's'"
+ @param s : "String to translate"
+ @param key : "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
 fn String? capply(String s, BGTransFn fun, TransTable* table, String key = "")
 {
