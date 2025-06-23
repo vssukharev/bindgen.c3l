@@ -70,7 +70,7 @@ macro void CFields.init(&self, Allocator alloc)
 *>
 macro CFields.@foreach(&self; @body(FieldKind* kind, usz index))
 {
-  usz[FieldKind.elements] counters;
+  usz[FieldKind.values.len] counters;
 
   foreach (i, &k : self.kinds)
   {
@@ -130,7 +130,7 @@ macro void C3Fields.init(&self, Allocator alloc)
 *>
 macro C3Fields.@foreach(&self; @body(FieldKind* kind, usz index))
 {
-  usz[FieldKind.elements] counters;
+  usz[FieldKind.values.len] counters;
 
   foreach (i, &k : self.kinds)
   {

@@ -84,7 +84,7 @@ fn String strSnakeToCamel(String str, Allocator alloc) @inline => @pool()
   usz last = 0;
   foreach (i, t : tokens)
   {
-    res[last:t.len] = t;
+    res[last:t.len] = t[..];
 
     if (i != (has_underscore ? 1 : 0))
     {
@@ -116,7 +116,7 @@ fn String strSnakeToPascal(String str, Allocator alloc) @inline => @pool()
   usz last = 0;
   foreach (i, t : tokens)
   {
-    res[last:t.len] = t;
+    res[last:t.len] = t[..];
     res[last] = res[last].to_upper();
     last += t.len;
   }
@@ -155,7 +155,7 @@ fn String strScreamingToCamel(String str, Allocator alloc) @inline => @pool()
   usz last = 0;
   foreach (i, t : tokens)
   {
-    res[last:t.len] = t;
+    res[last:t.len] = t[..];
     
     usz offset = 1;
     if (i == (has_underscore ? 1 : 0)) offset = 0;
@@ -186,7 +186,7 @@ fn String strScreamingToPascal(String str, Allocator alloc) @inline => @pool()
   usz last = 0;
   foreach (i, t : tokens)
   {
-    res[last:t.len] = t;
+    res[last:t.len] = t[..];
     
     for (usz j = last + 1; j < last + t.len; ++j)
     {
@@ -234,7 +234,7 @@ fn String strCamelToSnake(String str, Allocator alloc) @inline => @pool()
   foreach (i, t : tokens)
   {
     bool is_underscore = t[0] == '_';
-    res[last:t.len] = t;
+    res[last:t.len] = t[..];
 
     foreach (&c : res[last:t.len])
     {

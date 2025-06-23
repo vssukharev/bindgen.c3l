@@ -5,7 +5,7 @@ import std::os::process, std::io;
 import std::collections::list;
 
 <*
- @param extra_opts "Additional options for clang compiler"
+ @param extra_opts : "Additional options for clang compiler"
  @return "List{ZString}, which and each element of which should be then freed via allocator"
 *>
 fn List{ZString}? getParseCommandArgs(Allocator allocator, String[] extra_opts) => @pool() 
