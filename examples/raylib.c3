@@ -2,10 +2,37 @@
 import bindgen;
 import std::io;
 
-fn String transConst(String name, Allocator alloc)
+fn void main(String[] args)
 {
-  switch (name)
-  {
+  String out = args.len > 1 ? args[1] : "";
+  
+  BGTransCallbacks trans_fns = {
+    .func = &bgstr::pascal_to_camel,
+    .type = &bgstr::camel_to_pascal,
+    // Ignore of name of functional macro is CLITERAL or starts with RL_
+    .func_macro = fn String(String str, Allocator alloc) =>
+       str == "CLITERAL" || str[:3] == "RL_" ? "" : 
+       str.screaming_to_camel(alloc),
+    // Ignore if a variable called 'alias'
+    .variable = fn String(String str, Allocator alloc) =>
+      str == "alias" ? "" : str.copy(alloc),
+    .constant = &transConst,
+  };
+
+  BGGenCallbacks gen_fns = {
+    .constant = &valConst,
+  };
+
+  BGOptions opts = {
+    .out_name = out,
+    .module_name = "raylib::rl",
+  };
+
+  bg::translate_header("./examples/headers/raylib.h", opts, trans_fns, gen_fns)!!;
+}
+
+fn String transConst(String name, Allocator alloc) {
+  switch (name) {
     // Ignore these constants (constant macros)
     case "GetMouseRay":
     case "MOUSE_LEFT_BUTTON":
@@ -28,11 +55,9 @@ fn String transConst(String name, Allocator alloc)
 // idea about their types and can't infer them as raylib uses 
 // '#define YELLOW CLITERAL(Color){ 253, 249, 0, 255 }' for example.
 // So the solution is to create custom const value generation function
-// and pass it toy bidngen
-fn String valConst(String name, Allocator alloc)
-{
-  switch (name)
-  {
+// and pass it to bindgen
+fn String valConst(String name, Allocator alloc) {
+  switch (name) {
     case "LIGHTGRAY":   return "(Color){ 200, 200, 200, 255 }";
     case "GRAY":        return "(Color){ 130, 130, 130, 255 }";
     case "DARKGRAY":    return "(Color){ 80, 80, 80, 255 }";
@@ -61,36 +86,5 @@ fn String valConst(String name, Allocator alloc)
     case "RAYWHITE":    return "(Color){ 245, 245, 245, 255 }";
     default:            return "";
   }
-}
-
-fn void main(String[] args)
-{
-  String out = args.len > 1 ? args[1] : "";
-  
-  BGTransCallbacks trans_fns = {
-    .func = &bgstr::pascal_to_camel,
-
-    .type = &bgstr::camel_to_pascal,
-
-    .func_macro = fn String(String str, Allocator alloc) =>
-       str == "CLITERAL" || str[:3] == "RL_" ? "" : 
-       str.screaming_to_camel(alloc),
-
-    .variable = fn String(String str, Allocator alloc) =>
-      str == "alias" ? "" : str.copy(alloc),
-
-    .constant = &transConst,
-  };
-
-  BGGenCallbacks gen_fns = {
-    .constant = &valConst,
-  };
-
-  BGOptions opts = {
-    .out_name = out,
-    .module_name = "raylib::rl",
-  };
-
-  bg::translate_header("./examples/headers/raylib.h", trans_fns, opts, gen_fns)!!;
 }
 

@@ -7,6 +7,13 @@ fn void main(String[] args)
 {
   String out = args.len > 1 ? args[1] : "";
   
+  BGOptions opts = {
+    .out_name = out,
+    .clang_args = { "-DGLFW_INCLUDE_VULKAN", "-I./examples/headers" },
+    .module_name = "glfw",
+    // .skip_errors = true,
+  };
+
   BGTransCallbacks trans_fns = {
     .func = fn String(String str, Allocator alloc) =>
       str.strip("glfw").pascal_to_camel(alloc),
@@ -27,15 +34,8 @@ fn void main(String[] args)
         .imports = "vulkan",
       },
   };
-  
-  BGOptions opts = {
-    .out_name = out,
-    .clang_args = { "-DGLFW_INCLUDE_VULKAN", "-I./examples/headers" },
-    .module_name = "glfw",
-    // .skip_errors = true,
-  };
 
-  bg::translate_header("./examples/headers/glfw3.h", trans_fns, opts, gen_fns)!!;
+  bg::translate_header("./examples/headers/glfw3.h", opts, trans_fns, gen_fns)!!;
 }
 
 

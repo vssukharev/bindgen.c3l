@@ -2,10 +2,42 @@
 import bindgen;
 import std::ascii, std::io;
 
-fn String valFuncMacro(String name, Allocator alloc)
+fn void main(String[] args)
 {
-  switch (name)
-  {
+  String out = args.len > 1 ? args[1] : "";
+  
+  BGOptions opts = {
+    .clang_args = { "-DVK_ENABLE_BETA_EXTENSIONS" },
+    .module_name = "vulkan::vk",
+    .out_name = out,
+    .include_file = &includeFile,
+    .skip_errors = true,
+    .no_verbose = true,
+  }; 
+
+  BGTransCallbacks trans_cbs = {
+    // Strip 'vk' from functions
+    .func = fn String(String str, Allocator alloc) =>
+      str.strip("vk").camel_to_snake(alloc),
+    // There is a small conflict with variable called 'module'
+    .variable = fn String(String str, Allocator alloc) =>
+      str == "module" ? "mod" : str.camel_to_snake(alloc),
+    // Strip 'VK_' from constans
+    .constant = fn String(String str, Allocator alloc) =>
+      str.strip("VK_").snake_to_screaming(alloc),
+
+    .func_macro = &transFuncMacro,
+  };
+
+  BGGenCallbacks gen_cbs = {
+    .func_macro = &valFuncMacro,
+  };
+
+  bg::translate_header("./examples/headers/vulkan-part.h", opts, trans_cbs, gen_cbs)!!;
+}
+
+fn String valFuncMacro(String name, Allocator alloc) {
+  switch (name) {
     case "VK_MAKE_API_VERSION":
       return "return (((uint)(#variant)) << 29U) | (((uint)(#major)) << 22U) | (((uint)(#minor)) << 12U) | ((uint)(#patch));".copy(alloc);
 
@@ -25,10 +57,8 @@ fn String valFuncMacro(String name, Allocator alloc)
   return name.copy(alloc);
 }
 
-fn String transFuncMacro(String name, Allocator alloc)
-{
-  switch (name)
-  {
+fn String transFuncMacro(String name, Allocator alloc) {
+  switch (name) {
     // Ignore these functional macros
     case "VK_DEFINE_HANDLE":
     case "VK_DEFINE_NON_DISPATCHABLE_HANDLE": 
@@ -42,42 +72,9 @@ fn String transFuncMacro(String name, Allocator alloc)
   return name.strip("VK_").screaming_to_snake(alloc);
 }
 
-fn bool includeFile(String name)
-{
+// #include a file only in case it's full path contains 'vulkan/'
+fn bool includeFile(String name) {
   return name.contains("vulkan/");
-}
-
-fn void main(String[] args)
-{
-  String out = args.len > 1 ? args[1] : "";
-  
-  BGTransCallbacks trans_cbs = {
-    .func = fn String(String str, Allocator alloc) =>
-      str.strip("vk").camel_to_snake(alloc),
-
-    .variable = fn String(String str, Allocator alloc) =>
-      str == "module" ? "mod" : str.camel_to_snake(alloc),
-      
-    .constant = fn String(String str, Allocator alloc) =>
-      str.strip("VK_").snake_to_screaming(alloc),
-
-    .func_macro = &transFuncMacro,
-  };
-
-  BGGenCallbacks gen_cbs = {
-    .func_macro = &valFuncMacro,
-  };
-
-  BGOptions opts = {
-    .clang_args = { "-DVK_ENABLE_BETA_EXTENSIONS" },
-    .module_name = "vulkan::vk",
-    .out_name = out,
-    .include_file = &includeFile,
-    .skip_errors = true,
-    .no_verbose = true,
-  }; 
-
-  bg::translate_header("./examples/headers/vulkan-part.h", trans_cbs, opts, gen_cbs)!!;
 }
 
 

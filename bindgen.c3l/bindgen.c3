@@ -1,12 +1,34 @@
 
 <*
  General API is as simple as it's possible. You have one only function
- 'translate_headers' which takes all possible information about headers
+ 'translate_header' which takes all possible information about headers
  to be translated.
 *>
 module bindgen::bg;
 import bindgen::impl::api @public;
 
+<*
+ Main bindgen function. Translates all headers and writes result to opts.out_name. 
+ WARNING: function is not tested for usage on multiple threads yet.
+
+ @param header_name : "Header name to be translated"
+ @param opts : "Options to be passed to translator"
+ @param trans_callbacks : "Translation callbacks"
+ @param gen_callbacks : "Values generation callbacks"
+
+ @require gen_callbacks.if_condition == null || opts.module_name "Can't create an unnamed module section for conditional compilation, so specify module name, please."
+
+ @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
+*>
+fn void? translate_header(
+  String header_name, 
+  BGOptions opts = {},
+  BGTransCallbacks trans_callbacks = {},
+  BGGenCallbacks gen_callbacks = {})
+=> api::translateHeader(header_name, trans_callbacks, opts, gen_callbacks);
+
+
+<* Errors *>
 faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 
 <*
@@ -116,27 +138,6 @@ struct BGModuleWrap
   String if_condition;
   String imports;
 }
-
-<*
- Main bindgen function. Translates all headers and writes result to opts.out_name. 
- Should be preferred over bg::translate_header.
- WARNING: function is not tested for usage on multiple threads yet.
-
- @param header_name : "Header name to be translated"
- @param trans_callbacks : "Translation callbacks"
- @param opts : "Options to be passed to translator"
- @param gen_callbacks : "Values generation callbacks"
-
- @require gen_callbacks.if_condition == null || opts.module_name "I can't create an unnamed module section for conditional compilation, so specify module name, please."
-
- @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
-*>
-fn void? translate_header(
-  String header_name, 
-  BGTransCallbacks trans_callbacks,
-  BGOptions opts = {},
-  BGGenCallbacks gen_callbacks = {})
-=> api::translateHeader(header_name, trans_callbacks, opts, gen_callbacks);
 
 <*
  This module is created for user comfort.
