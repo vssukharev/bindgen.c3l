@@ -9,7 +9,11 @@ faultdef EMPTY, IGNORE;
  Applies function 'fun' to string 's' and allocate it via 'alloc'.
  @return? IGNORE
 *>
-fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @inline
+fn String? apply(
+  String s, 
+  BGTransFn fun, 
+  Allocator alloc = allocator::heap()) 
+@inline 
 {
   if (s.len == 0) return "";
   if (fun == null) return s.copy(alloc);
@@ -32,7 +36,11 @@ fn String? apply(String s, BGTransFn fun, Allocator alloc = allocator::heap()) @
  @param s : "String to translate"
  @param key : "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
-fn String? capply(String s, BGTransFn fun, TransTable* table, String key = "")
+fn String? capply(
+  String s, 
+  BGTransFn fun, 
+  TransTable* table, 
+  String key = "") 
 {
   String translated;
   
@@ -59,7 +67,11 @@ fn String? capply(String s, BGTransFn fun, TransTable* table, String key = "")
 
  @param is_func_param : "Whether this is a type of function parameter (made for arrays)"
 *>
-fn String? ctype(CXType type, GlobalVisitData* vd, bool is_func_param = false) => @pool()
+fn String? ctype(
+  CXType type, 
+  GlobalVisitData* vd, 
+  bool is_func_param = false) 
+=> @pool() 
 {
   TypeTokens tokens = algo::getTypeTokens(tmem, type);
 
@@ -97,7 +109,11 @@ fn String? ctype(CXType type, GlobalVisitData* vd, bool is_func_param = false) =
  which can possibly be pointers to functions. It is a superset
  of trans::ctype
 *>
-fn String? ctypeWithPFN(CXCursor cursor, GlobalVisitData* vd, bool is_func_param = false) => @pool()
+fn String? ctypeWithPFN(
+  CXCursor cursor, 
+  GlobalVisitData* vd, 
+  bool is_func_param = false) 
+=> @pool() 
 {
   CXType type = clang::getCursorType(cursor);
   CXString type_spell = clang::getTypeSpelling(type);
@@ -111,6 +127,7 @@ fn String? ctypeWithPFN(CXCursor cursor, GlobalVisitData* vd, bool is_func_param
   if (misc::isTypePFN(type))
   {
     ++vd.anon_fns_counter;
+    // TODO: rename PrivateFn to UnnamedPFN
     res = string::format(mem, "PrivateFn%s", vd.anon_fns_counter);
     vd.types_table[type_str] = res;
     
@@ -136,7 +153,7 @@ fn String? tokensUnderCursor(
   Allocator alloc, 
   CXCursor cursor, 
   BGTransCallbacks* tfns)
-=> @pool()
+=> @pool() 
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);

@@ -305,14 +305,19 @@ struct WriteAttrs (Printable)
 
 /// --- Helper modules
 
-macro WriteAttrs* WriteAttrs.init(&self, Allocator alloc)
+macro WriteAttrs* WriteAttrs.init(
+  &self, 
+  Allocator alloc)
 {
   self.kinds.init(alloc, 2);
   self.args.init(alloc, 1);
   return self;
 }
 
-macro void WriteAttrs.push(&self, WriteAttrKind $kind, String val = "")
+macro void WriteAttrs.push(
+  &self, 
+  WriteAttrKind $kind, 
+  String val = "")
 {
   self.kinds.push($kind);
   $switch $kind:
@@ -321,27 +326,29 @@ macro void WriteAttrs.push(&self, WriteAttrKind $kind, String val = "")
   $endswitch
 }
 
-fn usz? WriteAttrs.to_format(&self, Formatter* form) @dynamic
+fn usz? WriteAttrs.to_format(
+  &self, 
+  Formatter* form) 
+@dynamic
 {
   usz? acc;
 
   usz i;
-  foreach (k : self.kinds)
-  {
-    if (k.has_arg)
-    {
+  foreach (k : self.kinds) {
+    if (k.has_arg) {
       acc += form.printf(" %s(%s)", k.str, self.args[i]);
       ++i;
-    }
-    else
-    {
+    } else {
       acc += form.printf(" %s", k.str);
     }
   }
+
   return acc;
 }
 
-fn bool BGModuleWrap.equals(&self, BGModuleWrap* other)
+fn bool BGModuleWrap.equals(
+  &self, 
+  BGModuleWrap* other)
 {
   return self.if_condition == other.if_condition;
 }

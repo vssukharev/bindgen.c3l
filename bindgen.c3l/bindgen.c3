@@ -39,8 +39,8 @@ faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
 alias BGTransFn = fn String(String name, Allocator alloc);
 
 <*
- name : "Original string from C source. Should NOT be changed"
- alloc : "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
+ name "Original string from C source. Should NOT be changed"
+ alloc "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
  @return "Generated value according to the name string, allocated via 'alloc'"
 *>
 alias BGGenFn = fn String(String name, Allocator alloc);
@@ -64,11 +64,11 @@ alias BGModuleWrapFn = fn BGModuleWrap(String name, Allocator alloc);
  which will be called when translating the corresponding 
  C entity. For instance, 'func' is invoked when we translate functions.
 
- func : "Function"
- type : "Type"
- variable : "Function parameter or global variable"
- constant : "Global constant"
- func_maro : "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
+ func "Function"
+ type "Type"
+ variable "Function parameter or global variable"
+ constant "Global constant"
+ func_maro "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
 *>
 struct BGTransCallbacks
 {
@@ -82,11 +82,11 @@ struct BGTransCallbacks
 <*
  Optional settings for translation.
 
- clang_args : "Command-line args passed to clang when parsing each header. Default: no args are passed"
- out_name : "Output file name into which a translation will be written. Default: result is written to stdout"
- module_name : "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
- include_file : "By default, bindgen ignore `#include` directives as C stdlib headers are usually not needed to be translated. This option is a function which returns true if we want to '#include' file passed to 'name' parameter. Note that 'name' is either relative or absolute path to a file"
- skip_errors : "Whether to skip clang's parse errors. Note, that '<...> file not found' errors are skipped always and not controlled with this flag"
+ clang_args "Command-line args passed to clang when parsing each header. Default: no args are passed"
+ out_name "Output file name into which a translation will be written. Default: result is written to stdout"
+ module_name "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
+ include_file "By default, bindgen ignore `#include` directives as C stdlib headers are usually not needed to be translated. This option is a function which returns true if we want to '#include' file passed to 'name' parameter. Note that 'name' is either relative or absolute path to a file"
+ skip_errors "Whether to skip clang's parse errors. Note, that '<...> file not found' errors are skipped always and not controlled with this flag"
 *>
 struct BGOptions
 {
@@ -106,11 +106,11 @@ struct BGOptions
  for generating problematic bodies or values for function-like 
  macros and global constants respectively
 
- func_macro : "Functional macro body. Called for each function-like macro. Note that all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
- variable : "Global non-const variable rhs value. Called for global variables"
- constant : "Global const rhs value. Called for global constants"
- if_condition : "Generates the first argument for @if conditional compilation attribute. Called for each entity"
- module_wrap : "Pretty similar to the 'if_condition' function on top-level declarations like functions, structures, etc. It wraps the name into a separate module section with it's attributes (including @if conditional compilation attribute), imports and other functions. Note that using 'module_wrap' on f.e. structure fields or function parameters is impossible - in that case ues 'if_condition'. Called for each top-level declaration"
+ func_macro "Functional macro body. Called for each function-like macro. Note that all functional macro parameters are translated via BGTransCallbacks.variable and prepended with '#', so you should consider when generating macro body"
+ variable "Global non-const variable rhs value. Called for global variables"
+ constant "Global const rhs value. Called for global constants"
+ if_condition "Generates the first argument for @if conditional compilation attribute. Called for each entity"
+ module_wrap "Pretty similar to the 'if_condition' function on top-level declarations like functions, structures, etc. It wraps the name into a separate module section with it's attributes (including @if conditional compilation attribute), imports and other functions. Note that using 'module_wrap' on f.e. structure fields or function parameters is impossible - in that case ues 'if_condition'. Called for each top-level declaration"
 *>
 struct BGGenCallbacks
 {
@@ -130,8 +130,8 @@ struct BGGenCallbacks
  import opengl;
  ```
 
- if_condition : "Content of @if attribute of a generated module"
- imports : "A set of imports of a generated module, separated by ';'. Note that all whitespaces after ';' till the beginning of a word are skipped"
+ if_condition "Content of @if attribute of a generated module"
+ imports "A set of imports of a generated module, separated by ';'. Note that all whitespaces after ';' till the beginning of a word are skipped"
 *>
 struct BGModuleWrap
 {

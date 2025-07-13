@@ -11,40 +11,32 @@ import std::io, clang, std::collections::list;
 fn usz? varDecl(
   GlobalVisitData* vd,
   CXCursor cursor)
-@maydiscard => @pool()
-{
+@maydiscard => @pool() {
   CXType type = clang::getCursorType(cursor);
 
-  if (clang::isConstQualifiedType(type))
-  {
+  if (clang::isConstQualifiedType(type)) {
     return ttor::constDecl(vd, cursor);
-  }
-  else
-  {
+  } else {
     CXString cursor_spell = clang::getCursorSpelling(cursor);
     defer clang::disposeString(cursor_spell);
     String cursor_str = misc::convStr(cursor_spell);
 
     String rhs_val = "";
-    if (misc::getTopChildrenNumber(cursor) > 0)
-    {
+    if (misc::getTopChildrenNumber(cursor) > 0) {
       rhs_val = valgen::apply(tmem, cursor_str, vd.gen_fns.variable);
-      if (rhs_val == "")
-      {
+      if (rhs_val == "") {
         err::warn(vd.no_verbose, "Global variable '%s' contains default value and value generator function return empty string, so complete it manually", cursor_str);
       }
     }
     
     String? name = trans::apply(cursor_str, vd.trans_fns.variable);
-    if (catch name)
-    {
+    if (catch name) {
       err::warn(vd.no_verbose, "Global variable '%s' is ignored", cursor_str);
       return 0;
     }
 
     String? trans_type_str = trans::ctypeWithPFN(cursor, vd);
-    if (catch trans_type_str)
-    {
+    if (catch trans_type_str) {
       CXString type_spell = clang::getTypeSpelling(type);
       defer clang::disposeString(type_spell);
       String type_str = misc::convStr(type_spell);
@@ -118,39 +110,35 @@ fn usz? constDecl(
 fn usz? enumDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard => @pool()
-{
-  CXType type = clang::getCursorType(cursor);
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  String orig_type_str = misc::convStr(type_spell);
+@maydiscard => @pool() {
+  CXType enum_type = clang::getCursorType(cursor);
+  CXString enum_spell = clang::getTypeSpelling(enum_type);
+  defer clang::disposeString(enum_spell);
+  String orig_enum_name = misc::convStr(enum_spell);
 
-  String? type_str = trans::ctype(type, vd);
-  if (catch type_str)
-  {
-    err::warn(vd.no_verbose, "Enum '%s' is ignored", orig_type_str);
+  String? enum_name = trans::ctype(enum_type, vd);
+  if (catch enum_name) {
+    err::warn(vd.no_verbose, "Enum '%s' is ignored", orig_enum_name);
     return 0;
   }
 
   CXType under_type = clang::getEnumDeclIntegerType(cursor);
   String? under_type_str = trans::ctype(under_type, vd);
-  if (catch under_type_str)
-  {
-    CXString under_type_spell = clang::getTypeSpelling(type);
-    defer clang::disposeString(type_spell);
-    String orig_under_type_str = misc::convStr(type_spell);
+  if (catch under_type_str) {
+    CXString under_type_spell = clang::getTypeSpelling(enum_type);
+    defer clang::disposeString(enum_spell);
+    String orig_under_type_str = misc::convStr(enum_spell);
 
-    err::warn(vd.no_verbose, "Can't translate enum '%s' as it's underlying type is ignored", orig_type_str, orig_under_type_str);
+    err::warn(vd.no_verbose, "Can't translate enum '%s' as it's underlying enum_type is ignored", orig_enum_name, orig_under_type_str);
     return 0;
   }
 
   EnumVisitData vd_enum = {
     .g = vd,
-    .enum_name = type_str,
+    .enum_name = enum_name,
   };
 
-  switch (under_type.kind)
-  {
+  switch (under_type.kind) {
     case clang::TYPE_UCHAR:
     case clang::TYPE_USHORT: 
     case clang::TYPE_UINT:      
@@ -161,10 +149,10 @@ fn usz? enumDecl(
       vd_enum.is_unsigned = false;
   }
 
-  valgen::moduleWrap(vd, orig_type_str);
+  valgen::moduleWrap(vd, orig_enum_name);
 
-  WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_type_str, vd.gen_fns);
-  usz? acc = wter::enumDecl(vd.out, &vd.write_state, type_str, under_type_str);
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_enum_name, vd.gen_fns);
+  usz? acc = wter::enumDecl(vd.out, &vd.write_state, enum_name, under_type_str);
 
   clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
   return acc;
@@ -430,7 +418,7 @@ fn usz? unionDecl(
 // ------- Helpers, which are not called directly from global visitor
 
 <*
- @param $is_union : "Made to avoid code repetance"
+ @param $is_union : "Made to avoid code repeatance"
 *>
 macro usz? fieldType(
   GlobalVisitData* vd,
@@ -438,33 +426,48 @@ macro usz? fieldType(
   bool $is_union)
 @maydiscard => @pool()
 {
-  CXType type = clang::getCursorType(cursor);
-  String? trans_type_str = trans::ctype(type, vd);
+  CXType rec_type = clang::getCursorType(cursor);
+  String? rec_name = trans::ctype(rec_type, vd);
 
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  String type_str = misc::convStr(type_spell);
+  CXString rec_spell = clang::getTypeSpelling(rec_type);
+  defer clang::disposeString(rec_spell);
+  String orig_rec_name = misc::convStr(rec_spell);
 
-  if (catch trans_type_str)
-  {
+  if (catch rec_name) {
     $if $is_union:
-      err::warn(vd.no_verbose, "Union '%s' is ignored", type_str);
+      err::warn(vd.no_verbose, "Union '%s' is ignored", orig_rec_name);
     $else
-      err::warn(vd.no_verbose, "Struct '%s' is ignored", type_str);
+      err::warn(vd.no_verbose, "Struct '%s' is ignored", orig_rec_name);
     $endif
+    return 0;
+  }
+ 
+  if (clang::isAnonymous_Cursor(cursor)) {
+    CXSourceLocation cursor_loc = clang::getCursorLocation(cursor);
+    CUInt line, col;
+    CXFile file;
+    clang::getFileLocation(cursor_loc, &file, &line, &col, null);
+    CXString file_spell = clang::getFileName(file);
+    defer clang::disposeString(file_spell);
+    String file_name = misc::convStr(file_spell);
 
+    $if $is_union:
+      err::warn(vd.no_verbose, "Can't translate union at %s:%d:%d as it's anoymous", file_name, line, col);
+    $else
+      err::warn(vd.no_verbose, "Can't translate struct at %s:%d:%d as it's anoymous", file_name, line, col);
+    $endif
     return 0;
   }
 
+  WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_rec_name, vd.gen_fns);
 
-  WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
-
-  // If no fields are defined, type is incomplete
+  // If no fields are defined, rec_type is incomplete.
+  // Then we write it as typedef to void and wrap into
+  // module if needed
   usz fields_len = misc::getTopChildrenNumber(cursor);
-  if (fields_len == 0) 
-  {
-    valgen::moduleWrap(vd, type_str);
-    return wter::typedefDist(vd.out, &vd.write_state, trans_type_str, "void", attrs);
+  if (fields_len == 0)  {
+    valgen::moduleWrap(vd, orig_rec_name);
+    return wter::typedefDist(vd.out, &vd.write_state, rec_name, "void", attrs);
   }
 
   FieldsVisitData vd_struct = {
@@ -478,30 +481,28 @@ macro usz? fieldType(
   if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
 
   C3Fields? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
-  if (catch c3_fields)
-  {
+  if (catch c3_fields) {
     $if $is_union:
-      err::warn(vd.no_verbose, "Can't translate bit fields within union '%s', skipping...", type_str);
+      err::warn(vd.no_verbose, "Can't translate bit fields within union '%s', skipping...", orig_rec_name);
     $else
-      err::warn(vd.no_verbose, "Can't translate bit fields within struct '%s', skipping...", type_str);
+      err::warn(vd.no_verbose, "Can't translate bit fields within struct '%s', skipping...", orig_rec_name);
     $endif
     return 0;
   }
 
-  if (c3_fields.bit.len() > 0)
-  {
+  if (c3_fields.bit.len() > 0) {
     $if $is_union:
-      err::warn(vd.no_verbose, "Bit fields encountered within union '%s'!", type_str);
+      err::warn(vd.no_verbose, "Bit fields encountered within union '%s'!", orig_rec_name);
     $else
-      err::warn(vd.no_verbose, "Bit fields encountered within struct '%s'!", type_str);
+      err::warn(vd.no_verbose, "Bit fields encountered within struct '%s'!", orig_rec_name);
     $endif
   }
 
-  valgen::moduleWrap(vd, type_str);
+  valgen::moduleWrap(vd, orig_rec_name);
   $if $is_union:
-    return wter::unionDecl(vd.out, &vd.write_state, trans_type_str, &c3_fields, 0, attrs);
+    return wter::unionDecl(vd.out, &vd.write_state, rec_name, &c3_fields, 0, attrs);
   $else
-    return wter::structDecl(vd.out, &vd.write_state, trans_type_str, &c3_fields, 0, attrs);
+    return wter::structDecl(vd.out, &vd.write_state, rec_name, &c3_fields, 0, attrs);
   $endif
 }
 

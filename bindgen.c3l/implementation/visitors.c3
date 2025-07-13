@@ -34,7 +34,6 @@ fn CXChildVisitResult global(
     if (!check::apply(file_str, vd.include_file)) return clang::CHILD_VISIT_CONTINUE; 
   }
 
-
   switch (cursor_kind)
   {
     case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
@@ -184,8 +183,7 @@ fn CXChildVisitResult fields(
   String name_str = misc::convStr(name_spell);
 
   // If the cursor is anonymous record, handle it and go to the next child
-  if (clang::isAnonymous_Cursor(cursor))
-  {
+  if (clang::isAnonymous_Cursor(cursor)) {
     vd.prev_anon = cursor;
 
     FieldsVisitData vd_inner = {
@@ -196,14 +194,12 @@ fn CXChildVisitResult fields(
     vd_inner.fields.init(vd_inner.allocator);
     
     // Recursively visit records
-    if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_inner) != 0)
-    {
+    if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_inner) != 0) {
       return clang::CHILD_VISIT_BREAK;
     }
 
     vd.fields.kinds.push(kind);
-    switch (kind)
-    {
+    switch (kind) {
       case STRUCT:
         vd.fields.structs.push({"", vd_inner.fields});
       case UNION:

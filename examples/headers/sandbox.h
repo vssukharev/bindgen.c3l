@@ -2,7 +2,10 @@
 
 void foo();
 
-enum Hello {
-  ONE, TWO, THREE
+enum {
+  ONE, 
+  TWO, 
+  THREE
 };
+
 

@@ -24,7 +24,7 @@ fn void? translateHeader(
 @inline
 {
   err::info("Translating %s", header_name);
-  err::info("Writing to %s", opts.out_name);
+  err::info("Writing to %s", opts.out_name ?: "standard output");
  
   // Open file
   File out = *io::stdout();
