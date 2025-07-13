@@ -44,12 +44,9 @@ fn String? capply(
 {
   String translated;
   
-  if (try cached = (*table)[s])
-  {
+  if (try cached = (*table)[s]) {
     translated = cached;
-  } 
-  else 
-  {
+  } else {
     translated = trans::apply(s, fun)!;
 
     if (key == "") key = s;
@@ -123,10 +120,9 @@ fn String? ctypeWithPFN(
   if (try trans_type_str = vd.types_table[type_str]) return trans_type_str;
 
   String res;
-  if (misc::isTypePFN(type))
-  {
+  if (misc::isTypePFN(type)) {
     ++vd.anon_fns_counter;
-    res = string::format(mem, "UnnamedPFN%s", vd.anon_fns_counter);
+    res = string::format(mem, "UnnamedPFN%d", vd.anon_fns_counter);
     vd.types_table[type_str] = res;
     
     WriteAttrs attrs;
@@ -134,9 +130,7 @@ fn String? ctypeWithPFN(
     attrs.push(PRIVATE);
 
     ttor::pfnType(vd, res, type, cursor, attrs);
-  }
-  else
-  {
+  } else {
     res = trans::ctype(type, vd, is_func_param)!;
   }
 
@@ -187,32 +181,26 @@ fn String? tokensUnderCursor(
     if (token_str == ")") is_in_func_macro = false;
 
     bool is_func_macro;
-    switch (token_kind)
-    {
+    switch (token_kind) {
       // Assume that identifier is one of:
       // 1. Constant (macro)
       // 2. Functional macro
       case clang::TOKEN_IDENTIFIER:
         usz i = token - tokens_ptr;
-        if (i < tokens_len - 1)
-        {
+        if (i < tokens_len - 1) {
           CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
           defer clang::disposeString(token_spell_2);
           String token_str_2 = misc::convStr(token_spell_2);
-          if (token_str_2 == "(") 
-          {
+          if (token_str_2 == "(") {
             is_func_macro = true;
             is_in_func_macro = true;
           }
         }
 
-        if (is_func_macro)
-        {
+        if (is_func_macro) {
           res.append("@");
           res.append(trans::apply(token_str, tfns.func_macro)!);
-        }
-        else
-        {
+        } else {
           res.append(trans::apply(token_str, tfns.constant, tmem))!;
         }
 
@@ -230,8 +218,7 @@ fn String? tokensUnderCursor(
   // ')' at the end, append it to result. Probably a bug of
   // a libclang that it skips ')' if macro is expanded at the
   // end of a line.
-  if (is_in_func_macro)
-  {
+  if (is_in_func_macro) {
     res.append(")");
   }
 

@@ -375,3 +375,12 @@ fn usz? printIndent(
   return acc;
 }
 
+fn usz? printLines(
+  File* out,
+  usz lines_number = 1)
+{
+  usz? acc;
+  for (usz i; i < lines_number; ++i) acc += io::fprintf(out, "\n");
+  return acc;
+}
+

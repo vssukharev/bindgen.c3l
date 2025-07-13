@@ -112,16 +112,11 @@ fn usz? enumDecl(
   CXCursor cursor) 
 @maydiscard => @pool() {
   CXType enum_type = clang::getCursorType(cursor);
+  
   CXString enum_spell = clang::getTypeSpelling(enum_type);
   defer clang::disposeString(enum_spell);
   String orig_enum_name = misc::convStr(enum_spell);
-
-  String? enum_name = trans::ctype(enum_type, vd);
-  if (catch enum_name) {
-    err::warn(vd.no_verbose, "Enum '%s' is ignored", orig_enum_name);
-    return 0;
-  }
-
+  
   CXType under_type = clang::getEnumDeclIntegerType(cursor);
   String? under_type_str = trans::ctype(under_type, vd);
   if (catch under_type_str) {
@@ -134,8 +129,7 @@ fn usz? enumDecl(
   }
 
   EnumVisitData vd_enum = {
-    .g = vd,
-    .enum_name = enum_name,
+    .g = vd
   };
 
   switch (under_type.kind) {
@@ -149,10 +143,27 @@ fn usz? enumDecl(
       vd_enum.is_unsigned = false;
   }
 
-  valgen::moduleWrap(vd, orig_enum_name);
+  WriteAttrs attrs;
+  usz? acc;
+  if (clang::isAnonymous_Cursor(cursor)) {
+    acc = wter::printLines(vd.out);
+    
+    // Set enum name as it's underlying type
+    // if it's anonymous
+    vd_enum.enum_name = under_type_str;
+  } else {
+    String? enum_name = trans::ctype(enum_type, vd);
+    if (catch enum_name) {
+      err::warn(vd.no_verbose, "Enum '%s' is ignored", orig_enum_name);
+      return 0;
+    }
 
-  WriteAttrs attrs = valgen::getWriteAttrs(tmem, orig_enum_name, vd.gen_fns);
-  usz? acc = wter::enumDecl(vd.out, &vd.write_state, enum_name, under_type_str);
+    valgen::moduleWrap(vd, orig_enum_name);
+    attrs = valgen::getWriteAttrs(tmem, orig_enum_name, vd.gen_fns);
+    acc = wter::enumDecl(vd.out, &vd.write_state, enum_name, under_type_str);
+    
+    vd_enum.enum_name = enum_name;
+  }
 
   clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
   return acc;

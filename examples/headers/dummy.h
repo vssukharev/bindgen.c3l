@@ -143,3 +143,10 @@ enum SomeEnum
   SOME_MEMBER_3 = 45,
 };
 
+enum
+{
+  UNKNOWN_1,
+  UNKNOWN_2,
+  UNKNOWN_3,
+};
+
