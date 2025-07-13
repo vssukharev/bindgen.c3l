@@ -80,10 +80,8 @@ fn String? ctype(
   res_dstr.tinit();
 
   TypeTokenKind prev_kind = NAME; // We will never check NAME for previoud kind
-  tokens.@foreach(;TypeTokenKind kind, String str) 
-  {
-    switch (kind)
-    {
+  tokens.@foreach(;TypeTokenKind kind, String str) {
+    switch (kind) {
       case NAME:
         String trans_str = misc::mapBasicType(str) ?? trans::capply(str, vd.trans_fns.type, &vd.types_table)!;
         res_dstr.append(trans_str);
@@ -98,6 +96,7 @@ fn String? ctype(
       case UNSIZED_ARRAY:
         if (prev_kind != POINTER) res_dstr.append("*");
     }
+
     prev_kind = kind;
   };
 
@@ -127,8 +126,7 @@ fn String? ctypeWithPFN(
   if (misc::isTypePFN(type))
   {
     ++vd.anon_fns_counter;
-    // TODO: rename PrivateFn to UnnamedPFN
-    res = string::format(mem, "PrivateFn%s", vd.anon_fns_counter);
+    res = string::format(mem, "UnnamedPFN%s", vd.anon_fns_counter);
     vd.types_table[type_str] = res;
     
     WriteAttrs attrs;
