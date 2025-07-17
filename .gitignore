@@ -1,5 +1,6 @@
 
 build/
+.direnv/
 
 examples/*.c3i
 
