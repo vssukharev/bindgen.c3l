@@ -103,13 +103,18 @@ fn usz? constDecl(
 }
 
 <*
- Translates enumDecl declaration and writes it to 'out'
+ Translates enumDecl declaration and writes it to 'vd.out'
+ @param [out] out_name : "The resulting name of an enum type. Might be needed as enum can be anonymous: in that case this variable is set to the underlying type name"
+ @param out_alloc : "Allocator for allocating 'out_name'"
+
  @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL "Cursor must point to enum declaration"
  @return "Number of bytes written"
 *>
 fn usz? enumDecl(
   GlobalVisitData* vd, 
-  CXCursor cursor) 
+  CXCursor cursor,
+  String* out_name = null,
+  Allocator out_alloc = tmem) 
 @maydiscard => @pool() {
   CXType enum_type = clang::getCursorType(cursor);
   
@@ -124,7 +129,7 @@ fn usz? enumDecl(
     defer clang::disposeString(enum_spell);
     String orig_under_type_str = misc::convStr(enum_spell);
 
-    err::warn(vd.no_verbose, "Can't translate enum '%s' as it's underlying enum_type is ignored", orig_enum_name, orig_under_type_str);
+    err::warn(vd.no_verbose, "Can't translate enum '%s' as it's underlying type '%s' is ignored", orig_enum_name, orig_under_type_str);
     return 0;
   }
 
@@ -147,23 +152,24 @@ fn usz? enumDecl(
   usz? acc;
   if (clang::isAnonymous_Cursor(cursor)) {
     acc = wter::printLines(vd.out);
-    
     // Set enum name as it's underlying type
     // if it's anonymous
     vd_enum.enum_name = under_type_str;
   } else {
-    String? enum_name = trans::ctype(enum_type, vd);
-    if (catch enum_name) {
+    String? tmp = trans::ctype(enum_type, vd);
+    if (catch tmp) {
       err::warn(vd.no_verbose, "Enum '%s' is ignored", orig_enum_name);
       return 0;
     }
 
     valgen::moduleWrap(vd, orig_enum_name);
     attrs = valgen::getWriteAttrs(tmem, orig_enum_name, vd.gen_fns);
-    acc = wter::enumDecl(vd.out, &vd.write_state, enum_name, under_type_str);
+    acc = wter::enumDecl(vd.out, &vd.write_state, tmp, under_type_str);
     
-    vd_enum.enum_name = enum_name;
+    vd_enum.enum_name = tmp;
   }
+
+  if (out_name != null) *out_name = vd_enum.enum_name.copy(out_alloc);
 
   clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
   return acc;
@@ -409,7 +415,7 @@ fn usz? structDecl(
   CXCursor cursor) 
 @maydiscard => @pool()
 {
-  return ttor::fieldType(vd, cursor, false);
+  return ttor::recordDecl(vd, cursor, $is_union: false);
 }
 
 <*
@@ -422,7 +428,7 @@ fn usz? unionDecl(
   CXCursor cursor) 
 @maydiscard
 {
-  return ttor::fieldType(vd, cursor, true);
+  return ttor::recordDecl(vd, cursor, $is_union: true);
 }
 
 
@@ -430,11 +436,15 @@ fn usz? unionDecl(
 
 <*
  @param $is_union : "Made to avoid code repeatance"
+ @param [out] out_name : "The resulting written name of a record. Must be freed after use via an allocator"
+ @param out_alloc : "Allocator, which allocates 'out_name'"
 *>
-macro usz? fieldType(
+macro usz? recordDecl(
   GlobalVisitData* vd,
   CXCursor cursor, 
-  bool $is_union)
+  bool $is_union,
+  String* out_name = null,
+  Allocator out_alloc = tmem)
 @maydiscard => @pool()
 {
   CXType rec_type = clang::getCursorType(cursor);
@@ -463,9 +473,9 @@ macro usz? fieldType(
     String file_name = misc::convStr(file_spell);
 
     $if $is_union:
-      err::warn(vd.no_verbose, "Can't translate union at %s:%d:%d as it's anoymous", file_name, line, col);
+      err::warn(vd.no_verbose, "Can't translate union at %s:%d:%d as it's anonymous", file_name, line, col);
     $else
-      err::warn(vd.no_verbose, "Can't translate struct at %s:%d:%d as it's anoymous", file_name, line, col);
+      err::warn(vd.no_verbose, "Can't translate struct at %s:%d:%d as it's anonymous", file_name, line, col);
     $endif
     return 0;
   }
@@ -481,17 +491,17 @@ macro usz? fieldType(
     return wter::typedefDist(vd.out, &vd.write_state, rec_name, "void", attrs);
   }
 
-  FieldsVisitData vd_struct = {
+  FieldsVisitData vd_rec = {
     .g = vd,
     .allocator = tmem,
   };
 
-  vd_struct.fields.init(vd_struct.allocator);
+  vd_rec.fields.init(vd_rec.allocator);
 
-  // Translate record fields and store them into vd_struct.fields
-  if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_struct) != 0) return 0;
+  // Translate record fields and store them into vd_rec.fields
+  if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_rec) != 0) return 0;
 
-  C3Fields? c3_fields = algo::getC3Fields(tmem, vd_struct.fields);
+  C3Fields? c3_fields = algo::getC3Fields(tmem, vd_rec.fields);
   if (catch c3_fields) {
     $if $is_union:
       err::warn(vd.no_verbose, "Can't translate bit fields within union '%s', skipping...", orig_rec_name);
@@ -508,6 +518,9 @@ macro usz? fieldType(
       err::warn(vd.no_verbose, "Bit fields encountered within struct '%s'!", orig_rec_name);
     $endif
   }
+
+  // Write to out_name if needed
+  if (out_name != null) *out_name = rec_name.copy(out_alloc);
 
   valgen::moduleWrap(vd, orig_rec_name);
   $if $is_union:

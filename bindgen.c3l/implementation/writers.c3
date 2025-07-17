@@ -330,7 +330,7 @@ fn usz? fields(
 {
   usz? acc;
 
-  fields.@foreach(; FieldKind* kind, usz index)
+  fields.@foreach(; C3FieldKind* kind, usz index)
   {
     switch (*kind)
     {
@@ -338,7 +338,7 @@ fn usz? fields(
         acc += printIndent(out, indent_level);
         acc += io::fprintfn(out, "%s %s;", fields.norm[index].type, fields.norm[index].name);
 
-      case BIT:
+      case BITSTRUCT:
         state.kind = BITSTRUCT;
 
         acc += printIndent(out, indent_level);
@@ -358,6 +358,8 @@ fn usz? fields(
 
       case UNION:
         acc += wter::unionDecl(out, state, fields.unions[index].name, &fields.unions[index].fields, indent_level);
+        
+      default: unreachable();
     }
   };
 

@@ -25,8 +25,7 @@ fn String normIntSuf(
   mem::copy(new.ptr, lit.ptr, loc + 1);
 
   // copy right side
-  if (new.len - loc - 1 > 0) 
-  {
+  if (new.len - loc - 1 > 0) {
     mem::copy(
       new.ptr + (loc + 1), 
       lit.ptr + (loc + 2), 
@@ -38,15 +37,15 @@ fn String normIntSuf(
 }
 
 
-fn TypeTokens getTypeTokens(Allocator alloc, CXType type)
+fn TypeTokens getTypeTokens(
+  Allocator alloc, 
+  CXType type)
 {
   TypeTokens tokens;
   tokens.init(alloc);
 
-  while LOOP: (true) 
-  {
-    switch (type.kind)
-    {
+  while LOOP: (true) {
+    switch (type.kind) {
       case clang::TYPE_POINTER: 
         tokens.push(POINTER);
         type = clang::getPointeeType(type);
@@ -84,7 +83,10 @@ fn TypeTokens getTypeTokens(Allocator alloc, CXType type)
    - Once width is power of 2, we set it in C3Fields with underlying type, which size equals to the accumulated width
  3. Then it allocates everything that is needed via an allocator and returns the resulting structure
 *>
-fn C3Fields? getC3Fields(Allocator alloc, CFields cfs) => @pool()
+fn C3Fields? getC3Fields(
+  Allocator alloc, 
+  CFields cfs) 
+=> @pool()
 {
   C3Fields res;
   res.init(alloc);
@@ -95,14 +97,13 @@ fn C3Fields? getC3Fields(Allocator alloc, CFields cfs) => @pool()
   List{BitstructMember} bit_fields;
   bit_fields.init(alloc);
 
-  cfs.@foreach(; FieldKind* kind, usz index)
-  {
-    switch (*kind)
-    {
+  cfs.@foreach(; CFieldKind* kind, usz index) {
+    switch (*kind) {
       // TODO: do it without pushes with plain copy 
-      // as res.norm practically equal cfs.norm
+      // as res.norm practically equals to cfs.norm
       case NORMAL:
-        res.kinds.push(*kind);
+      case ENUM:
+        res.kinds.push(NORMAL);
         res.norm.push(cfs.norm[index]);
 
       case BIT:
@@ -112,22 +113,20 @@ fn C3Fields? getC3Fields(Allocator alloc, CFields cfs) => @pool()
         bit_widths_acc += cfield.width;
 
       case STRUCT:
-        res.kinds.push(*kind);
+        res.kinds.push(STRUCT);
         C3Fields c3fields = getC3Fields(alloc, cfs.structs[index].fields)!;
         res.structs.push({cfs.structs[index].name, c3fields});
 
       case UNION:
-        res.kinds.push(*kind);
+        res.kinds.push(UNION);
         C3Fields c3fields = getC3Fields(alloc, cfs.unions[index].fields)!;
         res.unions.push({cfs.unions[index].name, c3fields});
     }
 
     // Finish bit range and reset things if needed
-    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != usz.max)
-    {
-      res.kinds.push(BIT);
-      switch (bit_widths_acc)
-      {
+    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != usz.max) {
+      res.kinds.push(BITSTRUCT);
+      switch (bit_widths_acc) {
         case 1..8:
           res.bit.push({"char", bit_fields});
         case 9..16:

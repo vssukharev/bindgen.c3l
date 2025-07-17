@@ -5,7 +5,9 @@ import clang, std::io;
 
 faultdef NOT_BASIC_TYPE;
 
-fn String convStr(CXString s) @inline
+fn String convStr(
+  CXString s) 
+@inline
 {
   return clang::getCString(s).str_view();
 }
@@ -16,7 +18,8 @@ fn String convStr(CXString s) @inline
  will point to the macro definition. Apparently, clang::getExpansionLocation
  fixes that bug. I love libclang :)
 *>
-fn CXSourceRange getTrueCursorExtent(CXCursor cursor)
+fn CXSourceRange getTrueCursorExtent(
+  CXCursor cursor)
 {
   CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
   CXSourceRange sr = clang::getCursorExtent(cursor);
@@ -33,10 +36,12 @@ fn CXSourceRange getTrueCursorExtent(CXCursor cursor)
 <*
  Literally iterates through CXToken[] automatically converting them to strings it
 *>
-macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(CXToken* token, String token_str))
+macro @iterateTokens(
+  CXToken[] tokens, 
+  CXTranslationUnit tu; 
+  @body(CXToken* token, String token_str))
 {
-  foreach (&t : tokens)
-  {
+  foreach (&t : tokens) {
     CXString token_spell = clang::getTokenSpelling(tu, *t);
     defer clang::disposeString(token_spell);
     String token_str = misc::convStr(token_spell);
@@ -48,7 +53,8 @@ macro @iterateTokens(CXToken[] tokens, CXTranslationUnit tu; @body(CXToken* toke
 <*
  Detects whether the type is pointer to function
 *>
-fn bool isTypePFN(CXType type)
+fn bool isTypePFN(
+  CXType type)
 {
   return clang::getPointeeType(type).kind == clang::TYPE_FUNCTION_PROTO;
 }
@@ -57,13 +63,14 @@ fn bool isTypePFN(CXType type)
  Iterates through the toppest children of cursor and returns
  their quantity
 *>
-fn usz getTopChildrenNumber(CXCursor cursor)
+fn usz getTopChildrenNumber(
+  CXCursor cursor)
 {
   usz qty;
 
   clang::visitChildren(
     cursor, 
-    fn CXChildVisitResult(CXCursor cursor, CXCursor parent, CXClientData client_data)
+    fn (CXCursor cursor, CXCursor parent, CXClientData client_data)
     {
       usz* qty = (usz*) client_data;
       ++*qty;
@@ -75,28 +82,22 @@ fn usz getTopChildrenNumber(CXCursor cursor)
   return qty;
 }
 
-<*
- Retrives FieldKind from a cursor
-*>
-fn FieldKind getFieldKind(CXCursor cursor)
+fn CFieldKind getCFieldKind(
+  CXCursor cursor)
 {
-  FieldKind kind;
+  CFieldKind kind;
 
-  switch (clang::getCursorKind(cursor)) 
-  {
+  switch (clang::getCursorKind(cursor)) {
     case clang::CURSOR_STRUCT_DECL: 
       kind = STRUCT;
-
     case clang::CURSOR_UNION_DECL: 
       kind = UNION;
-
+    case clang::CURSOR_ENUM_DECL:
+      kind = ENUM;
     default: 
-      if (clang::getFieldDeclBitWidth(cursor) == -1) 
-      {
+      if (clang::getFieldDeclBitWidth(cursor) == -1) {
         kind = NORMAL;
-      }
-      else
-      {
+      } else {
         kind = BIT;
       }
   }
@@ -109,8 +110,7 @@ fn FieldKind getFieldKind(CXCursor cursor)
 *>
 fn String? mapBasicType(String str)
 {
-  switch (str)
-  {
+  switch (str) {
     case "void":          return "void";
     case "_Bool":         return "bool";
     case "ptrdiff_t":     return "isz";

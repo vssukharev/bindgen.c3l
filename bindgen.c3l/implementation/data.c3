@@ -18,15 +18,13 @@ struct VarDecl
   String name;
 }
 
-<*
- BIT : "Means bit field if used in CFields; means bitstruct when used in C3Fields"
-*>
-enum FieldKind : char
+enum CFieldKind : char
 {
-  NORMAL, 
+  NORMAL,
   STRUCT,
   UNION,
   BIT,
+  ENUM,
 }
 
 struct CFieldBit
@@ -46,11 +44,11 @@ struct CFieldAnon
 }
 
 <* 
-  kinds.len == sum of *.len 
+ kinds.len == sum of *.len 
 *>
 struct CFields
 {
-  List{FieldKind}   kinds;
+  List{CFieldKind}   kinds;
   List{VarDecl}     norm;
   List{CFieldBit}   bit;
   List{CFieldAnon}  structs;
@@ -68,15 +66,23 @@ macro void CFields.init(&self, Allocator alloc)
  Iterates through kinds and returns corresponding 
  index for fields depending on the kind
 *>
-macro CFields.@foreach(&self; @body(FieldKind* kind, usz index))
+macro CFields.@foreach(&self; @body(CFieldKind* kind, usz index))
 {
-  usz[FieldKind.values.len] counters;
+  usz[CFieldKind.values.len] counters;
 
   foreach (i, &k : self.kinds)
   {
     @body(k, counters[k.ordinal]);
     ++counters[k.ordinal];
   }
+}
+
+enum C3FieldKind : char
+{
+  NORMAL,
+  BITSTRUCT,
+  STRUCT,
+  UNION
 }
 
 <*
@@ -110,7 +116,7 @@ struct C3FieldBitstruct
 *>
 struct C3Fields
 {
-  List{FieldKind}         kinds;
+  List{C3FieldKind}       kinds;
   List{VarDecl}           norm;
   List{C3FieldBitstruct}  bit;
   List{C3FieldAnon}       structs;
@@ -128,9 +134,9 @@ macro void C3Fields.init(&self, Allocator alloc)
  Iterates through kinds and returns corresponding 
  index for fields depending on the kind
 *>
-macro C3Fields.@foreach(&self; @body(FieldKind* kind, usz index))
+macro C3Fields.@foreach(&self; @body(C3FieldKind* kind, usz index))
 {
-  usz[FieldKind.values.len] counters;
+  usz[C3FieldKind.values.len] counters;
 
   foreach (i, &k : self.kinds)
   {
@@ -173,11 +179,9 @@ macro TypeTokens.@foreach(&self; @body(TypeTokenKind kind, String str))
 {
   usz str_counter;
   usz str_len = self.strs.len();
-  foreach_r (k : self.kinds)
-  {
+  foreach_r (k : self.kinds) {
     String str;
-    switch (k)
-    {
+    switch (k) {
       case NAME:
       case SIZED_ARRAY:
         str = self.strs[str_len - ++str_counter];
@@ -254,7 +258,7 @@ struct FuncVisitData
 *>
 struct FieldsVisitData
 {
-  CXCursor          prev_anon;
+  CXCursor          prev_inlined;
   CFields           fields;
   Allocator         allocator;
   GlobalVisitData*  g;
