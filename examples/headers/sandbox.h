@@ -2,17 +2,16 @@
 
 struct Hello {
   struct Dsa { int a; } dsa;
-  union { double b; } sda;
-  enum Asd {
-    FOUR,
-    FIVE,
-    SIX
-  } _kind2;
   enum {
     ONE, 
     TWO, 
     THREE
-  } _kind1;
+  }* _kind1;
+  enum Ee {
+    ONE1, 
+    TWO1, 
+    THREE1
+  }* _kind2;
   struct UnknownT* ut;
 };
 

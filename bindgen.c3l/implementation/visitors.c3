@@ -190,30 +190,17 @@ fn CXChildVisitResult fields(
 
   CXType type = clang::getCursorType(cursor);
 
-  // Retrieve canonical type as it's the only one which is equatable with anonymous records
-  CXType canon_type = clang::getCanonicalType(type);
-  CXType prev_inlined_type = clang::getCursorType(vd.prev_inlined);
-
-  // TODO: don't make check in every iteration. Instead, look forward for a field
-  // If previous cursor was inlined type and current is the name of a field,
-  // fill the missing fields.
-  if (clang::equalTypes(canon_type, prev_inlined_type)) {
-    bool is_prev_anon = (bool) clang::isAnonymous_Cursor(vd.prev_inlined);
-    CFieldKind prev_kind = misc::getCFieldKind(vd.prev_inlined);
-
-    if (prev_kind == NORMAL || prev_kind == BIT || prev_kind == ENUM) {
-      vd.fields.norm[^1].name = trans_field_name;
-    } else if (is_prev_anon) {
-      switch (prev_kind) {
-        case STRUCT:
-          vd.fields.structs[^1].name = trans_field_name;
-        case UNION:
-          vd.fields.unions[^1].name = trans_field_name;
-        default:
-          unreachable();
-      }
+  if (!clang::isNull_Cursor(vd.prev_anon)) {
+    switch (misc::getCFieldKind(vd.prev_anon)) {
+      case STRUCT:
+        vd.fields.structs[^1].name = trans_field_name;
+      case UNION:
+        vd.fields.unions[^1].name = trans_field_name;
+      default:
+        unreachable();
     }
 
+    vd.prev_anon = clang::getNullCursor();
     return clang::CHILD_VISIT_CONTINUE;
   }
 
@@ -246,23 +233,18 @@ fn CXChildVisitResult fields(
         unreachable();
     }
   } else if (kind == ENUM) {
-    vd.prev_inlined = cursor;
-
-    String trans_type_str;
-    ttor::enumDecl(vd.g, cursor, &trans_type_str, vd.allocator);
-    vd.fields.norm.push({trans_type_str, ""});
-    vd.fields.kinds.push(NORMAL);
+    ttor::enumDecl(vd.g, cursor);
   } else {
-    vd.prev_inlined = cursor;
-
     // We have two different behaviours depending on whether a record
     // is anonymous or not. In first case, we create anonymous record 
     // as well; in second one, we regularly translate a record and 
     // write it globally
     if (clang::isAnonymous_Cursor(cursor)) {
+      vd.prev_anon = cursor;
       FieldsVisitData vd_inner = {
         .g = vd.g,
-        .allocator = vd.allocator
+        .allocator = vd.allocator,
+        .prev_anon = clang::getNullCursor(),
       };
 
       vd_inner.fields.init(vd_inner.allocator);
@@ -279,9 +261,14 @@ fn CXChildVisitResult fields(
           unreachable();
       }
     } else {
-      // If it's not an anonymous record, we just translate it and cache
-      String trans_type_str;
-      ttor::recordDecl(vd.g, cursor, false, &trans_type_str, vd.allocator);
+      switch (kind) {
+        case STRUCT:
+          ttor::recordDecl(vd.g, cursor, false);
+        case UNION:
+          ttor::recordDecl(vd.g, cursor, true);
+        default:
+          unreachable();
+      }
     }
   }
 

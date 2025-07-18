@@ -255,10 +255,11 @@ struct FuncVisitData
 
 <*
  allocator : "All string are allocated via it"
+ prev_anon : "Before visiting should be set to clang::getNullCursor()"
 *>
 struct FieldsVisitData
 {
-  CXCursor          prev_inlined;
+  CXCursor          prev_anon;
   CFields           fields;
   Allocator         allocator;
   GlobalVisitData*  g;

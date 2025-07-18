@@ -115,9 +115,9 @@ fn usz? enumDecl(
   CXCursor cursor,
   String* out_name = null,
   Allocator out_alloc = tmem) 
-@maydiscard => @pool() {
+@maydiscard => @pool() 
+{
   CXType enum_type = clang::getCursorType(cursor);
-  
   CXString enum_spell = clang::getTypeSpelling(enum_type);
   defer clang::disposeString(enum_spell);
   String orig_enum_name = misc::convStr(enum_spell);
@@ -125,9 +125,9 @@ fn usz? enumDecl(
   CXType under_type = clang::getEnumDeclIntegerType(cursor);
   String? under_type_str = trans::ctype(under_type, vd);
   if (catch under_type_str) {
-    CXString under_type_spell = clang::getTypeSpelling(enum_type);
+    CXString orig_under_type_spell = clang::getTypeSpelling(under_type);
     defer clang::disposeString(enum_spell);
-    String orig_under_type_str = misc::convStr(enum_spell);
+    String orig_under_type_str = misc::convStr(orig_under_type_spell);
 
     err::warn(vd.no_verbose, "Can't translate enum '%s' as it's underlying type '%s' is ignored", orig_enum_name, orig_under_type_str);
     return 0;
@@ -151,9 +151,7 @@ fn usz? enumDecl(
   WriteAttrs attrs;
   usz? acc;
   if (clang::isAnonymous_Cursor(cursor)) {
-    acc = wter::printLines(vd.out);
-    // Set enum name as it's underlying type
-    // if it's anonymous
+    // TODO: method for caching anonymous enums
     vd_enum.enum_name = under_type_str;
   } else {
     String? tmp = trans::ctype(enum_type, vd);
@@ -494,6 +492,7 @@ macro usz? recordDecl(
   FieldsVisitData vd_rec = {
     .g = vd,
     .allocator = tmem,
+    .prev_anon = clang::getNullCursor(),
   };
 
   vd_rec.fields.init(vd_rec.allocator);

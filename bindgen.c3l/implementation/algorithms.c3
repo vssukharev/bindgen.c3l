@@ -1,4 +1,5 @@
 
+// TODO: move everything to 'bindgen::impl::misc'
 module bindgen::impl::algo @private;
 import bindgen::impl @public; 
 import std::collections::list, clang;
@@ -35,7 +36,6 @@ fn String normIntSuf(
 
   return new;
 }
-
 
 fn TypeTokens getTypeTokens(
   Allocator alloc, 

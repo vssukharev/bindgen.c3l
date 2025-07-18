@@ -43,7 +43,9 @@ fn String? capply(
   String key = "") 
 {
   String translated;
-  
+ 
+  // err::log("Translating '%s'", s);
+
   if (try cached = (*table)[s]) {
     translated = cached;
   } else {
@@ -76,7 +78,8 @@ fn String? ctype(
   DString res_dstr;
   res_dstr.tinit();
 
-  TypeTokenKind prev_kind = NAME; // We will never check NAME for previoud kind
+  // We will never check NAME for previous kind
+  TypeTokenKind prev_kind = NAME;
   tokens.@foreach(;TypeTokenKind kind, String str) {
     switch (kind) {
       case NAME:
