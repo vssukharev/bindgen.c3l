@@ -69,11 +69,18 @@ fn String? ctype(
 {
   TypeTokens tokens = algo::getTypeTokens(tmem, type);
 
+  CXType base_type = misc::getBaseType(type);
   // Here we get canonical type for correct comparisons 
-  // for unnamed enums or records
-  CXType base_type = clang::getCanonicalType(misc::getBaseType(type));
+  // for unnamed enums or records. The main problem
+  // is that clang::getCanonicalType() practically
+  // erases the difference between alias and type itself,
+  // so we apply it under the following conditions
+  if (clang::isAnonymous_Cursor(clang::getTypeDeclaration(base_type))) {
+    base_type = clang::getCanonicalType(base_type);
+  }
+  // err::flog(vd.out, "%s - %s", misc::convStr(clang::getTypeSpelling(base_type)), misc::convStr(clang::getTypeKindSpelling(base_type.kind)));
 
-  // enum MyFoo -> Enum MyFoo
+
   DString res_dstr;
   res_dstr.tinit();
 

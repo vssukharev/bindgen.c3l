@@ -153,6 +153,7 @@ fn usz? enumDecl(
   if (clang::isAnonymous_Cursor(cursor)) {
     CXType base = misc::getBaseType(enum_type);
     vd.types_table[base] = under_type_str;
+    // err::flog(vd.out, "%s - %s", misc::convStr(clang::getTypeSpelling(base)), misc::convStr(clang::getTypeKindSpelling(base.kind)));
 
     vd_enum.enum_name = under_type_str;
   } else {
