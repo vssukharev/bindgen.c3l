@@ -16,7 +16,7 @@ import bindgen::impl::api @public;
  @param trans_callbacks : "Translation callbacks"
  @param gen_callbacks : "Values generation callbacks"
 
- @require gen_callbacks.if_condition == null || opts.module_name "Can't create an unnamed module section for conditional compilation, so specify module name, please."
+ @require gen_callbacks.if_condition == null || opts.module_name : "Can't create an unnamed module section for conditional compilation, so specify module name, please."
 
  @return? INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH
 *>

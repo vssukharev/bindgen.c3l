@@ -1,15 +1,23 @@
 
+module clang;
+
+macro uint CXType.hash(&self) => clang::hashCursor(clang::getTypeDeclaration(*self));
+macro bool CXType.equals(CXType a, CXType b) @operator(==) => (bool) clang::equalTypes(a, b);
+
 module bindgen::impl @private;
 import bindgen::bg;
 import std::io, std::collections::map, std::collections::list, clang;
 
-// --- Helper Structures
+// --- Types table
 
 <*
- Translation table maps C name to C3 name. 
- For instance: { .key = "int", .val = "CInt" } is "int" -> "CInt".
+ Types translation table maps CXType to C3 name. 
 *>
-alias TransTable = HashMap{String, String};
+alias TypesTable = HashMap{CXType, String};
+
+
+// --- Helper Structures
+
 alias VarDeclList = List{VarDecl};
 
 struct VarDecl
@@ -231,7 +239,7 @@ struct GlobalVisitData
   String            module_name;
   BGModuleWrap      prev_module_wrap;
 
-  TransTable        types_table;
+  TypesTable        types_table;
   File*             out;
   CXFile            cxfile; // used to ignore nodes from other files 
   usz               anon_fns_counter;
@@ -293,7 +301,7 @@ struct EnumVisitData
 
 // --- Writers Data
 
-enum WriteAttrKind : char (inline String str, bool has_arg)
+enum WriteAttrKind : char (String str, bool has_arg)
 {
   PRIVATE = { "@private", false },
   IF      = { "@if"     , true  },

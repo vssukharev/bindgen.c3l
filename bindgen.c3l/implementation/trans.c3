@@ -29,29 +29,24 @@ fn String? apply(
 
 <*
  Applies 'fun' to 's' String, returns the new 
- translated one and caches it into translation 
- table. String itself is always allocated on the
- heap and should NOT be freed as it would cause
- dangerous dead nodes in table.
+ translated one and caches it into types table 
+ with 'key' as key type. String itself is always 
+ allocated on the heap and should NOT be freed 
+ as it would cause dangerous dead nodes in table.
  @param s : "String to translate"
- @param key : "String to be used as a key in the 'table'. By default, equals to 's'"
 *>
 fn String? capply(
   String s, 
+  CXType key,
   BGTransFn fun, 
-  TransTable* table, 
-  String key = "") 
+  TypesTable* table) 
 {
   String translated;
- 
-  // err::log("Translating '%s'", s);
 
-  if (try cached = (*table)[s]) {
-    translated = cached;
+  if (try sc = (*table)[key]) {
+    translated = sc;
   } else {
     translated = trans::apply(s, fun)!;
-
-    if (key == "") key = s;
     if (table != null) (*table)[key] = translated; // 'translated' is not copied here
   }
 
@@ -73,6 +68,7 @@ fn String? ctype(
 => @pool() 
 {
   TypeTokens tokens = algo::getTypeTokens(tmem, type);
+  CXType base_type = misc::getBaseType(type);
 
   // enum MyFoo -> Enum MyFoo
   DString res_dstr;
@@ -83,7 +79,7 @@ fn String? ctype(
   tokens.@foreach(;TypeTokenKind kind, String str) {
     switch (kind) {
       case NAME:
-        String trans_str = misc::mapBasicType(str) ?? trans::capply(str, vd.trans_fns.type, &vd.types_table)!;
+        String trans_str = misc::mapBasicType(str) ?? trans::capply(str, base_type, vd.trans_fns.type, &vd.types_table)!;
         res_dstr.append(trans_str);
 
       case POINTER:
@@ -115,18 +111,15 @@ fn String? ctypeWithPFN(
 => @pool() 
 {
   CXType type = clang::getCursorType(cursor);
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  String type_str = misc::convStr(type_spell);
   
-  // Return if cached
-  if (try trans_type_str = vd.types_table[type_str]) return trans_type_str;
 
   String res;
   if (misc::isTypePFN(type)) {
+    if (try trans_type_str = vd.types_table[type]) return trans_type_str;
+
     ++vd.anon_fns_counter;
     res = string::format(mem, "UnnamedPFN%d", vd.anon_fns_counter);
-    vd.types_table[type_str] = res;
+    vd.types_table[type] = res;
     
     WriteAttrs attrs;
     attrs.init(tmem);

@@ -5,7 +5,7 @@ import std::io, clang, std::collections::list;
 
 <*
  Translates global variable declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL "Cursor must point to variable declaration"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL : "Cursor must point to variable declaration"
  @return "Number of bytes written"
 *>
 fn usz? varDecl(
@@ -54,7 +54,7 @@ fn usz? varDecl(
 
 <*
  Translates global constant declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL "Cursor must point to variable declaration"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL : "Cursor must point to variable declaration"
  @return "Number of bytes written"
 *>
 fn usz? constDecl(
@@ -107,7 +107,7 @@ fn usz? constDecl(
  @param [out] out_name : "The resulting name of an enum type. Might be needed as enum can be anonymous: in that case this variable is set to the underlying type name"
  @param out_alloc : "Allocator for allocating 'out_name'"
 
- @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL "Cursor must point to enum declaration"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL : "Cursor must point to enum declaration"
  @return "Number of bytes written"
 *>
 fn usz? enumDecl(
@@ -175,7 +175,7 @@ fn usz? enumDecl(
 
 <*
  Translates functions and writes it to 'vd.out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL "Cursor must point to function declaration"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL : "Cursor must point to function declaration"
  @returns "Number of bytes written"
 *>
 fn usz? func(
@@ -230,7 +230,7 @@ fn usz? func(
 
 <*
  Translates macro definition and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION "Cursor must point to macro definition"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION : "Cursor must point to macro definition"
  @returns "Number of bytes written"
 *>
 fn usz? macroDef(
@@ -352,7 +352,7 @@ fn usz? constMacroDef(
 
 <*
  Translates alias declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL "Cursor must point to typedef declaration"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL : "Cursor must point to typedef declaration"
  @returns "Number of bytes written"
 *>
 fn usz? typedefDecl(
@@ -405,7 +405,7 @@ fn usz? typedefDecl(
 
 <*
  Translates structure declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL "Cursor must point to structure declaration"
+ @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL : "Cursor must point to structure declaration"
  @returns "Number of bytes written"
 *>
 fn usz? structDecl(
@@ -418,7 +418,7 @@ fn usz? structDecl(
 
 <*
  Union declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL "Cursor must point to union declaration"
+ @require  clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL : "Cursor must point to union declaration"
  @returns "Number of bytes written"
 *>
 fn usz? unionDecl(

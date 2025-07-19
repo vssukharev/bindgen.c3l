@@ -157,4 +157,26 @@ fn String? mapBasicType(String str)
   }
 }
 
+fn CXType getBaseType(
+  CXType type) 
+{
+  CXType base;
+
+  while LOOP: (true) {
+    switch (type.kind) {
+      case clang::TYPE_POINTER: 
+        type = clang::getPointeeType(type);
+
+      case clang::TYPE_CONSTANT_ARRAY:
+      case clang::TYPE_INCOMPLETE_ARRAY:
+        type = clang::getElementType(type);
+
+      default:
+        base = type;
+        break LOOP;
+    }
+  }
+
+  return base;
+}
 
