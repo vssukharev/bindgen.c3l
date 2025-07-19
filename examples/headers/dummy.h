@@ -59,6 +59,12 @@ union AnonUnion
     int inner_a;
     int inner_b;
   };
+  
+  struct 
+  {
+    int inner_c;
+    int inner_d;
+  };
 
   char outer_b : 3;
   char outer_c : 5;

@@ -151,7 +151,9 @@ fn usz? enumDecl(
   WriteAttrs attrs;
   usz? acc;
   if (clang::isAnonymous_Cursor(cursor)) {
-    // TODO: method for caching anonymous enums
+    CXType base = misc::getBaseType(enum_type);
+    vd.types_table[base] = under_type_str;
+
     vd_enum.enum_name = under_type_str;
   } else {
     String? tmp = trans::ctype(enum_type, vd);
@@ -377,12 +379,9 @@ fn usz? typedefDecl(
   valgen::moduleWrap(vd, type_str);
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
 
-  if (misc::isTypePFN(under_type))
-  {
+  if (misc::isTypePFN(under_type)) {
     return ttor::pfnType(vd, trans_type_str, under_type, cursor, attrs);
-  }
-  else
-  {
+  } else {
     // Translate alias
     String? under_type_name = trans::ctype(under_type, vd);
     if (catch under_type_name)
@@ -391,12 +390,9 @@ fn usz? typedefDecl(
       return 0;
     }
 
-    if (trans_type_str != under_type_name)
-    {
+    if (trans_type_str != under_type_name) {
       return wter::typedefAlias(vd.out, &vd.write_state, trans_type_str, under_type_name, attrs);
-    }
-    else
-    {
+    } else {
       // Do not write if aliases are equal
       return 0;
     }
@@ -492,7 +488,7 @@ macro usz? recordDecl(
   FieldsVisitData vd_rec = {
     .g = vd,
     .allocator = tmem,
-    .prev_anon = clang::getNullCursor(),
+    .prev_inline = clang::getNullCursor(),
   };
 
   vd_rec.fields.init(vd_rec.allocator);

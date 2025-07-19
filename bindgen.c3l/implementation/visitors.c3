@@ -188,10 +188,11 @@ fn CXChildVisitResult fields(
     return clang::CHILD_VISIT_BREAK;
   }
 
-  CXType type = clang::getCursorType(cursor);
+  CXType type = clang::getCanonicalType(clang::getCursorType(cursor));
+  CXType prev_type = clang::getCursorType(vd.prev_inline);
 
-  if (!clang::isNull_Cursor(vd.prev_anon)) {
-    switch (misc::getCFieldKind(vd.prev_anon)) {
+  if (!clang::isNull_Cursor(vd.prev_inline) && clang::equalTypes(type, prev_type)) {
+    switch (misc::getCFieldKind(vd.prev_inline)) {
       case STRUCT:
         vd.fields.structs[^1].name = trans_field_name;
       case UNION:
@@ -200,7 +201,7 @@ fn CXChildVisitResult fields(
         unreachable();
     }
 
-    vd.prev_anon = clang::getNullCursor();
+    vd.prev_inline = clang::getNullCursor();
     return clang::CHILD_VISIT_CONTINUE;
   }
 
@@ -240,11 +241,11 @@ fn CXChildVisitResult fields(
     // as well; in second one, we regularly translate a record and 
     // write it globally
     if (clang::isAnonymous_Cursor(cursor)) {
-      vd.prev_anon = cursor;
+      vd.prev_inline = cursor;
       FieldsVisitData vd_inner = {
         .g = vd.g,
         .allocator = vd.allocator,
-        .prev_anon = clang::getNullCursor(),
+        .prev_inline = clang::getNullCursor(),
       };
 
       vd_inner.fields.init(vd_inner.allocator);

@@ -68,7 +68,10 @@ fn String? ctype(
 => @pool() 
 {
   TypeTokens tokens = algo::getTypeTokens(tmem, type);
-  CXType base_type = misc::getBaseType(type);
+
+  // Here we get canonical type for correct comparisons 
+  // for unnamed enums or records
+  CXType base_type = clang::getCanonicalType(misc::getBaseType(type));
 
   // enum MyFoo -> Enum MyFoo
   DString res_dstr;
@@ -111,7 +114,6 @@ fn String? ctypeWithPFN(
 => @pool() 
 {
   CXType type = clang::getCursorType(cursor);
-  
 
   String res;
   if (misc::isTypePFN(type)) {
