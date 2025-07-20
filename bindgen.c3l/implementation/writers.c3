@@ -64,11 +64,9 @@ fn usz? typedefFunc(
   
   if (params.len > 0) acc += io::fprintf(out, "\n");
 
-  foreach (i, p : params) 
-  {
+  foreach (i, p : params) {
     acc += io::fprintf(out, "  %s", p.type);
-    if (p.name)
-    {
+    if (p.name) {
       acc += io::fprintf(out, " %s", p.name);
     }
     if (i < params.len - 1) acc += io::fprintn(out, ", ");
@@ -100,12 +98,9 @@ fn usz? constDecl(
 
   if (prev_kind != CONST && prev_kind != ENUM) acc += io::fprintf(out, "\n");
 
-  if (type == "")
-  {
+  if (type == "") {
     acc += io::fprintfn(out, "const %s%s = %s;", name, attribs, value);
-  }
-  else
-  {
+  } else {
     acc += io::fprintfn(out, "const %s %s%s = %s;", type, name, attribs, value);
   }
 
@@ -129,12 +124,9 @@ fn usz? varDecl(
 
   usz? acc;
 
-  if (value == "")
-  {
+  if (value == "") {
     acc += io::fprintfn(out, "\n%s %s%s;", type, name, attribs);
-  }
-  else
-  {
+  } else {
     acc += io::fprintfn(out, "\n%s %s%s = %s;", type, name, attribs, value);
   }
 
@@ -179,9 +171,11 @@ fn usz? func(
   acc += io::fprintf(out, "\nfn %s %s(", return_type, name);
   if (params.len > 0) acc += io::fprintf(out, "\n");
 
-  foreach (i, p : params) 
-  {
-    acc += io::fprintf(out, "  %s %s", p.type, p.name);
+  foreach (i, p : params)  {
+    acc += io::fprintf(out, "  %s", p.type);
+    if (p.name) {
+      acc += io::fprintf(out, " %s", p.name);
+    }
     if (i < params.len - 1) acc += io::fprintn(out, ", ");
   }
   acc += io::fprintfn(out, ")\n@extern(\"%s\")%s;", original_name, attribs);
@@ -207,15 +201,13 @@ fn usz? funcMacro(
   usz? acc;
 
   acc += io::fprintf(out, "\nmacro @%s(", name);
-  foreach (i, p : params) 
-  {
+  foreach (i, p : params) {
     acc += io::fprintf(out, "#%s", p);
     if (i < params.len - 1) acc += io::fprint(out, ", ");
   }
   acc += io::fprintf(out, ")%s {", attribs);
   
-  if (body != "")
-  {
+  if (body != "") {
     acc += io::fprintfn(out, "\n%s%s", INDENT, body);
   }
 
