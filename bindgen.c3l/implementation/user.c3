@@ -12,17 +12,19 @@ fn List{ZString}? getParseCommandArgs(Allocator allocator, String[] extra_opts) 
 {
   const usz RESERVED_ARGS = 4;
 
-  List{ZString} res;
-  res.init(allocator, extra_opts.len + RESERVED_ARGS);
+  List{ZString} args;
+  args.init(allocator, extra_opts.len + RESERVED_ARGS);
+ 
+  // Just make sure that we treat a file as a C one
+  args.push("-xc");
 
-  user::getLibcHeadersLoc(&res)!;
+  user::getLibcHeadersLoc(&args)!;
 
-  foreach (extra_opt : extra_opts)
-  {
-    res.push((ZString)extra_opt);
+  foreach (extra_opt : extra_opts) {
+    args.push((ZString)extra_opt);
   }
 
-  return res;
+  return args;
 }
 
 <*
@@ -36,28 +38,23 @@ fn void? getLibcHeadersLoc(List{ZString}* res) => @pool()
   File in = proc.stderr();
 
   bool found;
-  while (!found)
-  {
-    if (in.read_byte()! == '\n')
-    {
+  while (!found) {
+    if (in.read_byte()! == '\n') {
       char[14] buffer;
       in.read(buffer[..])!;
-      if (buffer[..] == "#include <...>")
-      {
+      if (buffer[..] == "#include <...>") {
         while(in.read_byte()! != '\n') {}; // read till '\n'
         found = true;
       }
     }
   }
 
-  while (try first_c = in.read_byte() && first_c == ' ')
-  {
+  while (try first_c = in.read_byte() && first_c == ' ') {
     DString path_dstr;
     path_dstr.tinit();
 
     path_dstr.append("-I");
-    while (try c = in.read_byte() && c != '\n')
-    {
+    while (try c = in.read_byte() && c != '\n') {
       path_dstr.append(c);
     }
 
