@@ -70,6 +70,7 @@ fn String? ctype(
   TypeTokens tokens = algo::getTypeTokens(tmem, type);
 
   CXType base_type = misc::getBaseType(type);
+
   // Here we get canonical type for correct comparisons 
   // for unnamed enums or records. The main problem
   // is that clang::getCanonicalType() practically
@@ -78,8 +79,6 @@ fn String? ctype(
   if (clang::isAnonymous_Cursor(clang::getTypeDeclaration(base_type))) {
     base_type = clang::getCanonicalType(base_type);
   }
-  // err::flog(vd.out, "%s - %s", misc::convStr(clang::getTypeSpelling(base_type)), misc::convStr(clang::getTypeKindSpelling(base_type.kind)));
-
 
   DString res_dstr;
   res_dstr.tinit();

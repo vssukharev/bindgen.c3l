@@ -131,20 +131,15 @@ fn CXChildVisitResult func(
 {
   FuncVisitData* vd = (FuncVisitData*) client_data;
 
-  // If CURSOR_TYPE_REF is occured as function child, it means
-  // that it's return type is a function pointer, for instance
-  if (clang::getCursorKind(cursor) == clang::CURSOR_TYPE_REF)
-  {
+  // The visitor can also encounter non-paremeters in a function.
+  // For example, it may be attributes, etc.
+  if (clang::getCursorKind(cursor) != clang::CURSOR_PARM_DECL) {
     return clang::CHILD_VISIT_CONTINUE;
   }
-  
+
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);
   String name_str = misc::convStr(name_spell); 
-
-  CXString parent_spell = clang::getCursorSpelling(parent);
-  defer clang::disposeString(parent_spell);
-  String parent_str = misc::convStr(parent_spell);
 
   CXType type = clang::getCursorType(cursor);
   CXString type_spell = clang::getTypeSpelling(type);
@@ -157,6 +152,10 @@ fn CXChildVisitResult func(
   String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g, is_func_param: true);
   if (catch trans_type_str)
   {
+    CXString parent_spell = clang::getCursorSpelling(parent);
+    defer clang::disposeString(parent_spell);
+    String parent_str = misc::convStr(parent_spell);
+
     err::warn(vd.g.no_verbose, "Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
     return clang::CHILD_VISIT_BREAK;
   }
