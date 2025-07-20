@@ -320,12 +320,12 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
   ListString tokens;
   tokens.init(alloc, str.len / 2);
 
-  // Treat possible beginning '_'
+  // Erase possible beginning '_'
   usz first = 0;
   while (first < str.len && str[first] == '_') ++first;
   if (first > 0) tokens.push(str[0..first-1]);
 
-  // Treat possible closing '_' 
+  // Erase possible closing '_' 
   usz last = str.len - 1;
   while (last > 0 && str[last] == '_') --last;
 
@@ -335,6 +335,16 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
 
     // Handle several upper cases in a row
     if (str[begin].is_upper()) while (i <= last && str[i].is_upper()) ++i;
+
+    // If there are more than 2 capital chars in a row,
+    // divide them into 2 tokens:
+    // first token: first - prelast capital
+    // second token: last capital - the rest
+    if (i <= last && i - begin > 1) { 
+      --i;
+      tokens.push(str[begin..i-1]);
+      begin = i++;
+    }
 
     while (i <= last && ( str[i] == '_' || str[i].is_lower() )) ++i;
     tokens.push(str[begin..i-1]);
