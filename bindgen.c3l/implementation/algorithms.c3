@@ -13,7 +13,7 @@ faultdef ERROR;
 *>
 fn String normIntSuf(
   String lit, 
-  Allocator alloc = allocator::heap())
+  Allocator alloc = mem)
 {
   if (lit.len == 0 || lit[0] == '"') return lit.copy(alloc);
 

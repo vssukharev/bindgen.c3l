@@ -187,7 +187,7 @@ fn usz? func(
 {
   FuncVisitData vd_func = {
     .g = vd,
-    .allocator = allocator::temp(),
+    .allocator = tmem,
   };
 
   vd_func.params.tinit(4);
