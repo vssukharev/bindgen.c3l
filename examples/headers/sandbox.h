@@ -1,4 +1,3 @@
 
-int LLVMIsACmpInst();
-int LLVMBuildFPToUI();
+typedef int LLVMBuildStructGEP2;
 

@@ -341,7 +341,7 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
     // first token: first - prelast capital
     // second token: last capital - the rest
     if (i <= last && i - begin > 1) { 
-      --i;
+      if (!str[i].is_digit()) --i;
       tokens.push(str[begin..i-1]);
       begin = i++;
     }
