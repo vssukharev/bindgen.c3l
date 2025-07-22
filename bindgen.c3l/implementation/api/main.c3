@@ -28,7 +28,30 @@ fn void? translateHeader(
  
   // Open file
   File out = *io::stdout();
-  if (opts.out_name != "") out = file::open(opts.out_name, "w")!;
+
+  if (opts.out_name != "") @pool() {
+    Path out_path = { 
+      .path_string = opts.out_name,
+      .env = path::DEFAULT_ENV,
+    };
+
+    if (path::is_dir(out_path)) {
+      err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
+      return bg::INVALID_ARGUMENTS?;
+    }
+
+    // If there is no parent, we are in root
+    Path out_parent = out_path.parent() ?? {
+      .path_string = "/",
+      .env = path::DEFAULT_ENV,
+    };
+
+    // Create missing directories on the path
+    path::mkdir(out_parent, recursive: true)!!;
+
+    out = file::open(opts.out_name, "w")!;
+  };
+
   defer (void) out.close();
 
   // Check callbacks
