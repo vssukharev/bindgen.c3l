@@ -12,7 +12,7 @@ faultdef EMPTY, IGNORE;
 fn String? apply(
   String s, 
   BGTransFn fun, 
-  Allocator alloc = allocator::heap()) 
+  Allocator alloc = mem) 
 @inline 
 {
   if (s.len == 0) return "";
