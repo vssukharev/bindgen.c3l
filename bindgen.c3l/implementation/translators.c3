@@ -66,6 +66,11 @@ fn usz? constDecl(
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
 
+  if (misc::isCursorForwardDeclared(cursor)) {
+    err::warn(vd.no_verbose, "Const '%s' has forward declaration, skipping this declaration...", cursor_str);
+    return 0;
+  }
+
   ConstVisitData vd_const = { 
     .g = vd,
     .allocator = tmem,
@@ -121,6 +126,11 @@ fn usz? enumDecl(
   CXString enum_spell = clang::getTypeSpelling(enum_type);
   defer clang::disposeString(enum_spell);
   String orig_enum_name = misc::convStr(enum_spell);
+
+  if (misc::isCursorForwardDeclared(cursor)) {
+    err::warn(vd.no_verbose, "Enum '%s' has forward declaration, skipping this declaration...", orig_enum_name);
+    return 0;
+  }
   
   CXType under_type = clang::getEnumDeclIntegerType(cursor);
   String? under_type_str = trans::ctype(under_type, vd);
@@ -258,15 +268,13 @@ fn usz? funcMacroDef(
   String macro_str = misc::convStr(macro_spell);
 
   String? trans_macro_str = trans::apply(macro_str, vd.trans_fns.func_macro, tmem);
-  if (catch trans_macro_str)
-  {
+  if (catch trans_macro_str) {
     err::warn(vd.no_verbose, "Functional macro '%s' is ignored", macro_str);
     return 0;
   }
 
   String macro_body = valgen::apply(tmem, macro_str, vd.gen_fns.func_macro);
-  if (macro_body == "") 
-  {
+  if (macro_body == "") {
     err::warn(vd.no_verbose, "Macro '%s' (@%s) is function-like and generator function returned empty string so you should complete it's body manually", macro_str, trans_macro_str);
   }
 
@@ -281,17 +289,13 @@ fn usz? funcMacroDef(
   defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
 
   // Make a small tweak here. TODO: get rid of it
-  if OUTER: (true) 
-  {
+  if OUTER: (true) {
     // First token is the name of a macro and second token is left brace so start from the third one
-    misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str)
-    {
+    misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str) {
       if (token_str == ")") break OUTER;
-      if (token_str != ",")
-      {
+      if (token_str != ",") {
         String? trans_token_str = trans::apply(token_str, vd.trans_fns.variable, tmem);
-        if (catch trans_token_str)
-        {
+        if (catch trans_token_str) {
           err::warn(vd.no_verbose, "Can't translate functional macro '%s' as it's parameter '%s' is ignored", macro_str, token_str);
           return 0;
         }
@@ -321,20 +325,16 @@ fn usz? constMacroDef(
   String cursor_str = misc::convStr(cursor_spell);
 
   String? trans_cursor_str = trans::apply(cursor_str, vd.trans_fns.constant, tmem); 
-  if (catch trans_cursor_str)
-  {
+  if (catch trans_cursor_str) {
     err::warn(vd.no_verbose, "Constant '%s' is ignored", cursor_str);
     return 0;
   }
 
   String val = valgen::apply(tmem, cursor_str, vd.gen_fns.constant); 
-  if (val == "")
-  {
+  if (val == "") {
     String? t = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
-    if (catch exc = t)
-    {
-      switch (exc)
-      {
+    if (catch exc = t) {
+      switch (exc) {
         case trans::IGNORE:
           err::warn(vd.no_verbose, "Can't translate constant '%s' as it's rhs comprises ignored name", cursor_str);
         case trans::EMPTY:
@@ -363,18 +363,17 @@ fn usz? typedefDecl(
 @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
-  CXType under_type = clang::getTypedefDeclUnderlyingType(cursor);
-
   CXString type_spell = clang::getTypeSpelling(type);
   defer clang::disposeString(type_spell);
   String type_str = misc::convStr(type_spell);
 
   String? trans_type_str = trans::ctype(type, vd);
-  if (catch trans_type_str)
-  {
+  if (catch trans_type_str) {
     err::warn(vd.no_verbose, "Alias '%s' is ignored", type_str);
     return 0;
   }
+
+  CXType under_type = clang::getTypedefDeclUnderlyingType(cursor);
 
   valgen::moduleWrap(vd, type_str);
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, type_str, vd.gen_fns);
@@ -382,19 +381,24 @@ fn usz? typedefDecl(
   if (misc::isTypePFN(under_type)) {
     return ttor::pfnType(vd, trans_type_str, under_type, cursor, attrs);
   } else {
+    TypedefVisitData vd_inner = {
+      .g = vd,
+      .under_type = under_type,
+    };
+
+    clang::visitChildren(cursor, &vtor::typedefDecl, (CXClientData) &vd_inner);
+
     // Translate alias
     String? under_type_name = trans::ctype(under_type, vd);
-    if (catch under_type_name)
-    {
+    if (catch under_type_name) {
       err::warn(vd.no_verbose, "Can't translate alias as it's underlying type '%s' is ignored", type_str);
       return 0;
     }
 
-    if (trans_type_str != under_type_name) {
-      return wter::typedefAlias(vd.out, &vd.write_state, trans_type_str, under_type_name, attrs);
-    } else {
-      // Do not write if aliases are equal
+    if (!vd_inner.is_forward_declared && trans_type_str == under_type_name) {
       return 0;
+    } else {
+      return wter::typedefAlias(vd.out, &vd.write_state, trans_type_str, under_type_name, attrs);
     }
   }
 }
@@ -442,11 +446,20 @@ macro usz? recordDecl(
 @maydiscard => @pool()
 {
   CXType rec_type = clang::getCursorType(cursor);
-  String? rec_name = trans::ctype(rec_type, vd);
-
   CXString rec_spell = clang::getTypeSpelling(rec_type);
   defer clang::disposeString(rec_spell);
   String orig_rec_name = misc::convStr(rec_spell);
+
+  if (misc::isCursorForwardDeclared(cursor)) {
+    $if $is_union:
+      err::warn(vd.no_verbose, "Union '%s' has forward declaration, skipping this declaration...", orig_rec_name);
+    $else
+      err::warn(vd.no_verbose, "Struct '%s' has forward declaration, skipping this declaration...", orig_rec_name);
+    $endif
+    return 0;
+  }
+
+  String? rec_name = trans::ctype(rec_type, vd);
 
   if (catch rec_name) {
     $if $is_union:

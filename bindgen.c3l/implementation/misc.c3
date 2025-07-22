@@ -180,3 +180,19 @@ fn CXType getBaseType(
   return base;
 }
 
+<*
+ If the cursor does not represent a definition of that cursor,
+ we consider it forwardly declared
+*>
+macro bool isCursorForwardDeclared(
+  CXCursor cursor)
+{
+  return !clang::isCursorDefinition(cursor) && misc::isTypeIncomplete(clang::getCursorType(cursor));
+}
+
+macro bool isTypeIncomplete(
+  CXType type)
+{
+  return clang::getSizeOf_Type(type) == clang::TYPE_LAYOUT_ERROR_INCOMPLETE;
+}
+

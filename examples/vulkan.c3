@@ -12,7 +12,7 @@ fn void main(String[] args)
     .out_name = out,
     .include_file = &includeFile,
     .skip_errors = true,
-    .no_verbose = true,
+    .no_verbose = false,
   }; 
 
   BGTransCallbacks trans_cbs = {

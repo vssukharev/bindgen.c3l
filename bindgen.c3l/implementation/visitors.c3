@@ -122,6 +122,32 @@ fn CXChildVisitResult enumDecl(
 }
 
 <*
+ Considered to visit typedef underlying type.
+ If it's forward declared, cache it as "void".
+*>
+fn CXChildVisitResult typedefDecl(
+  CXCursor cursor, 
+  CXCursor parent, 
+  CXClientData client_data)
+{
+  // The visitor can also encounter non-types in a function.
+  // For example, it may be attributes, declared structures, etc.
+  if (clang::getCursorKind(cursor) != clang::CURSOR_TYPE_REF) {
+    return clang::CHILD_VISIT_CONTINUE;
+  }
+
+  TypedefVisitData* vd = (TypedefVisitData*) client_data;
+  vd.is_forward_declared = misc::isCursorForwardDeclared(cursor);
+
+  if (vd.is_forward_declared) {
+    CXType key = misc::getBaseType(vd.under_type);
+    vd.g.types_table[key] = "void";
+  }
+
+  return clang::CHILD_VISIT_BREAK;
+}
+
+<*
  Considered to visit function parameters
 *>
 fn CXChildVisitResult func(
@@ -129,13 +155,13 @@ fn CXChildVisitResult func(
   CXCursor parent, 
   CXClientData client_data)
 {
-  FuncVisitData* vd = (FuncVisitData*) client_data;
-
   // The visitor can also encounter non-paremeters in a function.
   // For example, it may be attributes, etc.
   if (clang::getCursorKind(cursor) != clang::CURSOR_PARM_DECL) {
     return clang::CHILD_VISIT_CONTINUE;
   }
+
+  FuncVisitData* vd = (FuncVisitData*) client_data;
 
   CXString name_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(name_spell);

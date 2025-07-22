@@ -274,9 +274,14 @@ struct FieldsVisitData
   usz               current;
 }
 
+<*
+ is_forward_declared : "Whether the underlying type is forward declared"
+*>
 struct TypedefVisitData
 {
-  GlobalVisitData* g;
+  GlobalVisitData*  g;
+  CXType            under_type;
+  bool              is_forward_declared;
 }
 
 <*
