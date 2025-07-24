@@ -29,5 +29,10 @@
       "type" : "executable",
       "sources" : [ "examples/raylib.c3" ],
     },
+
+    "mlir" : {
+      "type" : "executable",
+      "sources" : [ "examples/mlir.c3" ],
+    }
   },
 }
