@@ -17,7 +17,7 @@ Dependencies:
 
 Installation steps:
 
-1. Install  on your system (library for parsing C files).
+1. Install `libclang` on your system (library for parsing C files).
 2. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
 3. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
 ```json
