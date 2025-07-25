@@ -86,6 +86,7 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
+- Fix floating point suffixes
 - Multiple translation units support
 - Add kind parameter to if_condition and module_wrap functions: function, structure, member, etc.
 

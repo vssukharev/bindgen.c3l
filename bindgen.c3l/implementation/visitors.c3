@@ -137,7 +137,7 @@ fn CXChildVisitResult typedefDecl(
   }
 
   TypedefVisitData* vd = (TypedefVisitData*) client_data;
-  vd.is_forward_declared = misc::isCursorForwardDeclared(cursor) && misc::isTypeIncomplete(vd.under_type);
+  vd.is_forward_declared = !clang::isCursorDefinition(cursor) && misc::isTypeIncomplete(vd.under_type);
 
   if (vd.is_forward_declared) {
     CXType key = misc::getBaseType(vd.under_type);
