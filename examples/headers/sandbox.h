@@ -1,5 +1,5 @@
 
-// enum Uasd;
+enum Uasd;
 struct MlirAffineMap;
 const int ASD;
 const int ASD = 2;
@@ -12,12 +12,16 @@ struct MlirAffineMap {
 
 typedef struct GLFWwindow GLFWwindow;
 
+struct GLFWmonitor;
+
 struct GLFWmonitor { 
   int a; 
 };
+typedef struct GLFWmonitor GLFWmonitor;
+
 
 typedef struct VkBuffer_T* VkBuffer;
 
-typedef struct GLFWmonitor GLFWmonitor;
 
+#define LLVMDisassembler_ReferenceType_In_ARM64_LDRXui 2
 

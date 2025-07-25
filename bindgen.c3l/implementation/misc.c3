@@ -187,7 +187,7 @@ fn CXType getBaseType(
 macro bool isCursorForwardDeclared(
   CXCursor cursor)
 {
-  return !clang::isCursorDefinition(cursor) && misc::isTypeIncomplete(clang::getCursorType(cursor));
+  return !clang::isCursorDefinition(cursor);
 }
 
 macro bool isTypeIncomplete(
