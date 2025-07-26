@@ -55,10 +55,11 @@ Main library function is `bg::translate_header`. Mainly it takes a set of header
 
 ### String API
 
-For better user experience there is additional API for string transformations, which is a submodule of `bindgen`:
+For better user experience there is additional API for string transformations, which is a submodule of `bindgen`. These functions are also defined as methods for `String` for convenience:
 
-- `bgstr::map_basic_type` - switches the passed type and returns the corresponding C3 valid alternative. For example, it maps `uint32_t` -> `uint`, `int` -> `CInt`, etc. Strongly recommended to use every time.
-- `bgstr::<case1>_to_<case2>` - a ton of functions to convert one case to another. For instance, `bgstr::pascal_to_snake("HelloWorld")` would return `"hello_world"`. These functions are also defined as methods for `String` for convenience.
+- `bgstr::<case1>_to_<case2>` - a ton of functions to convert one case to another. For instance, `bgstr::pascal_to_snake("HelloWorld")` will return `"hello_world"`.
+- `bgstr::mixed_to_<case2>` - the logic of using it is the same as `bgstr::<case1>_to_<case2>` but it practically sequentially apply both translations for snake and camel case. For instance, `bgstr::mixed_to_screaming("LLVMDisassembler_ReferenceType_In_ARM64_LDRXui")` will return `"LLVM_DISASSEMBLER_REFERENCE_TYPE_IN_ARM64_LDR_XUI"`.
+- `bgstr::is_between` - detects whether a name is located between two given names in respect to the order of their translation. **WARNING**: because macros are translated at first even if they are located between, for instance, function declarations, you have to consider it while using this function.
 
 ## Examples
 

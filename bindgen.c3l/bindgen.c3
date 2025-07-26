@@ -150,19 +150,7 @@ import bindgen::impl::api @public;
 
 faultdef NOT_BASIC_TYPE;
 
-<*
- Detects wheter the given 'str' (name) is between 'a' and 'b' in declaration order.
- For example if we have something like:
- inf f1();
- int f2();
- int f3();
- bgstr::is_between("f2", "f1", "f3") will return true
-
- WARNING: do not use in combination with macros and some other entities
- as ALL macros are translated first so the actual order (like in header)
- is broken;
-*>
-fn bool is_between(String str, String a, String b) => api::strIsBetween(str, a, b);
+fn bool is_between(String name, String bound_1, String bound_2) => api::strIsBetween(name, bound_1, bound_2);
 
 fn String snake_to_camel(String str, Allocator alloc) => api::strSnakeToCamel(str, alloc);
 fn String snake_to_pascal(String str, Allocator alloc) => api::strSnakeToPascal(str, alloc);
@@ -180,7 +168,12 @@ fn String screaming_to_snake(String str, Allocator alloc) => api::strScreamingTo
 fn String screaming_to_camel(String str, Allocator alloc) => api::strScreamingToCamel(str, alloc);
 fn String screaming_to_pascal(String str, Allocator alloc) => api::strScreamingToPascal(str, alloc);
 
-fn bool String.is_between(String str, String a, String b) => is_between(str, a, b);
+fn String mixed_to_camel(String str, Allocator alloc) => api::strMixedToCamel(str, alloc);
+fn String mixed_to_screaming(String str, Allocator alloc) => api::strMixedToScreaming(str, alloc);
+fn String mixed_to_snake(String str, Allocator alloc) => api::strMixedToSnake(str, alloc);
+fn String mixed_to_pascal(String str, Allocator alloc) => api::strMixedToPascal(str, alloc);
+
+macro bool String.is_between(String str, String a, String b) => is_between(str, a, b);
 
 macro String String.snake_to_camel(String str, Allocator alloc) => snake_to_camel(str, alloc);
 macro String String.snake_to_pascal(String str, Allocator alloc) => snake_to_pascal(str, alloc);
