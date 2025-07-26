@@ -209,7 +209,7 @@ fn String? tokensUnderCursor(
         }
 
       case clang::TOKEN_LITERAL:
-        res.append(algo::normIntSuf(token_str, tmem));
+        res.append(algo::convertLiteral(tmem, token_str));
 
       case clang::TOKEN_KEYWORD:
       case clang::TOKEN_PUNCTUATION:

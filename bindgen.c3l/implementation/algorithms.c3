@@ -7,34 +7,35 @@ import std::collections::list, clang;
 faultdef ERROR;
 
 <*
- The only translation is substituting 'LL' or 'll' to 'L' and 'l' respectively.
- Technically, suffix can be mixed, e.g. 'LLu', 'ull', 'llU' - only 'll'
- and 'LL' must be together and in the same case.
+ Converts C integer or floating-point literal epressions to C3 ones
 *>
-fn String normIntSuf(
-  String lit, 
-  Allocator alloc = mem)
+fn String convertLiteral(
+  Allocator alloc,
+  String str)
+=> @pool()
 {
-  if (lit.len == 0 || lit[0] == '"') return lit.copy(alloc);
+  // If it's a string or empty literal
+  if (str.len == 0 || str[0] == '"') return str;
 
-  usz? loc = lit.index_of("LL") ?? lit.index_of("ll");
-  if (catch loc) return lit.copy(alloc); // It doesn't contain LL or ll
+  bool is_float = @ok(str.index_of_char('.'));
+  DString res = dstring::temp(str);
 
-  String new = (String) allocator::alloc_array(alloc, char, lit.len-1);
-
-  // copy left side
-  mem::copy(new.ptr, lit.ptr, loc + 1);
-
-  // copy right side
-  if (new.len - loc - 1 > 0) {
-    mem::copy(
-      new.ptr + (loc + 1), 
-      lit.ptr + (loc + 2), 
-      new.len - loc - 1
-    );
+  // --- Prefixes (octal)
+  if (str.len >= 2 && str[0] == '0' && str[1].is_odigit()) {
+    res.insert_at(1, 'o');
   }
 
-  return new;
+  // --- Suffixes
+  res.replace("LL", "L");
+  res.replace("ll", "l");
+  
+  // C3 doesn't have 'L' or 'l' literals for float so substitute them with ""
+  if (is_float) {
+    res.replace("L", "");
+    res.replace("l", "");
+  }
+
+  return res.copy_str(alloc);
 }
 
 fn TypeTokens getTypeTokens(

@@ -65,7 +65,7 @@ For better user experience there is additional API for string transformations, w
 
 There are several examples located in `examples` directory. To check them out, run the following command in root directory of the repository:
 
-- Sandbox to try out library: `c3c run sandbox` - it will write to `build/sandbox.c3i`
+- Sandbox to try out library: `c3c run sandbox` - it will write to stdout
 - My dummy: `c3c run dummy -- ./build/dummy.c3i` or `c3c run dummy` - it will print output to stdout
 - Vulkan: `c3c run vulkan -- ./build/vulkan.c3i`
 - GLFW: `c3c run glfw -- ./build/glfw.c3i`
@@ -87,7 +87,6 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
-- Fix floating point suffixes
 - Improve tokens analyzation in macros translation
 - Multiple translation units support
 - Add kind parameter to if_condition and module_wrap functions: function, structure, member, etc.
