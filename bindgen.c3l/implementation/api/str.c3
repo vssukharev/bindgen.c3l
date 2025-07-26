@@ -315,7 +315,7 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
     tokens.push(str[last+1..str.len-1]);
   }
 
-  err::log("%s", tokens);
+  // err::log("%s", tokens);
   return tokens;
 }
 
