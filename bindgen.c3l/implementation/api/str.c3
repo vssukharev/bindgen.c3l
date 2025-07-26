@@ -130,17 +130,20 @@ macro String convertToSnakeOrScreaming(Allocator alloc, ListString* tokens, bool
   usz size = 0;
   foreach (t : tokens) {
     size += t.len;
-    if (t[0] != '_') size += 1;
+
+    bool has_underscore = t[0] == '_' || t[^1] == '_';
+    if (!has_underscore) size += 1;
   }
+  // Substract one because of the last '_', which is not inserted
   --size;
 
+  // If last token is '___', we do not insert '_' after prelast token
   usz last_token_index = tokens.len() - ((*tokens)[^1][0] == '_' ? 2 : 1); 
 
   String res = (String) allocator::alloc_array(alloc, char, size);
   
   usz last = 0;
   foreach (i, t : tokens) {
-    bool is_underscore = t[0] == '_';
     res[last:t.len] = t[..];
 
     foreach (&c : res[last:t.len]) {
@@ -151,7 +154,8 @@ macro String convertToSnakeOrScreaming(Allocator alloc, ListString* tokens, bool
       $endif
     }
 
-    if (!is_underscore && i != last_token_index) {
+    bool has_underscore = t[0] == '_' || t[^1] == '_';
+    if (!has_underscore && i != last_token_index) {
       res[last+t.len] = '_';
       ++last;
     }
@@ -252,7 +256,7 @@ fn ListString parseSnakeCase(Allocator alloc, String str) @local {
 }
 
 <*
- Example: __oneTWo_threeFOUR -> [ __ one TWo_three FOUR __ ]
+ Example: __oneTWo_threeFOUR__ -> [ __ one T Wo_three FOUR __ ]
  @return "List which then must be freed"
 *>
 fn ListString parseCamelCase(Allocator alloc, String str) @local {
@@ -273,26 +277,36 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
     usz begin = i++;
 
     // Handle several upper cases and digits in a row
+    bool is_prev_digit = false;
     if (str[begin].is_upper()) {
-      while (i <= last && ( str[i].is_upper() || str[i].is_digit() )) ++i;
+      while (i <= last && str[i].is_upper()) ++i;
+      while (i <= last && ( str[i].is_digit() || str[i] == '_' )) {
+        is_prev_digit = true;
+        ++i;
+      }
     }
 
     // If there are more than 2 capital chars or digits in a row, divide them into 2 tokens:
     // 1. first - prelast capital; 2. last capital - the rest
     // Example: LLVMHello -> [LLVM, Hello]
     if (i <= last && i - begin > 1) { 
-      --i;
+      if (!is_prev_digit) --i;
       tokens.push(str[begin..i-1]);
-      begin = i++;
+      begin = i;
     }
 
-    while (i <= last && ( str[i] == '_' || str[i].is_lower() )) ++i;
-    tokens.push(str[begin..i-1]);
+    // If previous char is a digit or an underscore, go to the next iteration
+    // as upper case and digits might follow it, like in ARM64MESA
+    if (!is_prev_digit) {
+      // Handle lower case
+      while (i <= last && ( str[i].is_lower() || str[i] == '_' )) ++i;
+      if (i > begin) tokens.push(str[begin..i-1]);
 
-    // Handle digits
-    begin = i;
-    while (i <= last && str[i].is_digit()) ++i;
-    if (begin < i) tokens.push(str[begin..i-1]);
+      // Handle digits
+      begin = i;
+      while (i <= last && str[i].is_digit()) ++i;
+      if (begin < i) tokens.push(str[begin..i-1]);
+    }
   }
 
   // Push closing '_' if 'last' and 'first'
@@ -301,7 +315,7 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
     tokens.push(str[last+1..str.len-1]);
   }
 
-  // err::log("Camel: %s", tokens);
+  err::log("%s", tokens);
   return tokens;
 }
 

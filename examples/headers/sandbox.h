@@ -22,6 +22,6 @@
 //
 // typedef struct VkBuffer_T* VkBuffer;
 
-#define hereComesARM64 2
-#define LLVMDisassembler_ReferenceType_In_ARM64_LDRXui 2
+#define __HelloFromARM64MESA__ 2
+#define LLVMDisassemblerReferenceType_In_ARM64_LDRXui 2
 
