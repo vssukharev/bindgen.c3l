@@ -151,5 +151,3 @@ fn C3Fields? getC3Fields(
   return res;
 }
 
-
-

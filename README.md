@@ -6,18 +6,18 @@ C3 library which translates C header files to C3 bindings. It's main idea is to 
 ## Setup
 
 > [!CAUTION]
-> Currently c3c is in development so it's not stable. To be sure that you are using a correct version of the compiler, look at the 'flake.lock': "nodes" -> "c3c" -> "lock" -> "rev". 
+> Currently c3c is in development so it's not stable. To be sure that you are using a correct version of the compiler, look at the [flake.lock](./flake.lock): "nodes" -> "c3c" -> "lock" -> "rev". 
 
 This library is distributed with source code so you don't have to additionally with it link statically or dynamically.
 
-Dependencies:
+### Dependencies
 
-- [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html)
-- [c3c](https://c3-lang.org/)
+- [libclang](https://clang.llvm.org/doxygen/group__CINDEX.html) (library for parsing C files)
+- [c3c](https://c3-lang.org/) (guess what it is)
 
-Installation steps:
+### Installation
 
-1. Install `libclang` on your system (library for parsing C files).
+1. Install dependencies.
 2. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
 3. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
 ```json
@@ -43,7 +43,7 @@ fn void main() {
 ```
 
 > [!NOTE]
-> you must prefix functions with `bg`, not `bindgen`. For instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
+> As you can see, you must prefix functions with `bg`, not `bindgen`. For instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
 
 ## API
 
@@ -87,6 +87,7 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
+- Fix multiple definitions for macros
 - Improve tokens analyzation in macros translation
 - Multiple translation units support
 - Add kind parameter to if_condition and module_wrap functions: function, structure, member, etc.

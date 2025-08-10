@@ -18,10 +18,10 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
 
 fn void? translateHeader(
   String header_name, 
-  BGTransCallbacks trans_callbacks,
   BGOptions opts,
+  BGTransCallbacks trans_callbacks,
   BGGenCallbacks gen_callbacks)
-@inline
+@export("bg_translate_header")
 {
   err::info("Translating %s", header_name);
   err::info("Writing to %s", opts.out_name ?: "standard output");
