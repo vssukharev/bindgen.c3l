@@ -1,6 +1,6 @@
 
-module bindgen::impl::wter @private;
-import bindgen::bg, bindgen::impl @public;
+module bgimpl::wter;
+import bindgen::bg, bgimpl;
 import std::io, clang;
 
 const INDENT @local = "  ";

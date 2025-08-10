@@ -1,6 +1,6 @@
 
-module bindgen::impl::vtor @private;
-import bindgen::bg, bindgen::impl @public;
+module bgimpl::vtor;
+import bindgen::bg, bgimpl;
 import std::io, clang;
 
 const EMPTY_TOKENS @local = "";

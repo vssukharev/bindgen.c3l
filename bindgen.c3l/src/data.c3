@@ -4,7 +4,7 @@ module clang;
 macro uint CXType.hash(&self) => clang::hashCursor(clang::getTypeDeclaration(*self));
 macro bool CXType.equals(CXType a, CXType b) @operator(==) => (bool) clang::equalTypes(a, b);
 
-module bindgen::impl @private;
+module bgimpl;
 import bindgen::bg;
 import std::io, std::collections::map, std::collections::list, clang;
 

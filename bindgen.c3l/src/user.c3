@@ -1,6 +1,6 @@
 
-module bindgen::impl::user @private;
-import bindgen::impl @public;
+module bgimpl::user;
+import bgimpl;
 import std::os::process, std::io;
 import std::collections::list;
 

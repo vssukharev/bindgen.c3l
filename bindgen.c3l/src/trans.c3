@@ -1,6 +1,6 @@
 
-module bindgen::impl::trans @private;
-import bindgen::bg, bindgen::impl @public;
+module bgimpl::trans;
+import bindgen::bg, bgimpl;
 import clang, std::io;
 
 faultdef EMPTY, IGNORE;

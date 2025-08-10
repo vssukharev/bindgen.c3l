@@ -1,6 +1,6 @@
 <* TODO: clean up it a bit *>
-module bindgen::impl::api @private;
-import bindgen::impl::err @public;
+module bgimpl::bgstr;
+import bgimpl::err;
 import std::collections::list;
 import std::collections::map;
 import std::ascii;
@@ -9,7 +9,12 @@ alias ListString = List{String};
 
 /// ----------------- MISC -----------------
 
-fn bool strIsBetween(String str, String a, String b) @inline {
+fn bool isBetween(
+  String str, 
+  String a, 
+  String b) 
+@export("bgstr_is_between")
+{
   static HashMap{String, bool} map;
   if (!map.is_initialized()) map.init(mem);
 
@@ -29,39 +34,65 @@ fn bool strIsBetween(String str, String a, String b) @inline {
 
 /// ----------------- SNAKE CASE --------------------
 
-fn String strSnakeToCamel(String str, Allocator alloc) @inline => @pool() {
+fn String snakeToCamel(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_snake_to_camel") 
+=> @pool() 
+{
   ListString tokens = parseSnakeCase(tmem, str);
   return convertToCamel(alloc, &tokens);
 }
 
-fn String strSnakeToPascal(String str, Allocator alloc) @inline => @pool() {
+fn String snakeToPascal(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_snake_to_pascal") 
+=> @pool() 
+{
   ListString tokens = parseSnakeCase(tmem, str);
   return convertToPascal(alloc, &tokens);
 }
 
-fn String strSnakeToScreaming(String str, Allocator alloc) @inline {
+fn String snakeToScreaming(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_snake_to_screaming") 
+{
   String res = str.copy(alloc);
-  
   foreach (&c : res) {
     *c = c.to_upper();
   }
-
   return res;
 }
 
 /// ----------------- SCREAMING CASE --------------------
 
-fn String strScreamingToCamel(String str, Allocator alloc) @inline => @pool() {
+fn String screamingToCamel(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_screaming_to_camel")
+=> @pool() 
+{
   ListString tokens = parseSnakeCase(tmem, str);
   return convertToCamel(alloc, &tokens);
 }
 
-fn String strScreamingToPascal(String str, Allocator alloc) @inline => @pool() {
+fn String screamingToPascal(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_screaming_to_pascal")
+=> @pool() 
+{
   ListString tokens = parseSnakeCase(tmem, str);
   return convertToPascal(alloc, &tokens);
 }
 
-fn String strScreamingToSnake(String str, Allocator alloc) @inline {
+fn String screamingToSnake(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_screaming_to_snake")
+{
   String res = str.copy(alloc);
   foreach (&c : res) {
     *c = c.to_lower();
@@ -71,17 +102,31 @@ fn String strScreamingToSnake(String str, Allocator alloc) @inline {
 
 /// ----------------- CAMEL CASE --------------------
 
-fn String strCamelToSnake(String str, Allocator alloc) @inline => @pool() {
+fn String camelToSnake(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_camel_to_snake")
+=> @pool() 
+{
   ListString tokens = parseCamelCase(tmem, str);
   return convertToSnake(alloc, &tokens);
 }
 
-fn String strCamelToScreaming(String str, Allocator alloc) @inline => @pool() {
+fn String camelToScreaming(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_camel_to_screaming")
+=> @pool() 
+{
   ListString tokens = parseCamelCase(tmem, str);
   return convertToScreaming(alloc, &tokens);
 }
 
-fn String strCamelToPascal(String str, Allocator alloc) @inline {
+fn String camelToPascal(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_camel_to_pascal")
+{
   String res = str.copy(alloc);
   usz i;
   while (i < str.len && str[i] == '_') ++i;
@@ -91,10 +136,27 @@ fn String strCamelToPascal(String str, Allocator alloc) @inline {
 
 /// ----------------- PASCAL CASE --------------------
 
-alias strPascalToSnake = strCamelToSnake;
-alias strPascalToScreaming = strCamelToScreaming;
+fn String pascalToSnake(
+  String str,
+  Allocator alloc)
+@export("bgstr_pascal_to_snake")
+{
+  return camelToSnake(str, alloc) @inline;
+}
 
-fn String strPascalToCamel(String str, Allocator alloc) @inline {
+fn String pascalToScreaming(
+  String str,
+  Allocator alloc)
+@export("bgstr_pascal_to_screaming")
+{
+  return camelToScreaming(str, alloc) @inline;
+}
+
+fn String pascalToCamel(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_pascal_to_camel")
+{
   String res = str.copy(alloc);
   usz i;
   while (i < str.len && str[i] == '_') ++i;
@@ -104,29 +166,53 @@ fn String strPascalToCamel(String str, Allocator alloc) @inline {
 
 /// ----------------- MIXED CASE --------------------
 
-fn String strMixedToCamel(String str, Allocator alloc) => @pool() {
+fn String mixedToCamel(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_mixed_to_camel")
+=> @pool() 
+{
   ListString tokens = parseMixedCase(tmem, str);
   return convertToCamel(alloc, &tokens);
 }
 
-fn String strMixedToSnake(String str, Allocator alloc) => @pool() {
+fn String mixedToSnake(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_mixed_to_snake")
+=> @pool() 
+{
   ListString tokens = parseMixedCase(tmem, str);
   return convertToSnake(alloc, &tokens);
 }
 
-fn String strMixedToScreaming(String str, Allocator alloc) => @pool() {
+fn String mixedToScreaming(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_mixed_to_screaming")
+=> @pool() 
+{
   ListString tokens = parseMixedCase(tmem, str);
   return convertToScreaming(alloc, &tokens);  
 }
 
-fn String strMixedToPascal(String str, Allocator alloc) => @pool() {
+fn String mixedToPascal(
+  String str, 
+  Allocator alloc) 
+@export("bgstr_mixed_to_pascal")
+=> @pool() 
+{
   ListString tokens = parseMixedCase(tmem, str);
   return convertToPascal(alloc, &tokens);
 }
 
 /// ------------------- Local token converters -------------------
 
-macro String convertToSnakeOrScreaming(Allocator alloc, ListString* tokens, bool $to_snake) @local {
+macro String convertToSnakeOrScreaming(
+  Allocator alloc, 
+  ListString* tokens, 
+  bool $to_snake) 
+{
   usz size = 0;
   foreach (t : tokens) {
     size += t.len;
@@ -166,7 +252,11 @@ macro String convertToSnakeOrScreaming(Allocator alloc, ListString* tokens, bool
   return res;
 }
 
-macro String convertToCamelOrPascal(Allocator alloc, ListString* tokens, bool $to_camel) @local {
+macro String convertToCamelOrPascal(
+  Allocator alloc, 
+  ListString* tokens, 
+  bool $to_camel) 
+{
   usz size = 0;
   foreach (t : tokens) {
     size += t.len;
@@ -207,16 +297,16 @@ macro String convertToCamelOrPascal(Allocator alloc, ListString* tokens, bool $t
   return res;
 }
 
-fn String convertToSnake(Allocator alloc, ListString* tokens) @local => 
+fn String convertToSnake(Allocator alloc, ListString* tokens) => 
   convertToSnakeOrScreaming(alloc, tokens, $to_snake: true);
 
-fn String convertToScreaming(Allocator alloc, ListString* tokens) @local =>
+fn String convertToScreaming(Allocator alloc, ListString* tokens) =>
   convertToSnakeOrScreaming(alloc, tokens, $to_snake: false);
 
-fn String convertToCamel(Allocator alloc, ListString* tokens) @local => 
+fn String convertToCamel(Allocator alloc, ListString* tokens) => 
   convertToCamelOrPascal(alloc, tokens, $to_camel: true);
 
-fn String convertToPascal(Allocator alloc, ListString* tokens) @local => 
+fn String convertToPascal(Allocator alloc, ListString* tokens) => 
   convertToCamelOrPascal(alloc, tokens, $to_camel: false);
 
 /// ------------------- Local parsers -------------------
@@ -225,7 +315,10 @@ fn String convertToPascal(Allocator alloc, ListString* tokens) @local =>
  Example: __one_two__three_ -> [ __ one two three _ ]
  @return "List which must be freed"
 *>
-fn ListString parseSnakeCase(Allocator alloc, String str) @local {
+fn ListString parseSnakeCase(
+  Allocator alloc, 
+  String str) 
+{
   ListString tokens;
   tokens.init(alloc, str.len / 2);
 
@@ -259,7 +352,10 @@ fn ListString parseSnakeCase(Allocator alloc, String str) @local {
  Example: __oneTWo_threeFOUR__ -> [ __ one T Wo_three FOUR __ ]
  @return "List which then must be freed"
 *>
-fn ListString parseCamelCase(Allocator alloc, String str) @local {
+fn ListString parseCamelCase(
+  Allocator alloc, 
+  String str) 
+{
   ListString tokens;
   tokens.init(alloc, str.len / 2);
 
@@ -325,7 +421,11 @@ fn ListString parseCamelCase(Allocator alloc, String str) @local {
  as camel case.
  @return "List which then must be freed"
 *>
-fn ListString parseMixedCase(Allocator alloc, String str) @local => @pool() {
+fn ListString parseMixedCase(
+  Allocator alloc, 
+  String str) 
+=> @pool() 
+{
   ListString tokens;
   tokens.init(alloc, str.len / 2);
 

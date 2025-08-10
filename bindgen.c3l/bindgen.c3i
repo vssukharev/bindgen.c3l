@@ -5,7 +5,6 @@
  to be translated.
 *>
 module bindgen::bg;
-import bindgen::impl::api @public;
 
 <* Errors *>
 faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
@@ -57,11 +56,11 @@ struct BGOptions
  which will be called when translating the corresponding 
  C entity. For instance, 'func' is invoked when we translate functions.
 
- func "Function"
- type "Type"
- variable "Function parameter or global variable"
- constant "Global constant"
- func_maro "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
+ func : "Function"
+ type : "Type"
+ variable : "Function parameter or global variable"
+ constant : "Global constant"
+ func_maro : "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
 *>
 struct BGTransCallbacks
 {
@@ -237,30 +236,29 @@ struct BGModuleWrap
  signature.
 *>
 module bindgen::bgstr;
-import bindgen::impl::api @public;
 
-fn bool is_between(String name, String bound_1, String bound_2) => api::strIsBetween(name, bound_1, bound_2);
+fn bool is_between(String name, String bound_1, String bound_2) @extern("bgstr_is_between");
 
-fn String snake_to_camel(String str, Allocator alloc) => api::strSnakeToCamel(str, alloc);
-fn String snake_to_pascal(String str, Allocator alloc) => api::strSnakeToPascal(str, alloc);
-fn String snake_to_screaming(String str, Allocator alloc) => api::strSnakeToScreaming(str, alloc);
+fn String snake_to_camel(String str, Allocator alloc) @extern("bgstr_snake_to_camel");
+fn String snake_to_pascal(String str, Allocator alloc) @extern("bgstr_snake_to_pascal");
+fn String snake_to_screaming(String str, Allocator alloc) @extern("bgstr_snake_to_screaming");
 
-fn String pascal_to_screaming(String str, Allocator alloc) => api::strPascalToScreaming(str, alloc);
-fn String pascal_to_snake(String str, Allocator alloc) => api::strPascalToSnake(str, alloc);
-fn String pascal_to_camel(String str, Allocator alloc) => api::strPascalToCamel(str, alloc);
+fn String pascal_to_screaming(String str, Allocator alloc) @extern("bgstr_pascal_to_screaming");
+fn String pascal_to_snake(String str, Allocator alloc) @extern("bgstr_pascal_to_snake");
+fn String pascal_to_camel(String str, Allocator alloc) @extern("bgstr_pascal_to_camel");
 
-fn String camel_to_screaming(String str, Allocator alloc) => api::strCamelToScreaming(str, alloc);
-fn String camel_to_snake(String str, Allocator alloc) => api::strCamelToSnake(str, alloc);
-fn String camel_to_pascal(String str, Allocator alloc) => api::strCamelToPascal(str, alloc);
+fn String camel_to_screaming(String str, Allocator alloc) @extern("bgstr_camel_to_screaming");
+fn String camel_to_snake(String str, Allocator alloc) @extern("bgstr_camel_to_snake");
+fn String camel_to_pascal(String str, Allocator alloc) @extern("bgstr_camel_to_pascal");
 
-fn String screaming_to_snake(String str, Allocator alloc) => api::strScreamingToSnake(str, alloc);
-fn String screaming_to_camel(String str, Allocator alloc) => api::strScreamingToCamel(str, alloc);
-fn String screaming_to_pascal(String str, Allocator alloc) => api::strScreamingToPascal(str, alloc);
+fn String screaming_to_snake(String str, Allocator alloc) @extern("bgstr_screaming_to_snake");
+fn String screaming_to_camel(String str, Allocator alloc) @extern("bgstr_screaming_to_camel");
+fn String screaming_to_pascal(String str, Allocator alloc) @extern("bgstr_screaming_to_pascal");
 
-fn String mixed_to_camel(String str, Allocator alloc) => api::strMixedToCamel(str, alloc);
-fn String mixed_to_screaming(String str, Allocator alloc) => api::strMixedToScreaming(str, alloc);
-fn String mixed_to_snake(String str, Allocator alloc) => api::strMixedToSnake(str, alloc);
-fn String mixed_to_pascal(String str, Allocator alloc) => api::strMixedToPascal(str, alloc);
+fn String mixed_to_camel(String str, Allocator alloc) @extern("bgstr_mixed_to_camel");
+fn String mixed_to_screaming(String str, Allocator alloc) @extern("bgstr_mixed_to_screaming");
+fn String mixed_to_snake(String str, Allocator alloc) @extern("bgstr_mixed_to_snake");
+fn String mixed_to_pascal(String str, Allocator alloc) @extern("bgstr_mixed_to_pascal");
 
 macro bool String.is_between(String str, String a, String b) => is_between(str, a, b);
 

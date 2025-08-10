@@ -1,7 +1,7 @@
 
-// TODO: move everything to 'bindgen::impl::misc'
-module bindgen::impl::algo @private;
-import bindgen::impl @public; 
+// TODO: move everything to 'bgimpl::misc'
+module bgimpl::algo;
+import bgimpl; 
 import std::collections::list, clang;
 
 faultdef ERROR;

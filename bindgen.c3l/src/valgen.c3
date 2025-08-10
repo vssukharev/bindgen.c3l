@@ -1,6 +1,6 @@
 
-module bindgen::impl::valgen @private;
-import bindgen::bg, bindgen::impl @public;
+module bgimpl::valgen;
+import bindgen::bg, bgimpl;
 
 <*
  Applies fun to a name for value generation and returns a corresponding result

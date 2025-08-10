@@ -1,6 +1,6 @@
 
-module bindgen::impl::misc @private;
-import bindgen::impl @public;
+module bgimpl::misc;
+import bgimpl;
 import clang, std::io;
 
 faultdef NOT_BASIC_TYPE;

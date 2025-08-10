@@ -1,6 +1,6 @@
 
-module bindgen::impl::check @private;
-import bindgen::bg, bindgen::impl @public;
+module bgimpl::check;
+import bindgen::bg;
 
 fn bool apply(
   String s, 

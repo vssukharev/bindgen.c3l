@@ -1,7 +1,6 @@
 
-module bindgen::impl::api @private;
-import bindgen::bg @public;
-import bindgen::impl @public; 
+module bgimpl;
+import bindgen::bg;
 import clang, std::collections::map, std::io, std::os::process;
 
 const TRANSLATION_UNIT_PARSE_FLAGS =

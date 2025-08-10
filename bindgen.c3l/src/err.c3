@@ -1,6 +1,6 @@
 
-module bindgen::impl::err @private;
-import bindgen::bg, bindgen::impl @public;
+module bgimpl::err;
+import bindgen::bg, bgimpl;
 import clang, std::io;
 
 const ANSI_RED = "\e[31m";

@@ -1,6 +1,6 @@
 
-module bindgen::impl::ttor @private;
-import bindgen::impl @public;
+module bgimpl::ttor;
+import bgimpl;
 import std::io, clang, std::collections::list;
 
 <*
