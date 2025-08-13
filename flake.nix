@@ -15,9 +15,11 @@
     let 
       pkgs = import inputs.nixpkgs { inherit system; };
       c3c = inputs.c3c.packages.${system}.default;
+      c3c-debug = inputs.c3c.packages.${system}.c3c-debug;
     in 
     {
       devShells.default = pkgs.callPackage ./shell.nix { inherit c3c; };
+      devShells.c3c-debug = pkgs.callPackage ./shell.nix { c3c = c3c-debug; };
     }
   );
 }
