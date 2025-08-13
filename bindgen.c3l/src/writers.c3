@@ -3,8 +3,6 @@ module bgimpl::wter;
 import bindgen::bg, bgimpl;
 import std::io, clang;
 
-const INDENT @local = "  ";
-
 <*
  Writes aliasing typedef to 'out'
  @returns "Number of bytes written"
@@ -359,6 +357,8 @@ fn usz? fields(
 }
 
 // ------- Helpers
+
+const INDENT = "  ";
 
 fn usz? printIndent( 
   File* out, 

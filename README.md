@@ -20,6 +20,7 @@ This library is distributed with source code so you don't have to additionally w
 1. Install dependencies.
 2. Copy `bindgen.c3l` directory the dependency directory of your c3 project (`lib` by default).
 3. You can now set `bindgen` dependency for any project target by doing, for example (for more information plesase refer to C3 wiki):
+
 ```json
 {
   "targets": {
@@ -29,11 +30,15 @@ This library is distributed with source code so you don't have to additionally w
   },
 }
 ```
+
 4. Import module `bindgen` into your project:
+
 ```c3
 import bindgen;
 ```
+
 5. The most basic file if we want to translate a single file *foo.h* to *foo.c3i* without any additional work:
+
 ```c3
 import bindgen;
 
@@ -47,7 +52,7 @@ fn void main() {
 
 ## API
 
-All API functions are concentrated in *bindgen.c3l/bindgen.c3* file with more detailed documentation.
+All API functions are concentrated in [bindgen.c3i](./bindgen.c3l/bindgen.c3i) file with more detailed documentation.
 
 ### Main API
 

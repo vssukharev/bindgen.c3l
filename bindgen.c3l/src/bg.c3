@@ -3,18 +3,6 @@ module bgimpl;
 import bindgen::bg;
 import clang, std::collections::map, std::io, std::os::process;
 
-const TRANSLATION_UNIT_PARSE_FLAGS =
-    clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
-  | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
-  | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
-  | clang::TRANSLATION_UNIT_KEEP_GOING
-  // | clang::TRANSLATION_UNIT_SINGLE_FILE_PARSE
-  // The following flag cause catastrophic results. For example,
-  // if we have something like `#ifdef __cplusplus` in header file,
-  // who knows what code will be under this option
-  // | clang::TRANSLATION_UNIT_RETAIN_EXCLUDED_CONDITIONAL_BLOCKS
-;
-
 fn void? translateHeader(
   String header_name, 
   BGOptions opts,
@@ -73,7 +61,7 @@ fn void? translateHeader(
   }
 
   CXTranslationUnit tu;
-  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
   err::checkCode(code)!;
 
   // Print diagnostics
@@ -134,4 +122,17 @@ fn void? translateHeader(
   //   allocator::free(tmem, zstr);
   // }
 }
+
+const TRANSLATION_UNIT_PARSE_FLAGS =
+    clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
+  | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
+  | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
+  | clang::TRANSLATION_UNIT_KEEP_GOING
+  // | clang::TRANSLATION_UNIT_SINGLE_FILE_PARSE
+  // The following flag cause catastrophic results. For example,
+  // if we have something like `#ifdef __cplusplus` in header file,
+  // who knows what code will be under this option
+  // | clang::TRANSLATION_UNIT_RETAIN_EXCLUDED_CONDITIONAL_BLOCKS
+;
+
 

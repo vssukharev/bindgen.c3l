@@ -1,5 +1,5 @@
 <* TODO: clean up it a bit *>
-module bgimpl::bgstr;
+module bgimpl;
 import bgimpl::err;
 import std::collections::list;
 import std::collections::map;
@@ -72,20 +72,16 @@ fn String screamingToCamel(
   String str, 
   Allocator alloc) 
 @export("bgstr_screaming_to_camel")
-=> @pool() 
 {
-  ListString tokens = parseSnakeCase(tmem, str);
-  return convertToCamel(alloc, &tokens);
+  return snakeToCamel(str, alloc) @inline;
 }
 
 fn String screamingToPascal(
   String str, 
   Allocator alloc) 
 @export("bgstr_screaming_to_pascal")
-=> @pool() 
 {
-  ListString tokens = parseSnakeCase(tmem, str);
-  return convertToPascal(alloc, &tokens);
+  return snakeToPascal(str, alloc) @inline;
 }
 
 fn String screamingToSnake(
@@ -206,7 +202,9 @@ fn String mixedToPascal(
   return convertToPascal(alloc, &tokens);
 }
 
-/// ------------------- Local token converters -------------------
+/// ------------------- Private token converters -------------------
+
+module bgimpl @private;
 
 macro String convertToSnakeOrScreaming(
   Allocator alloc, 
@@ -309,7 +307,7 @@ fn String convertToCamel(Allocator alloc, ListString* tokens) =>
 fn String convertToPascal(Allocator alloc, ListString* tokens) => 
   convertToCamelOrPascal(alloc, tokens, $to_camel: false);
 
-/// ------------------- Local parsers -------------------
+/// ------------------- Private parsers -------------------
 
 <*
  Example: __one_two__three_ -> [ __ one two three _ ]

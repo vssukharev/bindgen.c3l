@@ -67,7 +67,7 @@ fn String? ctype(
   bool is_func_param = false) 
 => @pool() 
 {
-  TypeTokens tokens = algo::getTypeTokens(tmem, type);
+  TypeTokens tokens = misc::getTypeTokens(tmem, type);
 
   CXType base_type = misc::getBaseType(type);
 
@@ -209,7 +209,7 @@ fn String? tokensUnderCursor(
         }
 
       case clang::TOKEN_LITERAL:
-        res.append(algo::convertLiteral(tmem, token_str));
+        res.append(misc::convertLiteral(tmem, token_str));
 
       case clang::TOKEN_KEYWORD:
       case clang::TOKEN_PUNCTUATION:

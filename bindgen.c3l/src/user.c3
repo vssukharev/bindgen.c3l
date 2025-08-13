@@ -8,7 +8,10 @@ import std::collections::list;
  @param extra_opts : "Additional options for clang compiler"
  @return "List{ZString}, which and each element of which should be then freed via allocator"
 *>
-fn List{ZString}? getParseCommandArgs(Allocator allocator, String[] extra_opts) => @pool() 
+fn List{ZString}? getParseCommandArgs(
+  Allocator allocator, 
+  String[] extra_opts) 
+=> @pool() 
 {
   const usz RESERVED_ARGS = 4;
 
@@ -30,7 +33,9 @@ fn List{ZString}? getParseCommandArgs(Allocator allocator, String[] extra_opts) 
 <*
  @param res 
 *>
-fn void? getLibcHeadersLoc(List{ZString}* res) => @pool()
+fn void? getLibcHeadersLoc(
+  List{ZString}* res) 
+=> @pool()
 {
   SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
   proc.join()!; // join the process to close stdin of clang

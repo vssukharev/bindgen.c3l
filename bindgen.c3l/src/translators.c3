@@ -1,4 +1,10 @@
 
+module bgimpl::misc;
+import clang;
+
+// --- WHAT WILL WORK
+// macro CXToken[].@foreach(self; @body(/*...*/)) {}
+
 module bgimpl::ttor;
 import bgimpl;
 import std::io, clang, std::collections::list;
@@ -288,21 +294,22 @@ fn usz? funcMacroDef(
   clang::tokenize(tu, sr, &tokens_ptr, &tokens_len);
   defer clang::disposeTokens(tu, tokens_ptr, tokens_len);
 
-  // Make a small tweak here. TODO: get rid of it
-  if OUTER: (true) {
-    // First token is the name of a macro and second token is left brace so start from the third one
-    misc::@iterateTokens(tokens_ptr[2..tokens_len-1], tu; CXToken* token, String token_str) {
-      if (token_str == ")") break OUTER;
-      if (token_str != ",") {
-        String? trans_token_str = trans::apply(token_str, vd.trans_fns.variable, tmem);
-        if (catch trans_token_str) {
-          err::warn(vd.no_verbose, "Can't translate functional macro '%s' as it's parameter '%s' is ignored", macro_str, token_str);
-          return 0;
-        }
+  foreach (&token : tokens_ptr[2..tokens_len-1]) {
+    CXString token_spell = clang::getTokenSpelling(tu, *token);
+    defer clang::disposeString(token_spell);
+    String token_str = misc::convStr(token_spell);
 
-        params.push(trans_token_str);
+    // First token is the name of a macro and second token is left brace so start from the third one
+    if (token_str == ")") break;
+    if (token_str != ",") {
+      String? trans_token_str = trans::apply(token_str, vd.trans_fns.variable, tmem);
+      if (catch trans_token_str) {
+        err::warn(vd.no_verbose, "Can't translate functional macro '%s' as it's parameter '%s' is ignored", macro_str, token_str);
+        return 0;
       }
-    };
+
+      params.push(trans_token_str);
+    }
   }
 
   valgen::moduleWrap(vd, macro_str);
@@ -509,7 +516,7 @@ macro usz? recordDecl(
   // Translate record fields and store them into vd_rec.fields
   if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_rec) != 0) return 0;
 
-  C3Fields? c3_fields = algo::getC3Fields(tmem, vd_rec.fields);
+  C3Fields? c3_fields = misc::getC3Fields(tmem, vd_rec.fields);
   if (catch c3_fields) {
     $if $is_union:
       err::warn(vd.no_verbose, "Can't translate bit fields within union '%s', skipping...", orig_rec_name);
@@ -556,8 +563,7 @@ fn usz? pfnType(
   CXType ret_type = clang::getResultType(clang::getPointeeType(type));
   String? trans_ret_type_str = trans::ctype(ret_type, vd);
 
-  if (catch trans_ret_type_str)
-  {
+  if (catch trans_ret_type_str) {
     CXString ret_type_spell = clang::getTypeSpelling(ret_type);
     defer clang::disposeString(ret_type_spell);
     String ret_type_str = misc::convStr(ret_type_spell);

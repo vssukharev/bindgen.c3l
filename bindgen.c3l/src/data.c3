@@ -1,41 +1,56 @@
 
 module clang;
 
-macro uint CXType.hash(&self) => clang::hashCursor(clang::getTypeDeclaration(*self));
-macro bool CXType.equals(CXType a, CXType b) @operator(==) => (bool) clang::equalTypes(a, b);
+macro uint CXType.hash(&self) => 
+  clang::hashCursor(clang::getTypeDeclaration(*self));
+
+macro bool CXType.equals(CXType a, CXType b) @operator(==) => 
+  (bool) clang::equalTypes(a, b);
 
 module bgimpl;
-import bindgen::bg;
-import std::io, std::collections::map, std::collections::list, clang;
-
-// --- Types table
+import bindgen::bg,
+       std::io, 
+       std::collections::map, 
+       std::collections::list, 
+       clang;
 
 <*
  Types translation table maps CXType to C3 name. 
 *>
 alias TypesTable = HashMap{CXType, String};
 
-
-// --- Helper Structures
-
-alias VarDeclList = List{VarDecl};
-
+<*
+ Represents variable declaration meaning:
+ <type> <name>;
+*>
 struct VarDecl
 {
   String type;
   String name;
 }
 
+<*
+ Represents kind of fields in C.
+ NORMAL - regular field
+ BIT - bit field
+ STRUCT - inlined struct
+ UNION - inlined union
+ ENUM - inlined enum
+*>
 enum CFieldKind : char
 {
   NORMAL,
+  BIT,
   STRUCT,
   UNION,
-  BIT,
   ENUM,
 }
 
-struct CFieldBit
+<*
+ Represents bit fields meaning:
+ <type> <name> : <width>;
+*>
+struct CBitField
 {
   String  type;
   String  name;
@@ -43,9 +58,11 @@ struct CFieldBit
 }
 
 <*
+ Represents anonymous structure meaning:
+
  name : "Optional, can be zero string"
 *>
-struct CFieldAnon
+struct CInlinedField
 {
   String  name;
   CFields fields;
@@ -58,9 +75,9 @@ struct CFields
 {
   List{CFieldKind}   kinds;
   List{VarDecl}     norm;
-  List{CFieldBit}   bit;
-  List{CFieldAnon}  structs;
-  List{CFieldAnon}  unions;
+  List{CBitField}   bit;
+  List{CInlinedField}  structs;
+  List{CInlinedField}  unions;
 }
 
 macro void CFields.init(&self, Allocator alloc)
@@ -256,7 +273,7 @@ struct GlobalVisitData
 *>
 struct FuncVisitData
 {
-  VarDeclList       params;
+  List{VarDecl}     params;
   Allocator         allocator;
   GlobalVisitData*  g;
 }

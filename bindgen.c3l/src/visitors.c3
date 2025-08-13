@@ -101,15 +101,11 @@ fn CXChildVisitResult enumDecl(
   clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
 
   // If we get empty rhs, evaluate value
-  if (vd_const.val == EMPTY_TOKENS)
-  {
-    if (vd.is_unsigned)
-    {
+  if (vd_const.val == EMPTY_TOKENS) {
+    if (vd.is_unsigned) {
       CULongLong ival = clang::getEnumConstantDeclUnsignedValue(cursor);
       vd_const.val = string::tformat("%s", ival);
-    }
-    else
-    {
+    } else {
       CLongLong ival = clang::getEnumConstantDeclValue(cursor);
       vd_const.val = string::tformat("%s", ival);
     }
@@ -289,9 +285,9 @@ fn CXChildVisitResult fields(
     } else {
       switch (kind) {
         case STRUCT:
-          ttor::recordDecl(vd.g, cursor, false);
+          ttor::structDecl(vd.g, cursor);
         case UNION:
-          ttor::recordDecl(vd.g, cursor, true);
+          ttor::unionDecl(vd.g, cursor);
         default:
           unreachable();
       }
