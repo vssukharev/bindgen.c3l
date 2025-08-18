@@ -1,14 +1,15 @@
-
 <*
  This module contains independent pure helper functions
  or macros with minimal logic, which are frequently 
  used across the codebase.
 *>
 module bgimpl::misc;
-import bgimpl, clang, std::collections::list;
+import bgimpl, 
+       clang, 
+       std::collections::list;
 
 // --- WHAT WON'T WORK
-// macro int[].@foreach(self) {}
+// macro int.@foreach(self) {}
 
 <*
  Convert CXString to regular C3 String
@@ -30,7 +31,7 @@ fn bool isCursorForwardDeclared(CXCursor cursor) @inline => !clang::isCursorDefi
 
 
 <*
- TODO: documentation
+ Helper function for clang functionality
 *>
 fn bool isTypeIncomplete(CXType type) @inline => clang::getSizeOf_Type(type) == clang::TYPE_LAYOUT_ERROR_INCOMPLETE;
 
@@ -79,7 +80,8 @@ fn usz getTopChildrenNumber(
 
 
 <*
- TODO: documentation
+ If type is a nested pointer or array, gets rid
+ of these qulifiers and returns the basic type.
 *>
 fn CXType getBaseType(
   CXType type) 

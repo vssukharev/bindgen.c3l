@@ -1,6 +1,8 @@
 
 module bgimpl::valgen;
-import bindgen::bg, bgimpl;
+import bindgen::bg, 
+       bgimpl;
+
 
 <*
  Applies fun to a name for value generation and returns a corresponding result
@@ -18,6 +20,7 @@ macro apply(
   return res;
 }
 
+
 <*
  Gets write attributes for the name and allocates them via allocator
 *>
@@ -33,6 +36,7 @@ fn WriteAttrs getWriteAttrs(
   return res;
 }
 
+
 <*
  Writes a new module section for the name
  if needed based on gen_fns.module_wrap. 
@@ -42,7 +46,7 @@ fn WriteAttrs getWriteAttrs(
 fn void moduleWrap(
   GlobalVisitData* vd, 
   String name) 
-=> @pool()
+  => @pool()
 {
   BGModuleWrap curr = valgen::apply(tmem, name, vd.gen_fns.module_wrap);
 

@@ -1,11 +1,22 @@
-
+<*
+ The module contains writer functions.
+ Each such function changes WriteState,
+ writes it's formatted parameters to
+ out without extra logic and returns
+ the number of bytes written.
+*>
 module bgimpl::wter;
-import bindgen::bg, bgimpl;
-import std::io, clang;
+import bindgen::bg, 
+       bgimpl, 
+       std::io, 
+       clang;
+
+
+const INDENT = "  ";
+
 
 <*
- Writes aliasing typedef to 'out'
- @returns "Number of bytes written"
+ Aliasing typedef
 *>
 fn usz? typedefAlias(
   File* out,
@@ -22,9 +33,9 @@ fn usz? typedefAlias(
   return acc;
 }
 
+
 <*
- Writes distinct typedef to 'out'
- @returns "Number of bytes written"
+ Distinct typedef
 *>
 fn usz? typedefDist(
   File* out,
@@ -41,9 +52,9 @@ fn usz? typedefDist(
   return acc;
 }
 
+
 <*
- Writes function pointer typedef to 'out'
- @returns "Number of bytes written"
+ Function pointer typedef
 *>
 fn usz? typedefFunc(
   File* out,
@@ -75,9 +86,9 @@ fn usz? typedefFunc(
   return acc;
 }
 
+
 <*
- Writes global constant to 'out'
- @returns "Number of bytes written"
+ Constant declaration
 *>
 fn usz? constDecl(
   File* out,
@@ -105,9 +116,9 @@ fn usz? constDecl(
   return acc;
 }
 
+
 <*
- Writes global variable to 'out'
- @returns "Number of bytes written"
+ Global variable declaration
 *>
 fn usz? varDecl(
   File* out,
@@ -131,9 +142,9 @@ fn usz? varDecl(
   return acc;
 }
 
+
 <*
- Writes type declaration enum to 'out'
- @returns "Number of bytes written"
+ Enum declaration without it's underlying constants
 *>
 fn usz? enumDecl(
   File* out,
@@ -148,9 +159,9 @@ fn usz? enumDecl(
   return io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
 }
 
+
 <*
- Writes function to 'out'
- @returns "Number of bytes written"
+ Function declaration
 *>
 fn usz? func(
   File* out,
@@ -181,9 +192,9 @@ fn usz? func(
   return acc;
 }
 
+
 <*
- Writes function to 'out'
- @return "Number of bytes written"
+ Functional macro
 *>
 fn usz? funcMacro(
   File* out,
@@ -214,9 +225,9 @@ fn usz? funcMacro(
   return acc;
 }
 
+
 <*
- Writes module name to 'out'
- @returns "Number of bytes written"
+ Module section statement
 *>
 fn usz? moduleHead(
   File* out,
@@ -230,18 +241,25 @@ fn usz? moduleHead(
   return io::fprintfn(out, "\nmodule %s%s;", module_name, attribs);
 }
 
+
+<*
+ Import statemenet 
+*>
 fn usz? importModule(
   File* out,
   WriteState* state,
-  String module_name)
+  String to_import)
 @maydiscard
 {
   state.kind = IMPORT;
 
-  return io::fprintfn(out, "import %s;", module_name);
+  return io::fprintfn(out, "import %s;", to_import);
 }
 
 
+<*
+ Struct declaration
+*>
 fn usz? structDecl(
   File* out,
   WriteState* state,
@@ -277,6 +295,9 @@ fn usz? structDecl(
 }
 
 
+<*
+ Union declaration
+*>
 fn usz? unionDecl(
   File* out,
   WriteState* state,
@@ -312,6 +333,10 @@ fn usz? unionDecl(
 }
 
 
+<*
+ Helper function for wter::structDecl and wter::unionDecl,
+ which writes record fields
+*>
 fn usz? fields(
   File* out,
   WriteState* state,
@@ -334,10 +359,10 @@ fn usz? fields(
         acc += printIndent(out, indent_level);
         acc += io::fprintfn(out, "bitstruct : %s {", fields.bit[index].under_type)!;
 
-        foreach (BitstructMember bitm : fields.bit[index].fields)
+        foreach (C3BitstructField bitf : fields.bit[index].fields)
         {
           acc += printIndent(out, indent_level + 1);
-          acc += io::fprintfn(out, "%s %s : %s..%s;", bitm.type, bitm.name, bitm.from, bitm.to)!;
+          acc += io::fprintfn(out, "%s %s : %s..%s;", bitf.type, bitf.name, bitf.from, bitf.to)!;
         }
 
         acc += printIndent(out, indent_level);
@@ -356,10 +381,10 @@ fn usz? fields(
   return acc;
 }
 
-// ------- Helpers
 
-const INDENT = "  ";
-
+<*
+ Helper printer
+*>
 fn usz? printIndent( 
   File* out, 
   usz indent_level = 1)
@@ -369,6 +394,10 @@ fn usz? printIndent(
   return acc;
 }
 
+
+<*
+ Helper printer
+*>
 fn usz? printLines(
   File* out,
   usz lines_number = 1)

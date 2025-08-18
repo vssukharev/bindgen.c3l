@@ -1,18 +1,33 @@
+<*
+ The module contains translator functions.
+ Each such function treats CXCursor declaration,
+ translates it according to it's specification
+ and writes it to out.
 
+ Translators of top-level declarations also support
+ module wrapping.
+
+ All translators support adding custom attributes to
+ the result of translation based on user functions.
+
+ All translators return 0 if error occured.
+*>
 module bgimpl::ttor;
-import bgimpl;
-import std::io, clang, std::collections::list;
+import bgimpl,
+       std::io, 
+       clang, 
+       std::collections::list;
 
 
 <*
- Translates global variable declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL : "Cursor must point to variable declaration"
- @return "Number of bytes written"
+ Global variable or const declaration
+ @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL
 *>
 fn usz? varDecl(
   GlobalVisitData* vd,
   CXCursor cursor)
-  @maydiscard => @pool() 
+  @maydiscard 
+  => @pool() 
 {
   CXType type = clang::getCursorType(cursor);
 
@@ -56,9 +71,8 @@ fn usz? varDecl(
 
 
 <*
- Translates global constant declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL : "Cursor must point to variable declaration"
- @return "Number of bytes written"
+ Global constant declaration
+ @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL
 *>
 fn usz? constDecl(
   GlobalVisitData* vd, 
@@ -81,23 +95,20 @@ fn usz? constDecl(
   };
 
   // If value is not generated manually, visit tokens.
-  if (vd_const.val == "")
-  {
+  if (vd_const.val == "") {
     // Visit rhs of var declaration and translate 
     // there everything, that is identifier
     clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
   }
 
   String? name = trans::apply(cursor_str, vd.trans_fns.constant);
-  if (catch name)
-  {
+  if (catch name) {
     err::warn(vd.no_verbose, "Constant '%s' is ignored", cursor_str);
     return 0;
   }
 
   String? trans_type_str = trans::ctypeWithPFN(cursor, vd);
-  if (catch trans_type_str)
-  {
+  if (catch trans_type_str) {
     CXString type_spell = clang::getTypeSpelling(clang::getCursorType(cursor));
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
@@ -112,18 +123,12 @@ fn usz? constDecl(
 
 
 <*
- Translates enumDecl declaration and writes it to 'vd.out'
- @param [out] out_name : "The resulting name of an enum type. Might be needed as enum can be anonymous: in that case this variable is set to the underlying type name"
- @param out_alloc : "Allocator for allocating 'out_name'"
-
- @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL : "Cursor must point to enum declaration"
- @return "Number of bytes written"
+ Enum declaration and all underlying constants
+ @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL
 *>
 fn usz? enumDecl(
   GlobalVisitData* vd, 
-  CXCursor cursor,
-  String* out_name = null,
-  Allocator out_alloc = tmem) 
+  CXCursor cursor) 
   @maydiscard => @pool() 
 {
   CXType enum_type = clang::getCursorType(cursor);
@@ -183,22 +188,20 @@ fn usz? enumDecl(
     vd_enum.enum_name = tmp;
   }
 
-  if (out_name != null) *out_name = vd_enum.enum_name.copy(out_alloc);
-
   clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
   return acc;
 }
 
 
 <*
- Translates functions and writes it to 'vd.out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL : "Cursor must point to function declaration"
- @returns "Number of bytes written"
+ Function delcaration
+ @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL
 *>
 fn usz? func(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-  @maydiscard => @pool()
+  @maydiscard 
+  => @pool()
 {
   FuncVisitData vd_func = {
     .g = vd,
@@ -215,22 +218,19 @@ fn usz? func(
   String func_str = misc::convStr(func_spell);
 
   String? trans_func_str = trans::apply(func_str, vd.trans_fns.func);
-  if (catch trans_func_str)
-  {
+  if (catch trans_func_str) {
     err::warn(vd.no_verbose, "Function '%s' is ignored", func_str);
     return 0;
   }
 
   CXType ret_type = clang::getCursorResultType(cursor); 
-  if (misc::isTypePFN(ret_type))
-  {
+  if (misc::isTypePFN(ret_type)) {
     err::warn(vd.no_verbose, "Function '%s' returns a pointer to function, which I can't translate, skipping...", func_str);
     return 0;
   }
 
   String? trans_ret_type_str = trans::ctype(ret_type, vd);
-  if (catch trans_ret_type_str)
-  {
+  if (catch trans_ret_type_str) {
     CXString type_spell = clang::getTypeSpelling(ret_type);
     defer clang::disposeString(type_spell);
     String type_str = misc::convStr(type_spell);
@@ -245,10 +245,10 @@ fn usz? func(
   return wter::func(vd.out, &vd.write_state, vd_func.params.array_view(), trans_ret_type_str, func_str, trans_func_str, attrs);
 }
 
+
 <*
- Translates macro definition and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION : "Cursor must point to macro definition"
- @returns "Number of bytes written"
+ Macro definition
+ @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION
 *>
 fn usz? macroDef(
   GlobalVisitData* vd, 
@@ -257,12 +257,12 @@ fn usz? macroDef(
 {
   return clang::isMacroFunctionLike_Cursor(cursor) ? 
     ttor::funcMacroDef(vd, cursor) :
-    ttor::constMacroDef(vd, cursor);
+    ttor::constMacroDef(vd, cursor) @inline;
 }
 
 
 <*
- Translates functional macro without generating it's body
+ Functional macro definition
 *>
 fn usz? funcMacroDef(
   GlobalVisitData* vd,
@@ -320,8 +320,7 @@ fn usz? funcMacroDef(
 
 
 <*
- Translates macro which is not function-like, e.g.:
- `#define MY_MACRO 1` -> `const MY_MACRO = 1;`
+ Constant macro definition
 *>
 fn usz? constMacroDef(
   GlobalVisitData* vd, 
@@ -362,9 +361,8 @@ fn usz? constMacroDef(
 
 
 <*
- Translates alias declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL : "Cursor must point to typedef declaration"
- @returns "Number of bytes written"
+ Typedef declaration
+ @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL
 *>
 fn usz? typedefDecl(
   GlobalVisitData* vd, 
@@ -404,7 +402,7 @@ fn usz? typedefDecl(
       return 0;
     }
 
-    if (!vd_inner.is_forward_declared && trans_type_str == under_type_name) {
+    if (!vd_inner.is_incomplete && trans_type_str == under_type_name) {
       return 0;
     } else {
       return wter::typedefAlias(vd.out, &vd.write_state, trans_type_str, under_type_name, attrs);
@@ -414,9 +412,8 @@ fn usz? typedefDecl(
 
 
 <*
- Translates structure declaration and writes it to 'out'
- @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL : "Cursor must point to structure declaration"
- @returns "Number of bytes written"
+ Structure declaration
+ @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL
 *>
 fn usz? structDecl(
   GlobalVisitData* vd, 
@@ -428,9 +425,8 @@ fn usz? structDecl(
 
 
 <*
- Union declaration and writes it to 'out'
- @require  clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL : "Cursor must point to union declaration"
- @returns "Number of bytes written"
+ Union declaration
+ @require  clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL 
 *>
 fn usz? unionDecl(
   GlobalVisitData* vd, 
@@ -442,16 +438,12 @@ fn usz? unionDecl(
 
 
 <*
- @param $is_union : "Made to avoid code repeatance"
- @param [out] out_name : "The resulting written name of a record. Must be freed after use via an allocator"
- @param out_alloc : "Allocator, which allocates 'out_name'"
+ Both struct and union declaration helper macro
 *>
 macro usz? recordDecl(
   GlobalVisitData* vd,
   CXCursor cursor, 
-  bool $is_union,
-  String* out_name = null,
-  Allocator out_alloc = tmem)
+  bool $is_union)
   @maydiscard => @pool()
 {
   CXType rec_type = clang::getCursorType(cursor);
@@ -536,9 +528,6 @@ macro usz? recordDecl(
     $endif
   }
 
-  // Write to out_name if needed
-  if (out_name != null) *out_name = rec_name.copy(out_alloc);
-
   valgen::moduleWrap(vd, orig_rec_name);
   $if $is_union:
     return wter::unionDecl(vd.out, &vd.write_state, rec_name, &c3_fields, 0, attrs);
@@ -548,13 +537,17 @@ macro usz? recordDecl(
 }
 
 
+<*
+ Pointer to function type (not top-level declaration)
+*>
 fn usz? pfnType(
   GlobalVisitData* vd, 
   String name,
   CXType type, 
   CXCursor cursor,
   WriteAttrs attribs = {}) 
-  @maydiscard => @pool()
+  @maydiscard 
+  => @pool()
 {
   FuncVisitData vd_func = {
     .g = vd,
@@ -584,3 +577,4 @@ fn usz? pfnType(
 
   return wter::typedefFunc(vd.out, &vd.write_state, name, trans_ret_type_str, vd_func.params.array_view(), attribs: attribs);
 }
+

@@ -31,7 +31,7 @@ fn String? apply(
 
 
 <*
- Applies 'fun' to 's' String, returns the new 
+ Applies 'fun' to 's', returns the new 
  translated one and caches it into types table 
  with 'key' as key type. String itself is always 
  allocated on the heap and should NOT be freed 
@@ -60,8 +60,10 @@ fn String? capply(
 <*
  Translates type to a string, caching it also.
  It has a special behaviour when translating a function parameter for ABI compatibility:
- int[] -> CInt*; int[]* -> CInt*; int[10] -> CInt[10]* (as function parameter); int[10] ->
- CInt[10] (as structure field or typedef).
+ - int[] -> CInt*
+ - int[]* -> CInt* 
+ - int[10] -> CInt[10]* (as function parameter)
+ - int[10] -> CInt[10] (as structure field or typedef).
 
  @param is_func_param : "Whether this is a type of function parameter (made for arrays)"
 *>
@@ -71,7 +73,7 @@ fn String? ctype(
   bool is_func_param = false) 
   => @pool() 
 {
-  TypeTokens tokens = tparse::getTypeTokens(tmem, type);
+  CTypeTokens tokens = tparse::getTypeTokens(tmem, type);
 
   CXType base_type = misc::getBaseType(type);
 
@@ -88,8 +90,10 @@ fn String? ctype(
   res_dstr.tinit();
 
   // We will never check NAME for previous kind
-  TypeTokenKind prev_kind = NAME;
-  tokens.@foreach(;TypeTokenKind kind, String str) {
+  CTypeTokenKind prev_kind = NAME;
+  tokens.@foreach(;CTypeTokenKind kind, usz str_index) {
+    String str = tparse::convertCTypeTokenToC3(kind, tokens.strs.array_view(), str_index);
+
     switch (kind) {
       case NAME:
         String trans_str = trans::basicType(str) ?? trans::capply(str, base_type, vd.trans_fns.type, &vd.types_table)!;
@@ -149,7 +153,7 @@ fn String? ctypeWithPFN(
 
 <*
  Translates tokens under cursor.
- @return "A string which then must be freed"
+ @return "String, allocated via alloc"
 *>
 fn String? tokensUnderCursor(
   Allocator alloc, 
@@ -270,13 +274,14 @@ fn String literal(
 
 
 <*
- Returns fault if type is not basic
+ Maps type String to it's common representation in C3.
+ If type is not mappable, throws an error.
  @return? trans::NOT_BASIC_TYPE
 *>
 fn String? basicType(
-  String str)
+  String type)
 {
-  switch (str) {
+  switch (type) {
     case "void":          return "void";
     case "_Bool":         return "bool";
     case "ptrdiff_t":     return "isz";

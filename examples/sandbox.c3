@@ -1,5 +1,6 @@
 
-import bindgen;
+import bindgen, bgimpl;
+import std::io;
 
 fn void main() 
 {

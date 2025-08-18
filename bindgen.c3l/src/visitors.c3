@@ -1,12 +1,23 @@
-
+<*
+ The module contains visitors for
+ all necessary kinds of declarations.
+ Visitors are usually called from
+ translators and set parameters, neeeded
+ by the ones.
+*>
 module bgimpl::vtor;
-import bindgen::bg, bgimpl;
-import std::io, clang;
+import bindgen::bg, 
+       bgimpl,
+       std::io, 
+       clang;
 
-const EMPTY_TOKENS @local = "";
+
+const EMPTY_TOKENS = "";
+
 
 <*
- Global visitor
+ Visits the whole file and translates all 
+ top-level declarations
 *>
 fn CXChildVisitResult global(
   CXCursor cursor, 
@@ -25,8 +36,7 @@ fn CXChildVisitResult global(
   if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
 
   // If file is not equal to ours and it's not permitted, skip it
-  if (!clang::isEqual_File(cursor_file, vd.cxfile))
-  {
+  if (!clang::isEqual_File(cursor_file, vd.cxfile)) {
     CXString file_spell = clang::getFileName(cursor_file);
     defer clang::disposeString(file_spell);
     String file_str = misc::convStr(file_spell);
@@ -34,8 +44,7 @@ fn CXChildVisitResult global(
     if (!check::apply(file_str, vd.include_file)) return clang::CHILD_VISIT_CONTINUE; 
   }
 
-  switch (cursor_kind)
-  {
+  switch (cursor_kind) {
     case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
     case clang::CURSOR_STRUCT_DECL: ttor::structDecl(vd, cursor);
     case clang::CURSOR_TYPEDEF_DECL: ttor::typedefDecl(vd, cursor);
@@ -48,10 +57,10 @@ fn CXChildVisitResult global(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+
 <*
- Intended to visit global or enum constants.
- Note that vd.current ought to be set to the
- quantity of the children.
+ Constant rhs
+ Sets the rhs value of a constant.
 *>
 fn CXChildVisitResult constDecl(
   CXCursor cursor, 
@@ -62,8 +71,7 @@ fn CXChildVisitResult constDecl(
 
   // When cursor type is a typedef of some other type, one more 
   // child is added to it so skip it
-  if (clang::getCursorKind(cursor) == clang::CURSOR_TYPE_REF)
-  {
+  if (clang::getCursorKind(cursor) == clang::CURSOR_TYPE_REF) {
     return clang::CHILD_VISIT_CONTINUE;
   }
 
@@ -72,8 +80,11 @@ fn CXChildVisitResult constDecl(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+
 <*
- TODO: documentation
+ Enum constants
+ Translates each enum constant and writes 
+ them to global output.
 *>
 fn CXChildVisitResult enumDecl(
   CXCursor cursor, 
@@ -87,9 +98,8 @@ fn CXChildVisitResult enumDecl(
   String cursor_str = misc::convStr(cursor_spell);
   
   String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, tmem);
-  if (catch trans_cursor_str)
-  {
-    err::warn(vd.g.no_verbose, "Enum value '%s' is ignored", cursor_str);
+  if (catch trans_cursor_str) {
+    err::warn(vd.g.no_verbose, "Enum constant '%s' is ignored", cursor_str);
     return clang::CHILD_VISIT_CONTINUE;
   }
   
@@ -117,9 +127,10 @@ fn CXChildVisitResult enumDecl(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+
 <*
- Considered to visit typedef underlying type.
- If it's forward declared, cache it as "void".
+ Typedef underlying type
+ If it's underlying type is incomplete, cache it as "void".
 *>
 fn CXChildVisitResult typedefDecl(
   CXCursor cursor, 
@@ -133,9 +144,9 @@ fn CXChildVisitResult typedefDecl(
   }
 
   TypedefVisitData* vd = (TypedefVisitData*) client_data;
-  vd.is_forward_declared = !clang::isCursorDefinition(cursor) && misc::isTypeIncomplete(vd.under_type);
+  vd.is_incomplete = !clang::isCursorDefinition(cursor) && misc::isTypeIncomplete(vd.under_type);
 
-  if (vd.is_forward_declared) {
+  if (vd.is_incomplete) {
     CXType key = misc::getBaseType(vd.under_type);
     vd.g.types_table[key] = "void";
   }
@@ -143,8 +154,10 @@ fn CXChildVisitResult typedefDecl(
   return clang::CHILD_VISIT_BREAK;
 }
 
+
 <*
- Considered to visit function parameters
+ Function parameters
+ Translate them and push to visit data
 *>
 fn CXChildVisitResult func(
   CXCursor cursor, 
@@ -187,14 +200,17 @@ fn CXChildVisitResult func(
   return clang::CHILD_VISIT_CONTINUE;
 }
 
+
 <*
- Visits fields of either struct or union
+ Fields of either struct or union.
+ If a field declares a type, translates
+ it and write to global output.
 *>
 fn CXChildVisitResult fields(
   CXCursor cursor, 
   CXCursor parent, 
   CXClientData client_data)
-=> @pool()
+  => @pool()
 {
   // TODO: cope with incomplete types!!!
   FieldsVisitData* vd = (FieldsVisitData*) client_data;

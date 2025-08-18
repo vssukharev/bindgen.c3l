@@ -1,12 +1,6 @@
-
-module clang;
-
-macro uint CXType.hash(&self) => 
-  clang::hashCursor(clang::getTypeDeclaration(*self));
-
-macro bool CXType.equals(CXType a, CXType b) @operator(==) => 
-  (bool) clang::equalTypes(a, b);
-
+<*
+ All data types are defined here
+*>
 module bgimpl;
 import bindgen::bg,
        std::io, 
@@ -14,23 +8,8 @@ import bindgen::bg,
        std::collections::list, 
        clang;
 
-<*
- Types translation table maps CXType to C3 name. 
-*>
-alias TypesTable = HashMap{CXType, String};
 
 <*
- Represents variable declaration meaning:
- <type> <name>;
-*>
-struct VarDecl
-{
-  String type;
-  String name;
-}
-
-<*
- Represents kind of fields in C.
  NORMAL - regular field
  BIT - bit field
  STRUCT - inlined struct
@@ -46,6 +25,80 @@ enum CFieldKind : char
   ENUM,
 }
 
+
+<*
+ NORMAL - regular field
+ BITSTRUCT - inlined bitstruct
+ STRUCT - inlined struct
+ UNION - inlined union
+*>
+enum C3FieldKind : char
+{
+  NORMAL,
+  BITSTRUCT,
+  STRUCT,
+  UNION
+}
+
+
+<*
+ NAME - 'struct' or 'MyType'
+ POINTER - *
+ SIZED_ARRAY - [10]
+ UNSIZED_ARRAY  - []
+*>
+enum CTypeTokenKind : char
+{
+  NAME,
+  POINTER,
+  SIZED_ARRAY,  
+  UNSIZED_ARRAY,
+}
+
+
+<*
+ Represents the C3 declaration kind,
+ written to out file
+*>
+enum WriteKind
+{
+  ALIAS, TYPEDEF,
+  FUNC, CONST, 
+  UNION, ENUM,
+  MACRO, MODULE,
+  IMPORT, STRUCT,
+  VAR, BITSTRUCT,
+}
+
+
+<*
+ Represents attributes for C3 declarations
+ has_arg - whether an attr
+*>
+enum WriteAttrKind : char (String str, bool has_arg)
+{
+  PRIVATE = { "@private", false },
+  IF      = { "@if"     , true  },
+}
+
+
+<*
+ Types translation table maps CXType to C3 name. 
+*>
+alias TypesTable = HashMap{CXType, String};
+
+
+<*
+ Represents variable declaration meaning:
+ <type> <name>;
+*>
+struct VarDecl
+{
+  String type;
+  String name;
+}
+
+
 <*
  Represents bit fields meaning:
  <type> <name> : <width>;
@@ -57,69 +110,57 @@ struct CBitField
   usz     width;
 }
 
+
 <*
  Represents anonymous structure meaning:
 
  name : "Optional, can be zero string"
 *>
-struct CInlinedField
+struct CInlinedRecord
 {
   String  name;
   CFields fields;
 }
+
 
 <* 
  kinds.len == sum of *.len 
 *>
 struct CFields
 {
-  List{CFieldKind}   kinds;
-  List{VarDecl}     norm;
-  List{CBitField}   bit;
-  List{CInlinedField}  structs;
-  List{CInlinedField}  unions;
+  List{CFieldKind}      kinds;
+  List{VarDecl}         norm;
+  List{CBitField}       bit;
+  List{CInlinedRecord}  structs;
+  List{CInlinedRecord}  unions;
 }
 
-macro void CFields.init(&self, Allocator alloc)
-{
-  $foreach $member : CFields.membersof:
-    self.$eval($member.nameof).init(alloc);
-  $endforeach
-}
-
-<*
- Iterates through kinds and returns corresponding 
- index for fields depending on the kind
-*>
-macro CFields.@foreach(&self; @body(CFieldKind* kind, usz index))
-{
-  usz[CFieldKind.values.len] counters;
-
-  foreach (i, &k : self.kinds)
-  {
-    @body(k, counters[k.ordinal]);
-    ++counters[k.ordinal];
-  }
-}
-
-enum C3FieldKind : char
-{
-  NORMAL,
-  BITSTRUCT,
-  STRUCT,
-  UNION
-}
 
 <*
  name : "Optional, can be zero string"
 *>
-struct C3FieldAnon
+struct C3InlinedRecord
 {
-  String    name;
   C3Fields  fields;
+  String    name;
 }
 
-struct BitstructMember
+
+<*
+ under_type : "Underlying type of a bitstruct (bitstruct : under_type { ... })"
+*>
+struct C3InlinedBitstruct
+{
+  List{C3BitstructField}  fields;
+  String                  under_type;
+}
+
+
+<*
+ from : "Number of starting bit"
+ to : "Number of ending bit"
+*>
+struct C3BitstructField
 {
   String  type;
   String  name;
@@ -127,127 +168,36 @@ struct BitstructMember
   usz     to;
 }
 
-<*
- under_type : "Underlying type of a bitstruct (bitstruct : under_type { ... })"
-*>
-struct C3FieldBitstruct
-{
-  String                under_type;
-  List{BitstructMember} fields;
-}
 
 <* 
   kinds.len == sum of *.len 
 *>
 struct C3Fields
 {
-  List{C3FieldKind}       kinds;
-  List{VarDecl}           norm;
-  List{C3FieldBitstruct}  bit;
-  List{C3FieldAnon}       structs;
-  List{C3FieldAnon}       unions;
+  List{C3FieldKind}         kinds;
+  List{VarDecl}             norm;
+  List{C3InlinedBitstruct}  bit;
+  List{C3InlinedRecord}     structs;
+  List{C3InlinedRecord}     unions;
 }
 
-macro void C3Fields.init(&self, Allocator alloc)
-{
-  $foreach $member : C3Fields.membersof:
-    self.$eval($member.nameof).init(alloc);
-  $endforeach
-}
 
 <*
- Iterates through kinds and returns corresponding 
- index for fields depending on the kind
+ strs : "Strings, which are unknown at compile time"
 *>
-macro C3Fields.@foreach(&self; @body(C3FieldKind* kind, usz index))
+struct CTypeTokens
 {
-  usz[C3FieldKind.values.len] counters;
-
-  foreach (i, &k : self.kinds)
-  {
-    @body(k, counters[k.ordinal]);
-    ++counters[k.ordinal];
-  }
+  List{CTypeTokenKind} kinds;
+  List{String}         strs;
 }
 
-enum TypeTokenKind : char
-{
-  NAME,           // 'struct' or 'MyType'
-  POINTER,        // *
-  SIZED_ARRAY,    // [10]
-  UNSIZED_ARRAY,  // []
-}
 
-struct TypeTokens
-{
-  List{TypeTokenKind} kinds;
-  List{String}        strs; // everything that is unknown at compile-time
-}
-
-macro void TypeTokens.init(&self, Allocator alloc)
-{
-  self.kinds.init(alloc);
-  self.strs.init(alloc);
-}
-
-macro void TypeTokens.free(&self)
-{
-  self.kinds.free();
-  self.strs.free();
-}
 
 <*
- Iterates through kinds and returns corresponding 
- index for fields depending on the kind
+ Visit data, accesed from any visitor
+
+ cxfile : "Used to ignore nodes from other files "
 *>
-macro TypeTokens.@foreach(&self; @body(TypeTokenKind kind, String str))
-{
-  usz str_counter;
-  usz str_len = self.strs.len();
-  foreach_r (k : self.kinds) {
-    String str;
-    switch (k) {
-      case NAME:
-      case SIZED_ARRAY:
-        str = self.strs[str_len - ++str_counter];
-      case UNSIZED_ARRAY:
-      case POINTER:
-        str = "*";
-    }
-
-    @body(k, str);
-  }
-}
-
-macro void TypeTokens.push(&self, TypeTokenKind $kind, String val = "")
-{
-  self.kinds.push($kind);
-
-  $switch $kind:
-    $case NAME:
-    $case SIZED_ARRAY:
-      self.strs.push(val);
-    $default:
-  $endswitch
-}
-
-enum WriteKind
-{
-  ALIAS, TYPEDEF,
-  FUNC, CONST, 
-  UNION, ENUM,
-  MACRO, MODULE,
-  IMPORT, STRUCT,
-  VAR, BITSTRUCT,
-}
-
-struct WriteState
-{
-  WriteKind kind;
-}
-
-// --- Visit Data
-
 struct GlobalVisitData
 {
   BGTransCallbacks  trans_fns;
@@ -258,7 +208,7 @@ struct GlobalVisitData
 
   TypesTable        types_table;
   File*             out;
-  CXFile            cxfile; // used to ignore nodes from other files 
+  CXFile            cxfile;
   usz               anon_fns_counter;
   WriteState        write_state;
 
@@ -267,6 +217,7 @@ struct GlobalVisitData
     bool            no_verbose;
   }
 }
+
 
 <*
  allocator : "All string are allocated via it"
@@ -277,6 +228,7 @@ struct FuncVisitData
   Allocator         allocator;
   GlobalVisitData*  g;
 }
+
 
 <*
  allocator : "All string are allocated via it"
@@ -291,15 +243,17 @@ struct FieldsVisitData
   usz               current;
 }
 
+
 <*
- is_forward_declared : "Whether the underlying type is forward declared"
+ is_incomplete : "Whether the underlying type is incomplete"
 *>
 struct TypedefVisitData
 {
   GlobalVisitData*  g;
   CXType            under_type;
-  bool              is_forward_declared;
+  bool              is_incomplete;
 }
+
 
 <*
  allocator : "val is allocated via it"
@@ -311,6 +265,7 @@ struct ConstVisitData
   GlobalVisitData*  g;
 }
 
+
 <*
  allocator : "All string are allocated via it"
 *>
@@ -321,71 +276,22 @@ struct EnumVisitData
   bool              is_unsigned;
 }
 
-// --- Writers Data
-
-enum WriteAttrKind : char (String str, bool has_arg)
-{
-  PRIVATE = { "@private", false },
-  IF      = { "@if"     , true  },
-}
 
 <*
- Only kind with kind.has_arg == true can have an arg
+ Writing state, passed to the writers
+*>
+struct WriteState
+{
+  WriteKind kind;
+}
+
+
+<*
+ Only kind with kind.has_arg can have an arg
 *>
 struct WriteAttrs (Printable)
 {
   List{WriteAttrKind} kinds;
   List{String}        args;
 }
-
-/// --- Helper modules
-
-macro WriteAttrs* WriteAttrs.init(
-  &self, 
-  Allocator alloc)
-{
-  self.kinds.init(alloc, 2);
-  self.args.init(alloc, 1);
-  return self;
-}
-
-macro void WriteAttrs.push(
-  &self, 
-  WriteAttrKind $kind, 
-  String val = "")
-{
-  self.kinds.push($kind);
-  $switch $kind:
-    $case IF:
-      self.args.push(val);
-  $endswitch
-}
-
-fn usz? WriteAttrs.to_format(
-  &self, 
-  Formatter* form) 
-@dynamic
-{
-  usz? acc;
-
-  usz i;
-  foreach (k : self.kinds) {
-    if (k.has_arg) {
-      acc += form.printf(" %s(%s)", k.str, self.args[i]);
-      ++i;
-    } else {
-      acc += form.printf(" %s", k.str);
-    }
-  }
-
-  return acc;
-}
-
-fn bool BGModuleWrap.equals(
-  &self, 
-  BGModuleWrap* other)
-{
-  return self.if_condition == other.if_condition;
-}
-
 

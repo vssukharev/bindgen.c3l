@@ -1,17 +1,20 @@
 
 module bgimpl::user;
-import bgimpl;
-import std::os::process, std::io;
-import std::collections::list;
+import bgimpl,
+       std::os::process, 
+       std::io,
+       std::collections::list;
+
 
 <*
+ Retrieves command args for clang and append extra_opts to it.
  @param extra_opts : "Additional options for clang compiler"
  @return "List{ZString}, which and each element of which should be then freed via allocator"
 *>
 fn List{ZString}? getParseCommandArgs(
   Allocator allocator, 
   String[] extra_opts) 
-=> @pool() 
+  => @pool() 
 {
   const usz RESERVED_ARGS = 4;
 
@@ -21,7 +24,7 @@ fn List{ZString}? getParseCommandArgs(
   // Just make sure that we treat a file as a C one
   args.push("-xc");
 
-  user::getLibcHeadersLoc(&args)!;
+  user::includeLibcToArgs(&args)!;
 
   foreach (extra_opt : extra_opts) {
     args.push((ZString)extra_opt);
@@ -30,12 +33,14 @@ fn List{ZString}? getParseCommandArgs(
   return args;
 }
 
+
 <*
- @param res 
+ Appends flags to res to locate libc headers for clang
+ @param [&out] res 
 *>
-fn void? getLibcHeadersLoc(
+fn void? includeLibcToArgs(
   List{ZString}* res) 
-=> @pool()
+  => @pool()
 {
   SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
   proc.join()!; // join the process to close stdin of clang
