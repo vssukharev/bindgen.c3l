@@ -1,13 +1,8 @@
 
-module bgimpl::misc;
-import clang;
-
-// --- WHAT WILL WORK
-// macro CXToken[].@foreach(self; @body(/*...*/)) {}
-
 module bgimpl::ttor;
 import bgimpl;
 import std::io, clang, std::collections::list;
+
 
 <*
  Translates global variable declaration and writes it to 'out'
@@ -17,7 +12,8 @@ import std::io, clang, std::collections::list;
 fn usz? varDecl(
   GlobalVisitData* vd,
   CXCursor cursor)
-@maydiscard => @pool() {
+  @maydiscard => @pool() 
+{
   CXType type = clang::getCursorType(cursor);
 
   if (clang::isConstQualifiedType(type)) {
@@ -58,6 +54,7 @@ fn usz? varDecl(
   }
 }
 
+
 <*
  Translates global constant declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL : "Cursor must point to variable declaration"
@@ -66,7 +63,7 @@ fn usz? varDecl(
 fn usz? constDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
@@ -113,6 +110,7 @@ fn usz? constDecl(
   return wter::constDecl(vd.out, &vd.write_state, trans_type_str, name, vd_const.val, attrs);
 }
 
+
 <*
  Translates enumDecl declaration and writes it to 'vd.out'
  @param [out] out_name : "The resulting name of an enum type. Might be needed as enum can be anonymous: in that case this variable is set to the underlying type name"
@@ -126,7 +124,7 @@ fn usz? enumDecl(
   CXCursor cursor,
   String* out_name = null,
   Allocator out_alloc = tmem) 
-@maydiscard => @pool() 
+  @maydiscard => @pool() 
 {
   CXType enum_type = clang::getCursorType(cursor);
   CXString enum_spell = clang::getTypeSpelling(enum_type);
@@ -191,6 +189,7 @@ fn usz? enumDecl(
   return acc;
 }
 
+
 <*
  Translates functions and writes it to 'vd.out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL : "Cursor must point to function declaration"
@@ -199,7 +198,7 @@ fn usz? enumDecl(
 fn usz? func(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   FuncVisitData vd_func = {
     .g = vd,
@@ -254,12 +253,13 @@ fn usz? func(
 fn usz? macroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard
+  @maydiscard
 {
   return clang::isMacroFunctionLike_Cursor(cursor) ? 
     ttor::funcMacroDef(vd, cursor) :
     ttor::constMacroDef(vd, cursor);
 }
+
 
 <*
  Translates functional macro without generating it's body
@@ -267,7 +267,7 @@ fn usz? macroDef(
 fn usz? funcMacroDef(
   GlobalVisitData* vd,
   CXCursor cursor)
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   CXString macro_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(macro_spell);
@@ -318,6 +318,7 @@ fn usz? funcMacroDef(
   return wter::funcMacro(vd.out, &vd.write_state, params.array_view(), trans_macro_str, macro_body, attrs);
 }
 
+
 <*
  Translates macro which is not function-like, e.g.:
  `#define MY_MACRO 1` -> `const MY_MACRO = 1;`
@@ -325,7 +326,7 @@ fn usz? funcMacroDef(
 fn usz? constMacroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
@@ -342,9 +343,9 @@ fn usz? constMacroDef(
     String? t = trans::tokensUnderCursor(tmem, cursor, &vd.trans_fns);
     if (catch exc = t) {
       switch (exc) {
-        case trans::IGNORE:
+        case trans::NAME_IGNORED:
           err::warn(vd.no_verbose, "Can't translate constant '%s' as it's rhs comprises ignored name", cursor_str);
-        case trans::EMPTY:
+        case trans::EMPTY_MACRO_VAL:
           err::warn(vd.no_verbose, "Macro '%s' doesn't have value, skipping...", cursor_str);
       }
       return 0;
@@ -359,6 +360,7 @@ fn usz? constMacroDef(
   return wter::constDecl(vd.out, &vd.write_state, "", trans_cursor_str, val, attrs);
 }
 
+
 <*
  Translates alias declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL : "Cursor must point to typedef declaration"
@@ -367,7 +369,7 @@ fn usz? constMacroDef(
 fn usz? typedefDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   CXType type = clang::getCursorType(cursor);
   CXString type_spell = clang::getTypeSpelling(type);
@@ -410,6 +412,7 @@ fn usz? typedefDecl(
   }
 }
 
+
 <*
  Translates structure declaration and writes it to 'out'
  @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL : "Cursor must point to structure declaration"
@@ -418,10 +421,11 @@ fn usz? typedefDecl(
 fn usz? structDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard => @pool()
+  @maydiscard
 {
   return ttor::recordDecl(vd, cursor, $is_union: false);
 }
+
 
 <*
  Union declaration and writes it to 'out'
@@ -431,13 +435,11 @@ fn usz? structDecl(
 fn usz? unionDecl(
   GlobalVisitData* vd, 
   CXCursor cursor) 
-@maydiscard
+  @maydiscard
 {
   return ttor::recordDecl(vd, cursor, $is_union: true);
 }
 
-
-// ------- Helpers, which are not called directly from global visitor
 
 <*
  @param $is_union : "Made to avoid code repeatance"
@@ -450,7 +452,7 @@ macro usz? recordDecl(
   bool $is_union,
   String* out_name = null,
   Allocator out_alloc = tmem)
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   CXType rec_type = clang::getCursorType(cursor);
   CXString rec_spell = clang::getTypeSpelling(rec_type);
@@ -516,7 +518,7 @@ macro usz? recordDecl(
   // Translate record fields and store them into vd_rec.fields
   if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_rec) != 0) return 0;
 
-  C3Fields? c3_fields = misc::getC3Fields(tmem, vd_rec.fields);
+  C3Fields? c3_fields = tparse::getC3Fields(tmem, vd_rec.fields);
   if (catch c3_fields) {
     $if $is_union:
       err::warn(vd.no_verbose, "Can't translate bit fields within union '%s', skipping...", orig_rec_name);
@@ -545,13 +547,14 @@ macro usz? recordDecl(
   $endif
 }
 
+
 fn usz? pfnType(
   GlobalVisitData* vd, 
   String name,
   CXType type, 
   CXCursor cursor,
   WriteAttrs attribs = {}) 
-@maydiscard => @pool()
+  @maydiscard => @pool()
 {
   FuncVisitData vd_func = {
     .g = vd,

@@ -3,11 +3,13 @@ module bgimpl::trans;
 import bindgen::bg, bgimpl;
 import clang, std::io;
 
-faultdef EMPTY, IGNORE;
+
+faultdef EMPTY_MACRO_VAL, NAME_IGNORED, NOT_BASIC_TYPE;
+
 
 <*
  Applies function 'fun' to string 's' and allocate it via 'alloc'.
- @return? IGNORE
+ @return? trans::NAME_IGNORED
 *>
 fn String? apply(
   String s, 
@@ -21,11 +23,12 @@ fn String? apply(
   String t = fun(s, alloc);
   if (t == "")
   {
-    return IGNORE?;
+    return trans::NAME_IGNORED?;
   }
 
   return t;
 }
+
 
 <*
  Applies 'fun' to 's' String, returns the new 
@@ -53,6 +56,7 @@ fn String? capply(
   return translated;
 }
 
+
 <*
  Translates type to a string, caching it also.
  It has a special behaviour when translating a function parameter for ABI compatibility:
@@ -65,9 +69,9 @@ fn String? ctype(
   CXType type, 
   GlobalVisitData* vd, 
   bool is_func_param = false) 
-=> @pool() 
+  => @pool() 
 {
-  TypeTokens tokens = misc::getTypeTokens(tmem, type);
+  TypeTokens tokens = tparse::getTypeTokens(tmem, type);
 
   CXType base_type = misc::getBaseType(type);
 
@@ -88,7 +92,7 @@ fn String? ctype(
   tokens.@foreach(;TypeTokenKind kind, String str) {
     switch (kind) {
       case NAME:
-        String trans_str = misc::mapBasicType(str) ?? trans::capply(str, base_type, vd.trans_fns.type, &vd.types_table)!;
+        String trans_str = trans::basicType(str) ?? trans::capply(str, base_type, vd.trans_fns.type, &vd.types_table)!;
         res_dstr.append(trans_str);
 
       case POINTER:
@@ -108,6 +112,7 @@ fn String? ctype(
   return res_dstr.copy_str(mem); // TODO: get rid of leak
 }
 
+
 <*
  The same as trans::ctype but should be applied on types 
  which can possibly be pointers to functions. It is a superset
@@ -117,7 +122,7 @@ fn String? ctypeWithPFN(
   CXCursor cursor, 
   GlobalVisitData* vd, 
   bool is_func_param = false) 
-=> @pool() 
+  => @pool() 
 {
   CXType type = clang::getCursorType(cursor);
 
@@ -141,6 +146,7 @@ fn String? ctypeWithPFN(
   return res;
 }
 
+
 <*
  Translates tokens under cursor.
  @return "A string which then must be freed"
@@ -149,7 +155,7 @@ fn String? tokensUnderCursor(
   Allocator alloc, 
   CXCursor cursor, 
   BGTransCallbacks* tfns)
-=> @pool() 
+  => @pool() 
 {
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
@@ -168,7 +174,7 @@ fn String? tokensUnderCursor(
   // It's needed as sometimes cursor name can be also tokenized, 
   // e.g. when tokenizing a macro, first token is it's name.
   usz start_from = kind == clang::CURSOR_MACRO_DEFINITION ? 1 : 0;
-  if (tokens_len <= start_from) return trans::EMPTY?;
+  if (tokens_len <= start_from) return trans::EMPTY_MACRO_VAL?;
 
   DString res;
   res.init(mem); // res.append() falls into infinite loop if use temp allocator
@@ -209,7 +215,7 @@ fn String? tokensUnderCursor(
         }
 
       case clang::TOKEN_LITERAL:
-        res.append(misc::convertLiteral(tmem, token_str));
+        res.append(trans::literal(tmem, token_str));
 
       case clang::TOKEN_KEYWORD:
       case clang::TOKEN_PUNCTUATION:
@@ -229,4 +235,91 @@ fn String? tokensUnderCursor(
   return res.copy_str(alloc);
 }
 
+
+<*
+ Converts C integer or floating-point literal epressions to C3 ones
+*>
+fn String literal(
+  Allocator alloc,
+  String str)
+  => @pool()
+{
+  // If it's a string or empty literal
+  if (str.len == 0 || str[0] == '"') return str;
+
+  bool is_float = @ok(str.index_of_char('.'));
+  DString res = dstring::temp(str);
+
+  // --- Prefixes (octal)
+  if (str.len >= 2 && str[0] == '0' && str[1].is_odigit()) {
+    res.insert_at(1, 'o');
+  }
+
+  // --- Suffixes
+  res.replace("LL", "L");
+  res.replace("ll", "l");
+  
+  // C3 doesn't have 'L' or 'l' literals for float so substitute them with ""
+  if (is_float) {
+    res.replace("L", "");
+    res.replace("l", "");
+  }
+
+  return res.copy_str(alloc);
+}
+
+
+<*
+ Returns fault if type is not basic
+ @return? trans::NOT_BASIC_TYPE
+*>
+fn String? basicType(
+  String str)
+{
+  switch (str) {
+    case "void":          return "void";
+    case "_Bool":         return "bool";
+    case "ptrdiff_t":     return "isz";
+    case "size_t":        return "usz";
+
+    case "char":          return "CChar";
+    case "short":         return "CShort";
+    case "int":           return "CInt";
+    case "long":          return "CLong";
+    case "long long":     return "CLongLong";
+
+    case "unsigned char":       return "char";
+    case "unsigned short":      return "CUShort";
+    case "unsigned":            return "CUInt";
+    case "unsigned int":        return "CUInt";
+    case "unsigned long":       return "CULong";
+    case "unsigned long long":  return "CULongLong";
+    
+    case "signed char":       return "ichar";
+    case "signed short":      return "CShort";
+    case "signed":            return "CUInt";
+    case "signed int":        return "CInt";
+    case "signed long":       return "CLong";
+    case "signed long long":  return "CLongLong";
+
+    case "int8_t":        return "ichar";
+    case "int16_t":       return "short";
+    case "int32_t":       return "int";
+    case "int64_t":       return "long";
+    case "intptr_t":      return "iptr";
+
+    case "uint8_t":       return "char";
+    case "uint16_t":      return "ushort";
+    case "uint32_t":      return "uint";
+    case "uint64_t":      return "ulong";
+    case "uintptr_t":     return "uptr";
+
+    case "float":         return "float";
+    case "double":        return "double";
+
+    case "va_list":       return "void*";
+
+    default:              return NOT_BASIC_TYPE?;
+  }
+}
 

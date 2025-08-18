@@ -51,23 +51,4 @@ macro void diag(String file, CUInt line, CUInt col, String str, ...)
   io::eprintfn(str, $vasplat);
 }
 
-macro void? checkCode(CXErrorCode code)
-{
-  switch (code)
-  {
-    case clang::ERROR_SUCCESS: 
-      return;
-
-    case clang::ERROR_FAILURE:
-    case clang::ERROR_AST_READ_ERROR:
-      return bg::CLANG_PARSE_ERROR?;
-
-    case clang::ERROR_CRASHED:
-      return bg::CLANG_CRASH?;
-
-    case clang::ERROR_INVALID_ARGUMENTS:
-      return bg::INVALID_ARGUMENTS?;
-  }
-}
-
 

@@ -73,7 +73,7 @@ fn CXChildVisitResult constDecl(
 }
 
 <*
-
+ TODO: documentation
 *>
 fn CXChildVisitResult enumDecl(
   CXCursor cursor, 
@@ -213,7 +213,7 @@ fn CXChildVisitResult fields(
   CXType prev_type = clang::getCursorType(vd.prev_inline);
 
   if (!clang::isNull_Cursor(vd.prev_inline) && clang::equalTypes(type, prev_type)) {
-    switch (misc::getCFieldKind(vd.prev_inline)) {
+    switch (tparse::getCFieldKind(vd.prev_inline)) {
       case STRUCT:
         vd.fields.structs[^1].name = trans_field_name;
       case UNION:
@@ -226,7 +226,7 @@ fn CXChildVisitResult fields(
     return clang::CHILD_VISIT_CONTINUE;
   }
 
-  CFieldKind kind = misc::getCFieldKind(cursor);
+  CFieldKind kind = tparse::getCFieldKind(cursor);
 
   if (kind == NORMAL || kind == BIT) {
     String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g);

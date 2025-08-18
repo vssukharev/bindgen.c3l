@@ -3,12 +3,16 @@ module bgimpl;
 import bindgen::bg;
 import clang, std::collections::map, std::io, std::os::process;
 
+
+<*
+ Implementation of bg::translate_header
+*>
 fn void? translateHeader(
   String header_name, 
-  BGOptions opts,
-  BGTransCallbacks trans_callbacks,
-  BGGenCallbacks gen_callbacks)
-@export("bg_translate_header")
+  BGOptions opts = {},
+  BGTransCallbacks trans_callbacks = {},
+  BGGenCallbacks gen_callbacks = {})
+  @export("bg_translate_header")
 {
   err::info("Translating %s", header_name);
   err::info("Writing to %s", opts.out_name ?: "standard output");
@@ -54,21 +58,31 @@ fn void? translateHeader(
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
 
-  if (!file::exists(header_name)) 
-  {
+  if (!file::exists(header_name)) {
     err::erro("Could not find input header file '%s'. Please, check your current directory", header_name);
     return bg::INVALID_ARGUMENTS?;
   }
 
   CXTranslationUnit tu;
-  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
-  err::checkCode(code)!;
+  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString) header_name, cargs.ptr, 
+                                                  cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+  
+  switch (code) {
+    case clang::ERROR_SUCCESS: 
+      break;
+    case clang::ERROR_FAILURE:
+    case clang::ERROR_AST_READ_ERROR:
+      return bg::CLANG_PARSE_ERROR?;
+    case clang::ERROR_CRASHED:
+      return bg::CLANG_CRASH?;
+    case clang::ERROR_INVALID_ARGUMENTS:
+      return bg::INVALID_ARGUMENTS?;
+  }
 
   // Print diagnostics
   CUInt diagnostics_count = clang::getNumDiagnostics(tu);
   usz severe_count;
-  for (CUInt i; i < diagnostics_count; ++i)
-  {
+  for (CUInt i; i < diagnostics_count; ++i) {
     CXDiagnostic diag = clang::getDiagnostic(tu, i); 
     defer clang::disposeDiagnostic(diag);
 
@@ -80,8 +94,7 @@ fn void? translateHeader(
     defer clang::disposeString(diag_spell);
     String diag_str = misc::convStr(diag_spell);
 
-    if (clang::getDiagnosticSeverity(diag) >= clang::DIAGNOSTIC_ERROR)
-    {
+    if (clang::getDiagnosticSeverity(diag) >= clang::DIAGNOSTIC_ERROR) {
       // Do not count if some file is not found
       if (!diag_str.ends_with("file not found")) ++severe_count;
       err::diag(header_name, line, col, diag_str);
@@ -89,10 +102,7 @@ fn void? translateHeader(
   }
 
   // Return if everything is bad
-  if (severe_count > 0 && !opts.skip_errors)
-  {
-    return bg::CLANG_PARSE_ERROR?;
-  }
+  if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR?;
 
   GlobalVisitData visit_data = {
     .trans_fns = trans_callbacks,
@@ -123,12 +133,12 @@ fn void? translateHeader(
   // }
 }
 
+
 const TRANSLATION_UNIT_PARSE_FLAGS =
     clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
   | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
   | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
   | clang::TRANSLATION_UNIT_KEEP_GOING
-  // | clang::TRANSLATION_UNIT_SINGLE_FILE_PARSE
   // The following flag cause catastrophic results. For example,
   // if we have something like `#ifdef __cplusplus` in header file,
   // who knows what code will be under this option
