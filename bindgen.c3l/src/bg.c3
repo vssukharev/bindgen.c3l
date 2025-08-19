@@ -15,12 +15,27 @@ fn void? translateHeader(
   @export("bg_translate_header")
 {
   err::info(opts.no_verbose, "Translating %s", header_name);
-  err::info(opts.no_verbose, "Writing to %s", opts.out_name ?: "standard output");
+  
+  // Set the output name for the user
+  String out_name;
+
+  switch {
+    case (bool)opts.out_file.file:
+      out_name = "file descriptor";
+    case (bool)opts.out_name:
+      out_name = opts.out_name;
+    default:
+      out_name = "standard output";
+  }
+
+  err::info(opts.no_verbose, "Writing to %s", out_name);
  
   // Open file
-  File out = *io::stdout();
+  File out = opts.out_file.file ? opts.out_file : *io::stdout();
 
   if (opts.out_name != "") @pool() {
+    err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out");
+
     Path out_path = { 
       .path_string = opts.out_name,
       .env = path::DEFAULT_ENV,
