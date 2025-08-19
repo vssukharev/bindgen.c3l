@@ -94,6 +94,8 @@ fn void? translateHeader(
       return bg::INVALID_ARGUMENTS?;
   }
 
+  defer clang::disposeTranslationUnit(tu);
+
   // Print diagnostics
   CUInt diagnostics_count = clang::getNumDiagnostics(tu);
   usz severe_count;
@@ -153,11 +155,6 @@ const TRANSLATION_UNIT_PARSE_FLAGS =
     clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
   | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
   | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
-  | clang::TRANSLATION_UNIT_KEEP_GOING
-  // The following flag cause catastrophic results. For example,
-  // if we have something like `#ifdef __cplusplus` in header file,
-  // who knows what code will be under this option
-  // | clang::TRANSLATION_UNIT_RETAIN_EXCLUDED_CONDITIONAL_BLOCKS
-;
+  | clang::TRANSLATION_UNIT_KEEP_GOING;
 
 

@@ -81,7 +81,7 @@ fn usz getTopChildrenNumber(
 
 <*
  If type is a nested pointer or array, gets rid
- of these qulifiers and returns the basic type.
+ of these qualifiers and returns the basic type.
 *>
 fn CXType getBaseType(
   CXType type) 

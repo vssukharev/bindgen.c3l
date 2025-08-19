@@ -4,7 +4,8 @@
 *>
 module bgimpl;
 import bindgen::bg,
-       std::io;
+       std::io,
+       clang;
 
 
 fn bool BGModuleWrap.equals(
@@ -197,12 +198,6 @@ fn usz? WriteAttrs.to_format(
 }
 
 
-<*
- Those functions are defines for HashMap to work with CXType as key
-*>
-module clang;
-
-
 fn uint CXType.hash(
   CXType t) 
 {
@@ -213,7 +208,7 @@ fn uint CXType.hash(
 fn bool CXType.equals(
   CXType a, 
   CXType b) 
-  @operator(==) 
+  @operator(==)
 {
   return (bool)clang::equalTypes(a, b) @inline;
 }
