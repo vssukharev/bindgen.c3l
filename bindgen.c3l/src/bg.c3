@@ -68,7 +68,7 @@ fn void? translateHeader(
   if (trans_callbacks.func_macro == null) err::warn(opts.no_verbose, "Functional macros translation will not be performed as function pointer is null");
 
   // Get command args for clang
-  ZString[] cargs = user::getParseCommandArgs(tmem, opts.clang_args).array_view()!;
+  ZString[] cargs = user::getParseCommandArgs(tmem, opts.clang_args)!;
 
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);

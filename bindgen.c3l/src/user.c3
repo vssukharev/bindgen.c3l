@@ -8,29 +8,28 @@ import bgimpl,
 
 <*
  Retrieves command args for clang and append extra_opts to it.
- @param extra_opts : "Additional options for clang compiler"
- @return "List{ZString}, which and each element of which should be then freed via allocator"
+ @return "ZString[], which and each element of which should be then freed via alloc"
 *>
-fn List{ZString}? getParseCommandArgs(
-  Allocator allocator, 
+fn ZString[]? getParseCommandArgs(
+  Allocator alloc, 
   String[] extra_opts) 
   => @pool() 
 {
-  const usz RESERVED_ARGS = 4;
+  const ADD_ARGS = 4;
 
   List{ZString} args;
-  args.init(allocator, extra_opts.len + RESERVED_ARGS);
+  args.init(tmem, extra_opts.len + ADD_ARGS);
  
   // Just make sure that we treat a file as a C one
   args.push("-xc");
 
-  user::includeLibcToArgs(&args)!;
+  user::includeLibcToArgs(alloc, &args)!;
 
   foreach (extra_opt : extra_opts) {
     args.push((ZString)extra_opt);
   }
 
-  return args;
+  return args.to_array(alloc);
 }
 
 
@@ -39,6 +38,7 @@ fn List{ZString}? getParseCommandArgs(
  @param [&out] res 
 *>
 fn void? includeLibcToArgs(
+  Allocator alloc,
   List{ZString}* res) 
   => @pool()
 {
@@ -69,7 +69,7 @@ fn void? includeLibcToArgs(
     }
 
     // Append all possible headers
-    res.push(path_dstr.copy_zstr(res.allocator));
+    res.push(path_dstr.copy_zstr(alloc));
   }
 }
 
