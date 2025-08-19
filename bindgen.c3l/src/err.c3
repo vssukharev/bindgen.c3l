@@ -58,15 +58,18 @@ macro void warn(
 
 
 <*
- Writes str to stdout
+ If !no_verbose, writes str to stdout
  in info format
 *>
 macro void info(
+  bool no_verbose,
   String str = "", 
   ...) 
 {
-  io::eprintf("%sInfo%s : ", ANSI_GREEN, ANSI_NONE);
-  io::eprintfn(str, $vasplat);
+  if (!no_verbose) {
+    io::eprintf("%sInfo%s : ", ANSI_GREEN, ANSI_NONE);
+    io::eprintfn(str, $vasplat);
+  }
 } 
 
 

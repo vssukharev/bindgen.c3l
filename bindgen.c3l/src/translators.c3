@@ -84,7 +84,7 @@ fn usz? constDecl(
   String cursor_str = misc::convStr(cursor_spell);
 
   if (misc::isCursorForwardDeclared(cursor)) {
-    err::warn(vd.no_verbose, "Const '%s' has forward declaration, skipping this declaration...", cursor_str);
+    err::warn(vd.no_verbose, "Const '%s' is forward declared, skipping this declaration...", cursor_str);
     return 0;
   }
 

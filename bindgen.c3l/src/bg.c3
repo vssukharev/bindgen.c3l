@@ -14,8 +14,8 @@ fn void? translateHeader(
   BGGenCallbacks gen_callbacks = {})
   @export("bg_translate_header")
 {
-  err::info("Translating %s", header_name);
-  err::info("Writing to %s", opts.out_name ?: "standard output");
+  err::info(opts.no_verbose, "Translating %s", header_name);
+  err::info(opts.no_verbose, "Writing to %s", opts.out_name ?: "standard output");
  
   // Open file
   File out = *io::stdout();
