@@ -33,6 +33,16 @@
     "mlir" : {
       "type" : "executable",
       "sources" : [ "examples/mlir.c3" ],
-    }
+    },
+
+    "test-runner" : {
+      "type" : "executable",
+      "sources" : [ "tests/test_runner.c3" ],
+    },
+
+    "unit" : {
+      "type" : "test",
+      "sources" : [ "tests/bgtest_lib.c3", "tests/unit/**" ],
+    },
   },
 }
