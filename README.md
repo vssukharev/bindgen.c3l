@@ -50,6 +50,12 @@ fn void main() {
 > [!NOTE]
 > As you can see, you must prefix functions with `bg`, not `bindgen`. For instance: `bg::hello()` but not `bindgen::hello()` - it is made for shorty sake.
 
+### Running tests
+
+There are two types of tests:
+1. Function tests - testing separate API parts. Run through `c3c run ftest-runner`.
+2. Unit tests - testing library implementation parts. Run through `c3c test unit`.
+
 ## API
 
 All API functions are concentrated in [bindgen.c3i](./bindgen.c3l/bindgen.c3i) file with more detailed documentation.
