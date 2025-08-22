@@ -17,7 +17,6 @@ faultdef INVALID_BITFIELDS;
  Converts token kind to it's representation in C3.
  If kind is represented with a run-time string, strs
  and str_index are used to retrieve this string.
- @require str_index < strs.len
 *>
 fn String convertCTypeTokenToC3(
   CTypeTokenKind kind,
@@ -28,6 +27,7 @@ fn String convertCTypeTokenToC3(
   switch (kind) {
     case NAME:
     case SIZED_ARRAY:
+      assert( str_index < strs.len );
       return strs[str_index];
     case UNSIZED_ARRAY:
     case POINTER:

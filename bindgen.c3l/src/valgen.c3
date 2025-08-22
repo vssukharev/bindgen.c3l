@@ -5,7 +5,9 @@ import bindgen::bg,
 
 
 <*
- Applies fun to a name for value generation and returns a corresponding result
+ Applies fun to a name for value generation.
+ If function is null, returns the default value
+ of return type.
  @require @typeis(fun, BGGenFn) ||| @typeis(fun, BGModuleWrapFn)
 *>
 macro apply(
@@ -22,7 +24,9 @@ macro apply(
 
 
 <*
- Gets write attributes for the name and allocates them via allocator
+ Gets write attributes for the name and allocates them via allocator.
+ Uses the following callbacks of gen_fns to generate values for attributes:
+ 1. if_condition - if not empty, stand for '@if' value
 *>
 fn WriteAttrs getWriteAttrs(
   Allocator alloc, 
@@ -38,14 +42,16 @@ fn WriteAttrs getWriteAttrs(
 
 
 <*
- Writes a new module section for the name
- if needed based on gen_fns.module_wrap. 
- Note: if two names in a row got the same module name,
- new section is not written.
+ Writes a new module section for the name if needed
+ to vd.out, based on vd.gen_fns.module_wrap (see BGModuleWrap docs).
+ If two names in a row returned the same module wrap, new 
+ section is not written.
+ Module section inherents name from vd.module_name.
+ @param [&inout] vd
 *>
 fn void moduleWrap(
   GlobalVisitData* vd, 
-  String name) 
+  String name)
   => @pool()
 {
   BGModuleWrap curr = valgen::apply(tmem, name, vd.gen_fns.module_wrap);

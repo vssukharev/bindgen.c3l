@@ -33,8 +33,9 @@ fn void? translateHeader(
   // Open file
   File out = opts.out_file.file ? opts.out_file : *io::stdout();
 
+  // FIX: make BGOptions.out_file override BGOptions.out_name
   if (opts.out_name != "") @pool() {
-    err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out");
+    err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out_file");
 
     Path out_path = { 
       .path_string = opts.out_name,
@@ -68,7 +69,13 @@ fn void? translateHeader(
   if (trans_callbacks.func_macro == null) err::warn(opts.no_verbose, "Functional macros translation will not be performed as function pointer is null");
 
   // Get command args for clang
-  ZString[] cargs = user::getParseCommandArgs(tmem, opts.clang_args)!;
+  ZString[]? cargs = user::getParseCommandArgs(tmem, opts.clang_args);
+  if (catch exc = cargs) {
+    if (exc == process::FAILED_TO_START_PROCESS) {
+      err::erro("Could not run 'clang' in order to find libc headers. Please, install clang");
+    }
+    return exc?;
+  }
 
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
@@ -79,46 +86,12 @@ fn void? translateHeader(
   }
 
   CXTranslationUnit tu;
-  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString) header_name, cargs.ptr, 
-                                                  cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
-  
-  switch (code) {
-    case clang::ERROR_SUCCESS: 
-      break;
-    case clang::ERROR_FAILURE:
-    case clang::ERROR_AST_READ_ERROR:
-      return bg::CLANG_PARSE_ERROR?;
-    case clang::ERROR_CRASHED:
-      return bg::CLANG_CRASH?;
-    case clang::ERROR_INVALID_ARGUMENTS:
-      return bg::INVALID_ARGUMENTS?;
-  }
-
+  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString) header_name, cargs.ptr, cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+  checkCode(code)!;
   defer clang::disposeTranslationUnit(tu);
 
   // Print diagnostics
-  CUInt diagnostics_count = clang::getNumDiagnostics(tu);
-  usz severe_count;
-  for (CUInt i; i < diagnostics_count; ++i) {
-    CXDiagnostic diag = clang::getDiagnostic(tu, i); 
-    defer clang::disposeDiagnostic(diag);
-
-    CXSourceLocation diag_loc = clang::getDiagnosticLocation(diag);
-    CUInt line, col;
-    clang::getFileLocation(diag_loc, null, &line, &col, null);
-
-    CXString diag_spell = clang::getDiagnosticSpelling(diag);
-    defer clang::disposeString(diag_spell);
-    String diag_str = misc::convStr(diag_spell);
-
-    if (clang::getDiagnosticSeverity(diag) >= clang::DIAGNOSTIC_ERROR) {
-      // Do not count if some file is not found
-      if (!diag_str.ends_with("file not found")) ++severe_count;
-      err::diag(header_name, line, col, diag_str);
-    }
-  }
-
-  // Return if everything is bad
+  usz severe_count = runDiagnostics(tu, header_name, clang::DIAGNOSTIC_ERROR);
   if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR?;
 
   GlobalVisitData visit_data = {
@@ -148,6 +121,70 @@ fn void? translateHeader(
   // {
   //   allocator::free(tmem, zstr);
   // }
+}
+
+
+<*
+ Run diagnostics on translation unit.
+ Prints each diangostic if it is more or
+ equal to the min_severity. By default, ignores 
+ the file not found error, but you can override
+ it by unsetting ignore_file_not_found.
+ @param min_severity          : "Minimal severity for a diagnostic to be counted"
+ @param ignore_file_not_found : "Whether to ignore file not found error in diagnostics"
+ @return                        "Number of severe diagnostics"
+*>
+fn usz runDiagnostics(
+  CXTranslationUnit tu,
+  String header_name,
+  CXDiagnosticSeverity min_severity,
+  bool ignore_file_not_found = true)
+  @inline
+{
+  CUInt diagnostics_count = clang::getNumDiagnostics(tu);
+  usz severe_count;
+  for (CUInt i; i < diagnostics_count; ++i) {
+    CXDiagnostic diag = clang::getDiagnostic(tu, i); 
+    defer clang::disposeDiagnostic(diag);
+
+    CXSourceLocation diag_loc = clang::getDiagnosticLocation(diag);
+    CUInt line, col;
+    clang::getFileLocation(diag_loc, null, &line, &col, null);
+
+    CXString diag_spell = clang::getDiagnosticSpelling(diag);
+    defer clang::disposeString(diag_spell);
+    String diag_str = misc::convStr(diag_spell);
+
+    if (clang::getDiagnosticSeverity(diag) >= min_severity) {
+      // Do not count if some file is not found and we don't ignore it
+      if (ignore_file_not_found && diag_str.ends_with("file not found")) {
+        ++severe_count;
+      }
+      err::diag(header_name, line, col, diag_str);
+    }
+  }
+  return severe_count;
+}
+
+
+<*
+ Checks clang error code and returns
+ the corresponding fault if error occured
+*>
+fn void? checkCode(
+  CXErrorCode code)
+{
+  switch (code) {
+    case clang::ERROR_SUCCESS: 
+      break;
+    case clang::ERROR_FAILURE:
+    case clang::ERROR_AST_READ_ERROR:
+      return bg::CLANG_PARSE_ERROR?;
+    case clang::ERROR_CRASHED:
+      return bg::CLANG_CRASH?;
+    case clang::ERROR_INVALID_ARGUMENTS:
+      return bg::INVALID_ARGUMENTS?;
+  }
 }
 
 

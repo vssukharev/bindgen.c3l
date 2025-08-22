@@ -207,7 +207,7 @@ struct GlobalVisitData
   BGModuleWrap      prev_module_wrap;
 
   TypesTable        types_table;
-  File*             out;
+  OutStream         out;
   CXFile            cxfile;
   usz               anon_fns_counter;
   WriteState        write_state;

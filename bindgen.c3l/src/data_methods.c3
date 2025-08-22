@@ -176,6 +176,22 @@ macro void WriteAttrs.push(
 
 
 <*
+ Iterates through kinds and returns corresponding 
+ index for a value, associated with that kind
+*>
+macro WriteAttrs.@foreach(
+  &self; 
+  @body(WriteAttrKind* kind, usz index))
+{
+  usz i;
+  foreach (&k : self.kinds) {
+    @body(k, i);
+    if (k.has_arg) ++i;
+  }
+}
+
+
+<*
  Formats the WriteAttrs as such they should be 
  printed within C3 declaration
 *>
@@ -185,15 +201,13 @@ fn usz? WriteAttrs.to_format(
   @dynamic
 {
   usz? acc;
-  usz i;
-  foreach (k : self.kinds) {
+  self.@foreach(;WriteAttrKind* k, usz i) {
     if (k.has_arg) {
       acc += form.printf(" %s(%s)", k.str, self.args[i]);
-      ++i;
     } else {
       acc += form.printf(" %s", k.str);
     }
-  }
+  };
   return acc;
 }
 

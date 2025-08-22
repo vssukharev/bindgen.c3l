@@ -7,25 +7,29 @@ import bgimpl,
 
 
 <*
- Retrieves command args for clang and append extra_opts to it.
+ Retrieves essential command args for clang and append extra_args to it.
  @return "ZString[], which and each element of which should be then freed via alloc"
 *>
 fn ZString[]? getParseCommandArgs(
   Allocator alloc, 
-  String[] extra_opts) 
+  String[] extra_args = {},
+  bool no_libc = false) 
   => @pool() 
 {
   const ADD_ARGS = 4;
 
   List{ZString} args;
-  args.init(tmem, extra_opts.len + ADD_ARGS);
- 
+  args.tinit(extra_args.len + ADD_ARGS);
+  defer args.free();
+
   // Just make sure that we treat a file as a C one
   args.push("-xc");
 
-  user::includeLibcToArgs(alloc, &args)!;
+  if (!no_libc) {
+    user::includeLibcToArgs(alloc, &args)!;
+  }
 
-  foreach (extra_opt : extra_opts) {
+  foreach (extra_opt : extra_args) {
     args.push((ZString)extra_opt);
   }
 
@@ -35,7 +39,8 @@ fn ZString[]? getParseCommandArgs(
 
 <*
  Appends flags to res to locate libc headers for clang
- @param [&out] res 
+ @param [&out] res              : "List, which will be pushed with flags"
+ @require res.is_initialized()  : "List must be initialized"
 *>
 fn void? includeLibcToArgs(
   Allocator alloc,

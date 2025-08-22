@@ -19,7 +19,7 @@ const INDENT = "  ";
  Aliasing typedef
 *>
 fn usz? typedefAlias(
-  File* out,
+  OutStream out,
   WriteState* state,
   String name,
   String underlying_name,
@@ -38,7 +38,7 @@ fn usz? typedefAlias(
  Distinct typedef
 *>
 fn usz? typedefDist(
-  File* out,
+  OutStream out,
   WriteState* state,
   String name,
   String underlying_name,
@@ -57,7 +57,7 @@ fn usz? typedefDist(
  Function pointer typedef
 *>
 fn usz? typedefFunc(
-  File* out,
+  OutStream out,
   WriteState* state,
   String name,
   String return_type,
@@ -91,7 +91,7 @@ fn usz? typedefFunc(
  Constant declaration
 *>
 fn usz? constDecl(
-  File* out,
+  OutStream out,
   WriteState* state,
   String type,
   String name,
@@ -121,7 +121,7 @@ fn usz? constDecl(
  Global variable declaration
 *>
 fn usz? varDecl(
-  File* out,
+  OutStream out,
   WriteState* state,
   String type,
   String name,
@@ -147,7 +147,7 @@ fn usz? varDecl(
  Enum declaration without it's underlying constants
 *>
 fn usz? enumDecl(
-  File* out,
+  OutStream out,
   WriteState* state,
   String name,
   String type,
@@ -164,7 +164,7 @@ fn usz? enumDecl(
  Function declaration
 *>
 fn usz? func(
-  File* out,
+  OutStream out,
   WriteState* state,
   VarDecl[] params,
   String return_type,
@@ -197,7 +197,7 @@ fn usz? func(
  Functional macro
 *>
 fn usz? funcMacro(
-  File* out,
+  OutStream out,
   WriteState* state,
   String[] params,
   String name,
@@ -228,13 +228,16 @@ fn usz? funcMacro(
 
 <*
  Module section statement
+ @param [&out] state                : "Sets state.kind to WriteKind.MODULE"
+ @require module_name != ""         : "Module name can't be empty"
+ @require module_name[0].is_lower() : "Module name must start with lower case letter"
 *>
 fn usz? moduleHead(
-  File* out,
+  OutStream out,
   WriteState* state,
   String module_name,
   WriteAttrs attribs = {})
-@maydiscard
+  @maydiscard
 {
   state.kind = MODULE;
 
@@ -246,7 +249,7 @@ fn usz? moduleHead(
  Import statemenet 
 *>
 fn usz? importModule(
-  File* out,
+  OutStream out,
   WriteState* state,
   String to_import)
 @maydiscard
@@ -261,7 +264,7 @@ fn usz? importModule(
  Struct declaration
 *>
 fn usz? structDecl(
-  File* out,
+  OutStream out,
   WriteState* state,
   String name,
   C3Fields* fields,
@@ -299,7 +302,7 @@ fn usz? structDecl(
  Union declaration
 *>
 fn usz? unionDecl(
-  File* out,
+  OutStream out,
   WriteState* state,
   String name,
   C3Fields* fields,
@@ -338,7 +341,7 @@ fn usz? unionDecl(
  which writes record fields
 *>
 fn usz? fields(
-  File* out,
+  OutStream out,
   WriteState* state,
   C3Fields* fields,
   usz indent_level)
@@ -386,7 +389,7 @@ fn usz? fields(
  Helper printer
 *>
 fn usz? printIndent( 
-  File* out, 
+  OutStream out, 
   usz indent_level = 1)
 {
   usz? acc;
@@ -399,7 +402,7 @@ fn usz? printIndent(
  Helper printer
 *>
 fn usz? printLines(
-  File* out,
+  OutStream out,
   usz lines_number = 1)
 {
   usz? acc;

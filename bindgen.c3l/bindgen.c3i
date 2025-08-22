@@ -199,16 +199,16 @@ alias BGTransFn = fn String(String name, Allocator alloc);
 
 <*
  name   : "Original string from C source. Should NOT be changed"
+ @return "Boolean connected with the passed name"
+*>
+alias BGCheckFn = fn bool(String name);
+
+<*
+ name   : "Original string from C source. Should NOT be changed"
  alloc  : "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
  @return "Generated value according to the name string, allocated via 'alloc', or empty string to make no changes"
 *>
 alias BGGenFn = fn String(String name, Allocator alloc);
-
-<*
- name   : "Original string from C source. Should NOT be changed"
- @return "Boolean connected with the passed name"
-*>
-alias BGCheckFn = fn bool(String name);
 
 <*
  name   : "Original string from C source. Should NOT be changed"
@@ -228,7 +228,8 @@ alias BGModuleWrapFn = fn BGModuleWrap(String name, Allocator alloc);
  ```
 
  if_condition : "Content of @if attribute of a generated module"
- imports      : "A set of imports of a generated module, separated by ';'. Note that all whitespaces after ';' till the beginning of a word are skipped"
+ imports      : "A set of imports of a generated module, separated by ';'" 
+                "Note that all whitespaces after ';' till the beginning of a word are trimmed"
 *>
 struct BGModuleWrap
 {

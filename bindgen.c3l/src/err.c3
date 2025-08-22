@@ -4,12 +4,6 @@ import bindgen::bg, bgimpl;
 import clang, std::io;
 
 
-const ANSI_RED = "\e[31m";
-const ANSI_GREEN = "\e[32m";
-const ANSI_YELLOW = "\e[33m";
-const ANSI_NONE = "\e[0m";
-
-
 <*
  Debug helper macro.
  Writes str to stdout with special format.
@@ -22,7 +16,7 @@ macro void log(
   for (usz i; i < indent; ++i) {
     io::eprintf("  ");
   }
-  io::eprintf("%s[%s]%s : ", ANSI_GREEN, $$FUNC, ANSI_NONE);
+  io::eprintf("%s[%s]%s : ", Ansi.GREEN, $$FUNC, Ansi.RESET);
   io::eprintfn(str, $vasplat);
 } 
 
@@ -51,7 +45,7 @@ macro void warn(
   ...) 
 {
   if (!no_verbose) {
-    io::eprintf("%sWarning%s : ", ANSI_YELLOW, ANSI_NONE);
+    io::eprintf("%sWarning%s : ", Ansi.YELLOW, Ansi.RESET);
     io::eprintfn(str, $vasplat);
   }
 }
@@ -67,7 +61,7 @@ macro void info(
   ...) 
 {
   if (!no_verbose) {
-    io::eprintf("%sInfo%s : ", ANSI_GREEN, ANSI_NONE);
+    io::eprintf("%sInfo%s : ", Ansi.GREEN, Ansi.RESET);
     io::eprintfn(str, $vasplat);
   }
 } 
@@ -81,7 +75,7 @@ macro void erro(
   String str = "", 
   ...) 
 {
-  io::eprintf("%sError%s : ", ANSI_RED, ANSI_NONE);
+  io::eprintf("%sError%s : ", Ansi.RED, Ansi.RESET);
   io::eprintfn(str, $vasplat);
 }
 
@@ -97,7 +91,7 @@ macro void diag(
   String str, 
   ...)
 {
-  io::eprintf("%sError at %s:%d:%d%s : ", ANSI_RED, file, line, col, ANSI_NONE);
+  io::eprintf("%sError at %s:%d:%d%s : ", Ansi.RED, file, line, col, Ansi.RESET);
   io::eprintfn(str, $vasplat);
 }
 
