@@ -24,7 +24,7 @@ fn usz? typedefAlias(
   String name,
   String underlying_name,
   WriteAttrs attribs = {})
-@maydiscard
+  @maydiscard
 {
   state.kind = ALIAS;
 
@@ -43,7 +43,7 @@ fn usz? typedefDist(
   String name,
   String underlying_name,
   WriteAttrs attribs = {}) 
-@maydiscard
+  @maydiscard
 {
   state.kind = TYPEDEF;
 
@@ -63,7 +63,7 @@ fn usz? typedefFunc(
   String return_type,
   VarDecl[] params,
   WriteAttrs attribs = {})
-@maydiscard
+  @maydiscard
 {
   state.kind = ALIAS;
 
@@ -98,7 +98,7 @@ fn usz? constDecl(
   String value,
   WriteAttrs attribs = {},
   bool new_line = true)
-@maydiscard
+  @maydiscard
 {
   WriteKind prev_kind = state.kind;
   state.kind = CONST;
@@ -127,7 +127,7 @@ fn usz? varDecl(
   String name,
   String value,
   WriteAttrs attribs = {})
-@maydiscard
+  @maydiscard
 {
   state.kind = VAR;
 
@@ -152,7 +152,7 @@ fn usz? enumDecl(
   String name,
   String type,
   WriteAttrs attribs = {})
-@maydiscard
+  @maydiscard
 {
   state.kind = ENUM;
 
@@ -171,7 +171,7 @@ fn usz? func(
   String original_name,
   String name,
   WriteAttrs attribs = {}) 
-@maydiscard
+  @maydiscard
 {
   state.kind = FUNC;
 
@@ -203,7 +203,7 @@ fn usz? funcMacro(
   String name,
   String body,
   WriteAttrs attribs = {})
-@maydiscard
+  @maydiscard
 {
   state.kind = MACRO;
 
@@ -252,7 +252,7 @@ fn usz? importModule(
   OutStream out,
   WriteState* state,
   String to_import)
-@maydiscard
+  @maydiscard
 {
   state.kind = IMPORT;
 
@@ -270,7 +270,7 @@ fn usz? structDecl(
   C3Fields* fields,
   usz indent_level = 0,
   WriteAttrs attribs = {}) 
-@maydiscard
+  @maydiscard
 {
   state.kind = STRUCT;
 
@@ -280,12 +280,9 @@ fn usz? structDecl(
   
   if (indent_level == 0) acc += io::fprintf(out, "\n");
 
-  if (name == "")
-  {
+  if (name == "") {
     acc += io::fprintfn(out, "struct {");
-  }
-  else
-  {
+  } else {
     acc += io::fprintfn(out, "struct %s%s {", name, attribs);
   }
 
@@ -308,7 +305,7 @@ fn usz? unionDecl(
   C3Fields* fields,
   usz indent_level = 0,
   WriteAttrs attribs = {}) 
-@maydiscard
+  @maydiscard
 {
   state.kind = UNION;
 

@@ -138,11 +138,7 @@ fn String? ctypeWithPFN(
     res = string::format(mem, "UnnamedPFN%d", vd.anon_fns_counter);
     vd.types_table[type] = res;
     
-    WriteAttrs attrs;
-    attrs.init(tmem);
-    attrs.push(PRIVATE);
-
-    ttor::pfnType(vd, res, type, cursor, attrs);
+    ttor::pfnType(vd, res, type, cursor, { .private = true });
   } else {
     res = trans::ctype(type, vd, is_func_param)!;
   }

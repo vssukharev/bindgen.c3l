@@ -287,11 +287,16 @@ struct WriteState
 
 
 <*
- Only kind with kind.has_arg can have an arg
+ Write attributes represent additional attributes
+ for any declaration. There are two types of attributes:
+ - String: an attribute has an argument. The attribute is
+           enabled if it's value is not equal to ""
+ - bool:   an attribute doesn't have value and is enabled
+           if the bool is true.
 *>
 struct WriteAttrs (Printable)
 {
-  List{WriteAttrKind} kinds;
-  List{String}        args;
+  String if_condition @tag("attr", "@if");
+  bool   private      @tag("attr", "@private");
 }
 

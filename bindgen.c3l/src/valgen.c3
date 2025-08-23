@@ -24,19 +24,17 @@ macro apply(
 
 
 <*
- Gets write attributes for the name and allocates them via allocator.
- Uses the following callbacks of gen_fns to generate values for attributes:
- 1. if_condition - if not empty, stand for '@if' value
+ Gets write attributes for the name. Uses allocator to allocate 
+ strings, required by parameterized attributes. 
+ See WriteAttrs docs for more info.
 *>
 fn WriteAttrs getWriteAttrs(
-  Allocator alloc, 
+  Allocator alloc,
   String name, 
   BGGenCallbacks gen_fns)
 {
   WriteAttrs res;
-  res.init(alloc);
-  String if_arg = (String) valgen::apply(alloc, name, gen_fns.if_condition);
-  if (if_arg != "") res.push(IF, if_arg);
+  res.if_condition = valgen::apply(alloc, name, gen_fns.if_condition);
   return res;
 }
 
@@ -57,11 +55,8 @@ fn void moduleWrap(
   BGModuleWrap curr = valgen::apply(tmem, name, vd.gen_fns.module_wrap);
 
   if (!curr.equals(&vd.prev_module_wrap)) {
-    vd.prev_module_wrap = curr;
-
     WriteAttrs attrs;
-    attrs.init(tmem);
-    if (curr.if_condition != "") attrs.push(IF, curr.if_condition);
+    attrs.if_condition = curr.if_condition;
 
     wter::moduleHead(vd.out, &vd.write_state, vd.module_name, attrs);
 
@@ -71,6 +66,8 @@ fn void moduleWrap(
         wter::importModule(vd.out, &vd.write_state, imp.trim_left());
       }
     }
+
+    vd.prev_module_wrap = curr;
   }
 }
 
