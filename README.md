@@ -100,6 +100,7 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 - Fix multiple definitions for macros
 - Inline definition of records and enums inside of function parameters
+- Allow user to write any attributes on an entity based on WriteAttrs
 - Improve tokens analyzation in macros translation
 - Multiple translation units support
 - Add kind parameter to if_condition and module_wrap functions: function, structure, member, etc.
