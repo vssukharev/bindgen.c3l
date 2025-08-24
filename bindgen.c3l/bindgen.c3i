@@ -6,15 +6,17 @@
 module bindgen::bg;
 import std::io;
 
+
 <* Errors *>
 faultdef INVALID_ARGUMENTS, CLANG_PARSE_ERROR, CLANG_CRASH;
+
 
 <*
  Main bindgen function. Translates all headers and writes result to opts.out_name. 
  WARNING: function is not tested for usage on multiple threads yet.
 
  @param header_name     : "Header name to be translated"
- @param opts            : "Options to be passed to translator"
+ @param opts            : "Various translate options"
  @param trans_callbacks : "Translation callbacks"
  @param gen_callbacks   : "Values generation callbacks"
 
@@ -29,11 +31,12 @@ extern fn void? translate_header(
   BGGenCallbacks    gen_callbacks = {})
 @extern("bg_translate_header");
 
+
 <*
  Optional settings for translation.
 
  clang_args   : "Command-line args passed to clang when parsing each header. Default: no args are passed"
- out_name     : "DEPRECATED. Output file name into which a translation will be written. Default: result is written to stdout"
+ out_name     : "Output file name into which a translation will be written. Default: result is written to stdout"
  out_file     : "Output file descriptor. If it's set, overrides out_name. Default: out_name is used as output file"
  module_name  : "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
  include_file : "By default, bindgen ignore `#include` directives as C stdlib headers are usually not needed to be translated." 
@@ -44,7 +47,7 @@ extern fn void? translate_header(
 struct BGOptions
 {
   String[]  clang_args;
-  String    out_name @deprecated("use out_file");
+  String    out_name;
   File      out_file;
   String    module_name;
   BGCheckFn include_file;
@@ -55,6 +58,7 @@ struct BGOptions
     bool no_verbose;
   }
 }
+
 
 <*
  Translation callbacks is the set of functions, each of 
@@ -75,6 +79,7 @@ struct BGTransCallbacks
   BGTransFn constant;
   BGTransFn func_macro;
 }
+
 
 <*
  Generation callbacks is a set of functions which will be invoked, for instance, 
@@ -190,32 +195,37 @@ struct BGGenCallbacks
   BGModuleWrapFn  module_wrap;
 }
 
+
 <*
  name   : "Original string from C source. Should NOT be changed"
  alloc  : "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
- @return "Translated string, allocated via 'allocator', or empty string to skip the translation of a name (ignore it)"
+ @return  "Translated string, allocated via 'allocator', or empty string to skip the translation of a name (ignore it)"
 *>
 alias BGTransFn = fn String(String name, Allocator alloc);
 
+
 <*
  name   : "Original string from C source. Should NOT be changed"
- @return "Boolean connected with the passed name"
+ @return  "Boolean connected with the passed name"
 *>
 alias BGCheckFn = fn bool(String name);
+
 
 <*
  name   : "Original string from C source. Should NOT be changed"
  alloc  : "Allocator for the new returned string. Each allocation should be performed with that specific allocator"
- @return "Generated value according to the name string, allocated via 'alloc', or empty string to make no changes"
+ @return  "Generated value according to the name string, allocated via 'alloc', or empty string to make no changes"
 *>
 alias BGGenFn = fn String(String name, Allocator alloc);
+
 
 <*
  name   : "Original string from C source. Should NOT be changed"
  alloc  : "Allocator for BGModuleWrap strings. Each allocation should be performed with that specific allocator"
- @return "Module properties, with all strings of which allocated via 'alloc'"
+ @return  "Module properties, with all strings of which allocated via 'alloc'"
 *>
 alias BGModuleWrapFn = fn BGModuleWrap(String name, Allocator alloc);
+
 
 <*
  For example `(BGModuleWrap){ .if_condition = "env::GLFW_INCLUDE_VULKAN", .imports = "vulkan; opengl" } }`
@@ -227,6 +237,8 @@ alias BGModuleWrapFn = fn BGModuleWrap(String name, Allocator alloc);
  import opengl;
  ```
 
+ If all fields are empty, does not emit anything, meaning that the new section is not created.
+
  if_condition : "Content of @if attribute of a generated module"
  imports      : "A set of imports of a generated module, separated by ';'" 
                 "Note that all whitespaces after ';' till the beginning of a word are trimmed"
@@ -236,6 +248,7 @@ struct BGModuleWrap
   String if_condition;
   String imports;
 }
+
 
 <*
  This module is created for user comfort.
