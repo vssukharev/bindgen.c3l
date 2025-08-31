@@ -17,12 +17,14 @@
     "windows-x64": {
       "link-args": [ ],
       "dependencies": [  ],
-      "linked-libraries": [ "libclang" ]
+      "linked-libraries": [ "libclang" ],
+      "sources" : [ "./" ]
     },
     "windows-aarch64": {
       "link-args": [ ],
       "dependencies": [  ],
-      "linked-libraries": [ "libclang" ]
+      "linked-libraries": [ "libclang" ],
+      "sources" : [ "./" ]
     },
   }
 }
