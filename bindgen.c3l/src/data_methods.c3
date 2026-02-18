@@ -2,7 +2,7 @@
  Section provides necessary methods
  for structures defined in data.c3
 *>
-module bgimpl;
+module bgimpl::data_methods;
 import bindgen::bg,
        std::io,
        clang;
@@ -15,7 +15,6 @@ fn bool BGModuleWrap.equals(
 {
   return self.if_condition == other.if_condition;
 }
-
 
 <*
  Initializes each member of CFields via .init(alloc) method
@@ -126,6 +125,7 @@ macro CTypeTokens.@foreach(
 }
 
 
+
 <*
  @require $kind != NAME || val != ""        : `val must be set to "<name>" in case of $kind == NAME`
  @require $kind != SIZED_ARRAY || val != "" : `val must be set to "[<array_size>]" in case of $kind == SIZED_ARRAY`
@@ -158,23 +158,23 @@ macro void CTypeTokens.push(
 *>
 fn usz? WriteAttrs.to_format(
   &self, 
-  Formatter* form) 
+  Formatter* format) 
   @dynamic
 {
   usz? acc;
 
   $foreach $f : WriteAttrs.membersof:
-    assert( WriteAttrs.$eval($f.nameof).has_tagof("attr") );
-    String $attr = WriteAttrs.$eval($f.nameof).tagof("attr");
+    assert( $f.has_tagof("attr") );
+    String $attr = $f.tagof("attr");
 
     $switch $f.typeid:
       $case String:
-        if (self.$eval($f.nameof) != "") {
-          acc += form.printf(" %s(%s)", $attr, self.$eval($f.nameof));
+        if ($f.get(*self) != "") {
+          acc += format.printf(" %s(%s)", $attr, $f.get(*self));
         }
       $case bool:
-        if (self.$eval($f.nameof)) {
-          acc += form.printf(" %s", $attr);
+        if ($f.get(*self)) {
+          acc += format.printf(" %s", $attr);
         }
       $default:
         $error "Unexpected type in WriteAttrs fields";
@@ -199,4 +199,24 @@ fn bool CXType.equals(
 {
   return (bool)clang::equalTypes(a, b) @inline;
 }
+
+
+module std::core::array;
+
+
+<*
+ Returns true if predicate returns true at least one time. Returns false otherwise.
+ @require $kindof(arr) == SLICE ||| $kindof(arr) == ARRAY       : "Array must be either slice or array"
+ @require $kindof(predicate) == FUNC                              : "Predicate must be a function"
+ @require $typeof(predicate).returns == bool.typeid                 : "Predicate must return bool"
+ @require $typeof(predicate).paramsof.len == 1                      : "Predicate must have one parameter"
+ @require $typeof(predicate).paramsof[0].type == $typeof(arr).inner : "Predicate must have parameter of inner array type"
+*>
+macro has(arr, predicate)
+{
+  foreach (e : arr) if (predicate(e)) return true;
+  return false;
+}
+
+
 

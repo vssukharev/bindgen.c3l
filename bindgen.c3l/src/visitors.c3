@@ -122,7 +122,7 @@ fn CXChildVisitResult enumDecl(
   }
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.g.gen_fns);
-  wter::constDecl(vd.g.out, &vd.g.write_state, vd.enum_name, trans_cursor_str, vd_const.val, attrs, new_line: false);
+  wter::constDecl(vd.g.out, &vd.g.write_state, vd.enum_name, trans_cursor_str, vd_const.val, attrs);
 
   return clang::CHILD_VISIT_CONTINUE;
 }

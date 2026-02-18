@@ -11,7 +11,7 @@ fn void main(String[] args)
     .out_name = out,
     .clang_args = { "-DGLFW_INCLUDE_VULKAN", "-I./examples/headers" },
     .module_name = "glfw",
-    // .skip_errors = true,
+    .skip_errors = true,
   };
 
   BGTransCallbacks trans_fns = {

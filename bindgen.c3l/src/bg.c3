@@ -1,8 +1,10 @@
 
 module bgimpl;
 import bindgen::bg;
-import clang, std::collections::map, std::io, std::os::process;
-
+import clang, 
+       std::collections::map, 
+       std::io, 
+       std::os::process;
 
 <*
  Implementation of bg::translate_header
@@ -16,7 +18,7 @@ fn void? translateHeader(
 {
   err::info(opts.no_verbose, "Translating %s", header_name);
   
-  // Set the output name for the user
+  // Set the output name
   String out_name;
 
   switch {

@@ -33,9 +33,9 @@ fn WriteAttrs getWriteAttrs(
   String name, 
   BGGenCallbacks gen_fns)
 {
-  WriteAttrs res;
-  res.if_condition = valgen::apply(alloc, name, gen_fns.if_condition);
-  return res;
+  return {
+    .if_condition = valgen::apply(alloc, name, gen_fns.if_condition),
+  };
 }
 
 
@@ -46,24 +46,26 @@ fn WriteAttrs getWriteAttrs(
  section is not written.
  Module section inherents name from vd.module_name.
  @param [&inout] vd
+ @require vd.module_name != "" : "Module name can't be empty"
 *>
 fn void moduleWrap(
-  GlobalVisitData* vd, 
+  GlobalVisitData* vd,
   String name)
   => @pool()
 {
   BGModuleWrap curr = valgen::apply(tmem, name, vd.gen_fns.module_wrap);
 
   if (!curr.equals(&vd.prev_module_wrap)) {
-    WriteAttrs attrs;
-    attrs.if_condition = curr.if_condition;
+    WriteAttrs attrs = {
+      .if_condition = curr.if_condition,
+    };
 
     wter::moduleHead(vd.out, &vd.write_state, vd.module_name, attrs);
 
     if (curr.imports != "") {
       String[] imports_arr = curr.imports.tsplit(";", skip_empty: true);
       foreach (imp : imports_arr) {
-        wter::importModule(vd.out, &vd.write_state, imp.trim_left());
+        wter::importModule(vd.out, &vd.write_state, imp.trim());
       }
     }
 

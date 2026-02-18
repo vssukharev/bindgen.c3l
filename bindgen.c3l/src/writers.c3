@@ -2,7 +2,7 @@
  The module contains writer functions.
  Each such function changes WriteState,
  writes it's formatted parameters to
- out without extra logic and returns
+ out without extra logic or checks and returns
  the number of bytes written.
 *>
 module bgimpl::wter;
@@ -17,6 +17,10 @@ const INDENT = "  ";
 
 <*
  Aliasing typedef
+ @param [&inout] out
+ @param [&out]   state  : "Sets state.kind to WriteKind.ALIAS"
+ @require name            != ""
+ @require underlying_name != ""
 *>
 fn usz? typedefAlias(
   OutStream out,
@@ -36,8 +40,12 @@ fn usz? typedefAlias(
 
 <*
  Distinct typedef
+ @param [&inout] out
+ @param [&out]   state  : "Sets state.kind to WriteKind.TYPEDEF"
+ @require name            != ""
+ @require underlying_name != ""
 *>
-fn usz? typedefDist(
+fn usz? typedefDistinct(
   OutStream out,
   WriteState* state,
   String name,
@@ -55,6 +63,11 @@ fn usz? typedefDist(
 
 <*
  Function pointer typedef
+ @param [&inout] out
+ @param [&out]   state                                                            : "Sets state.kind to WriteKind.ALIAS"
+ @require !array::has(params, fn bool(VarDecl e) => e.type == "" && e.name != "") : "Each parameter must have type if it has name"
+ @require name        != ""
+ @require return_type != ""
 *>
 fn usz? typedefFunc(
   OutStream out,
@@ -74,11 +87,11 @@ fn usz? typedefFunc(
   if (params.len > 0) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params) {
-    acc += io::fprintf(out, "  %s", p.type);
+    acc += io::fprintf(out, INDENT+++"%s", p.type);
     if (p.name) {
       acc += io::fprintf(out, " %s", p.name);
     }
-    if (i < params.len - 1) acc += io::fprintn(out, ", ");
+    if (i < params.len - 1) acc += io::fprintn(out, ",");
   }
 
   acc += io::fprintn(out, ");");
@@ -88,7 +101,14 @@ fn usz? typedefFunc(
 
 
 <*
- Constant declaration
+ Constant declaration.
+ If state.kind is CONST or ENUM, does not write extra 
+ new line at the beginning.
+ @param [&inout] out
+ @param [&inout] state : "Sets state.kind to CONST"
+ @param          type  : "Can be empty, for example, for macro"
+ @require name  != ""
+ @require value != ""
 *>
 fn usz? constDecl(
   OutStream out,
@@ -96,8 +116,7 @@ fn usz? constDecl(
   String type,
   String name,
   String value,
-  WriteAttrs attribs = {},
-  bool new_line = true)
+  WriteAttrs attribs = {})
   @maydiscard
 {
   WriteKind prev_kind = state.kind;
@@ -119,6 +138,11 @@ fn usz? constDecl(
 
 <*
  Global variable declaration
+ @param [&inout] out
+ @param [&inout] state : "Sets state.kind to CONST"
+ @param          value : "Can be empty"
+ @require type != ""
+ @require name != ""
 *>
 fn usz? varDecl(
   OutStream out,
@@ -145,6 +169,10 @@ fn usz? varDecl(
 
 <*
  Enum declaration without it's underlying constants
+ @param [&inout] out
+ @param [&inout] state : "Sets state.kind to ENUM"
+ @require name != ""
+ @require type != ""
 *>
 fn usz? enumDecl(
   OutStream out,
@@ -162,6 +190,12 @@ fn usz? enumDecl(
 
 <*
  Function declaration
+ @param [&inout] out
+ @param [&inout] state                                                            : "Sets state.kind to FUNC"
+ @require !array::has(params, fn bool(VarDecl e) => e.type == "" && e.name != "") : "Each parameter must have type if it has name"
+ @require return_type   != ""
+ @require original_name != ""
+ @require name          != ""
 *>
 fn usz? func(
   OutStream out,
@@ -181,11 +215,11 @@ fn usz? func(
   if (params.len > 0) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params)  {
-    acc += io::fprintf(out, "  %s", p.type);
+    acc += io::fprintf(out, INDENT+++"%s", p.type);
     if (p.name) {
       acc += io::fprintf(out, " %s", p.name);
     }
-    if (i < params.len - 1) acc += io::fprintn(out, ", ");
+    if (i < params.len - 1) acc += io::fprintn(out, ",");
   }
   acc += io::fprintfn(out, ")\n@extern(\"%s\")%s;", original_name, attribs);
 
@@ -195,6 +229,11 @@ fn usz? func(
 
 <*
  Functional macro
+ @param [&inout] out
+ @param [&inout] state                                          : "Sets state.kind to MACRO"
+ @param          body                                           : "Can be empty"
+ @require !array::has(params, fn bool(String val) => val == "") : "params can't contain empty entries"
+ @require name != ""
 *>
 fn usz? funcMacro(
   OutStream out,
@@ -217,7 +256,7 @@ fn usz? funcMacro(
   acc += io::fprintf(out, ")%s {", attribs);
   
   if (body != "") {
-    acc += io::fprintfn(out, "\n%s%s", INDENT, body);
+    acc += io::fprintfn(out, "\n"+++INDENT+++"%s", body);
   }
 
   acc += io::fprintfn(out, "}");
@@ -228,9 +267,9 @@ fn usz? funcMacro(
 
 <*
  Module section statement
- @param [&out] state                : "Sets state.kind to WriteKind.MODULE"
- @require module_name != ""         : "Module name can't be empty"
- @require module_name[0].is_lower() : "Module name must start with lower case letter"
+ @param [&inout] out
+ @param [&out]   state : "Sets state.kind to WriteKind.MODULE"
+ @require module_name != ""
 *>
 fn usz? moduleHead(
   OutStream out,
@@ -247,21 +286,27 @@ fn usz? moduleHead(
 
 <*
  Import statemenet 
+ @param [&inout] out
+ @param [&out]   state : "Sets state.kind to WriteKind.IMPORT"
+ @require import_module != ""
 *>
 fn usz? importModule(
   OutStream out,
   WriteState* state,
-  String to_import)
+  String import_module)
   @maydiscard
 {
   state.kind = IMPORT;
 
-  return io::fprintfn(out, "import %s;", to_import);
+  return io::fprintfn(out, "import %s;", import_module);
 }
 
 
 <*
  Struct declaration
+ @param [&inout] out
+ @param [&in]    fields
+ @param [&out]   state  : "Sets state.kind to WriteKind.IMPORT"
 *>
 fn usz? structDecl(
   OutStream out,
@@ -315,12 +360,9 @@ fn usz? unionDecl(
 
   if (indent_level == 0) acc += io::fprintf(out, "\n");
 
-  if (name == "")
-  {
+  if (name == "") {
     acc += io::fprintfn(out, "union {");
-  }
-  else
-  {
+  } else {
     acc += io::fprintfn(out, "union %s%s {", name, attribs);
   }
 
@@ -391,19 +433,6 @@ fn usz? printIndent(
 {
   usz? acc;
   for (usz i; i < indent_level; ++i) acc += io::fprintf(out, INDENT);
-  return acc;
-}
-
-
-<*
- Helper printer
-*>
-fn usz? printLines(
-  OutStream out,
-  usz lines_number = 1)
-{
-  usz? acc;
-  for (usz i; i < lines_number; ++i) acc += io::fprintf(out, "\n");
   return acc;
 }
 

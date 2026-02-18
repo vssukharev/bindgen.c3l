@@ -78,7 +78,7 @@ enum WriteKind
 enum WriteAttrKind : char (String str, bool has_arg)
 {
   PRIVATE = { "@private", false },
-  IF      = { "@if"     , true  },
+  IF      = { "@if",      true },
 }
 
 

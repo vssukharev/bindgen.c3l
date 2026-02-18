@@ -496,7 +496,7 @@ macro usz? recordDecl(
   usz fields_len = misc::getTopChildrenNumber(cursor);
   if (fields_len == 0)  {
     valgen::moduleWrap(vd, orig_rec_name);
-    return wter::typedefDist(vd.out, &vd.write_state, rec_name, "void", attrs);
+    return wter::typedefDistinct(vd.out, &vd.write_state, rec_name, "void", attrs);
   }
 
   FieldsVisitData vd_rec = {

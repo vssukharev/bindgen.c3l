@@ -56,7 +56,7 @@ fn CXCursor[]? parse(
   CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp.str_view(), args.ptr, args.len, null, 0, PARSE_FLAGS);
   
   // Check the parse result
-  if (tu == null) return PARSE_FAILURE?;
+  if (tu == null) return PARSE_FAILURE~;
   
   // Run diagnostics
   usz severe_count;
@@ -78,7 +78,7 @@ fn CXCursor[]? parse(
       if (!quiet) io::eprintfn("\e[31mDiagnostic fail at %d:%d\e[0m : %s", line, col, diag_str);
     }
   }
-  if (severe_count > 0) return DIAGS_FAILURE?;
+  if (severe_count > 0) return DIAGS_FAILURE~;
 
   // If we exceeded the size of translation units, collect garbage
   if (translation_units.len() == TUS_CAPACITY) {
