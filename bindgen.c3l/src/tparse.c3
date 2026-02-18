@@ -171,7 +171,7 @@ fn C3Fields? getC3Fields(
             .fields = bit_fields
           });
         default:
-          return tparse::INVALID_BITFIELDS?;
+          return tparse::INVALID_BITFIELDS~;
       }
 
       bit_fields = {};

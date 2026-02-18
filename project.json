@@ -37,7 +37,7 @@
 
     "test-runner" : {
       "type" : "executable",
-      "sources" : [ "tests/test_runner.c3" ],
+      "sources" : [ "tests/bgtest_runner.c3" ],
     },
 
     "unit" : {

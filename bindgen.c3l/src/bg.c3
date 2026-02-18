@@ -44,7 +44,7 @@ fn void? translateHeader(
 
     if (path::is_dir(out_path)) {
       err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
-      return bg::INVALID_ARGUMENTS?;
+      return bg::INVALID_ARGUMENTS~;
     }
 
     // If there is no parent, we are in root
@@ -74,7 +74,7 @@ fn void? translateHeader(
     if (exc == process::FAILED_TO_START_PROCESS) {
       err::erro("Could not run 'clang' in order to find libc headers. Please, install clang");
     }
-    return exc?;
+    return exc~;
   }
 
   CXIndex index = clang::createIndex(0, 0);
@@ -82,7 +82,7 @@ fn void? translateHeader(
 
   if (!file::exists(header_name)) {
     err::erro("Could not find input header file '%s'. Please, check your current directory", header_name);
-    return bg::INVALID_ARGUMENTS?;
+    return bg::INVALID_ARGUMENTS~;
   }
 
   CXTranslationUnit tu;
@@ -92,7 +92,7 @@ fn void? translateHeader(
 
   // Print diagnostics
   usz severe_count = runDiagnostics(tu, header_name, clang::DIAGNOSTIC_ERROR);
-  if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR?;
+  if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR~;
 
   GlobalVisitData visit_data = {
     .trans_fns = trans_callbacks,
@@ -179,11 +179,11 @@ fn void? checkCode(
       break;
     case clang::ERROR_FAILURE:
     case clang::ERROR_AST_READ_ERROR:
-      return bg::CLANG_PARSE_ERROR?;
+      return bg::CLANG_PARSE_ERROR~;
     case clang::ERROR_CRASHED:
-      return bg::CLANG_CRASH?;
+      return bg::CLANG_CRASH~;
     case clang::ERROR_INVALID_ARGUMENTS:
-      return bg::INVALID_ARGUMENTS?;
+      return bg::INVALID_ARGUMENTS~;
   }
 }
 

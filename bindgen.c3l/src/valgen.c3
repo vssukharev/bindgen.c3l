@@ -8,7 +8,7 @@ import bindgen::bg,
  Applies fun to a name for value generation.
  If function is null, returns the default value
  of return type.
- @require @typeis(fun, BGGenFn) ||| @typeis(fun, BGModuleWrapFn)
+ @require $typeof(fun) == BGGenFn ||| $typeof(fun) == BGModuleWrapFn
 *>
 macro apply(
   Allocator alloc, 

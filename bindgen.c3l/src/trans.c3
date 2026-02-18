@@ -23,7 +23,7 @@ fn String? apply(
   String t = fun(s, alloc);
   if (t == "")
   {
-    return trans::NAME_IGNORED?;
+    return trans::NAME_IGNORED~;
   }
 
   return t;
@@ -174,7 +174,7 @@ fn String? tokensUnderCursor(
   // It's needed as sometimes cursor name can be also tokenized, 
   // e.g. when tokenizing a macro, first token is it's name.
   usz start_from = kind == clang::CURSOR_MACRO_DEFINITION ? 1 : 0;
-  if (tokens_len <= start_from) return trans::EMPTY_MACRO_VAL?;
+  if (tokens_len <= start_from) return trans::EMPTY_MACRO_VAL~;
 
   DString res;
   res.init(mem); // res.append() falls into infinite loop if use temp allocator
@@ -320,7 +320,7 @@ fn String? basicType(
 
     case "va_list":       return "void*";
 
-    default:              return NOT_BASIC_TYPE?;
+    default:              return NOT_BASIC_TYPE~;
   }
 }
 
