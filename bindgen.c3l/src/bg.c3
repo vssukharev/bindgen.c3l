@@ -115,6 +115,10 @@ fn void? translateHeader(
   // Write module name
   if (opts.module_name != "") wter::moduleHead(&out, &visit_data.write_state, opts.module_name);
 
+  foreach (imp : opts.imports) {
+	wter::importModule(&out, &visit_data.write_state, imp);
+  }
+
   CXCursor cursor = clang::getTranslationUnitCursor(tu);
   clang::visitChildren(cursor, &vtor::global, (CXClientData) &visit_data);
 

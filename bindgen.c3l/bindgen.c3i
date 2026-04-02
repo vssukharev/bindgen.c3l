@@ -39,6 +39,7 @@ extern fn void? translate_header(
  out_name     : "Output file name into which a translation will be written. Default: result is written to stdout"
  out_file     : "Output file descriptor. If it's set, overrides out_name. Default: out_name is used as output file"
  module_name  : "Resulting module name, prepended at the top .c3i file. Default: no module name is written on top of .c3i"
+ imports      : "imports to append"
  include_file : "By default, bindgen ignore `#include` directives as C stdlib headers are usually not needed to be translated." 
                 "This option is a function which returns true if we want to '#include' file passed to 'name' parameter." 
                 "Note that 'name' is either relative or absolute path to a file"
@@ -50,6 +51,7 @@ struct BGOptions
   String    out_name;
   File      out_file;
   String    module_name;
+  String[]  imports;
   BGCheckFn include_file;
 
   bitstruct : char
