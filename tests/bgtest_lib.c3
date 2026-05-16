@@ -3,7 +3,7 @@ module bgtest;
 import bgimpl,
        clang,
        std::io,
-       std::collections::elastic_array,
+       std::collections::fixedlist,
        std::collections::list;
 
 
@@ -39,7 +39,7 @@ fn CXCursor[]? parse(
   // Create temp header
   Path tmp = path::temp_directory(tmem)!!;
   tmp = tmp.tappend(HEADER_NAME)!!;
-  file::save(tmp.str_view(), code)!!;
+  file::save(tmp, code)!!;
 
   // Get args
   List{ZString} args_list;
@@ -53,7 +53,7 @@ fn CXCursor[]? parse(
   // Parse file
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
-  CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp.str_view(), args.ptr, args.len, null, 0, (CUInt)PARSE_FLAGS);
+  CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp, args.ptr, args.len, null, 0, (CUInt)PARSE_FLAGS);
   
   // Check the parse result
   if (tu == null) return PARSE_FAILURE~;
@@ -169,5 +169,5 @@ fn void cleanup() @local @finalizer
 }
 
 
-ElasticArray{CXTranslationUnit, TUS_CAPACITY} translation_units @local;
+FixedList{CXTranslationUnit, TUS_CAPACITY} translation_units @local;
 
