@@ -296,7 +296,7 @@ fn CXChildVisitResult fields(
 			vd.fields.kinds.push(NORMAL);
 		case BIT:
 			CInt width = clang::getFieldDeclBitWidth(cursor);
-			vd.fields.bit.push({trans_type_str, trans_field_name, (usz)width});
+			vd.fields.bit.push({trans_type_str, trans_field_name, (sz)width});
 			vd.fields.kinds.push(BIT);
 		default: 
 			unreachable();

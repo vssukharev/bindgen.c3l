@@ -113,7 +113,7 @@ struct CBitField
 {
 	String  type;
 	String  name;
-	usz     width;
+	sz     width;
 }
 
 
@@ -170,8 +170,8 @@ struct C3BitstructField
 {
 	String  type;
 	String  name;
-	usz     from;
-	usz     to;
+	sz     from;
+	sz     to;
 }
 
 
@@ -215,7 +215,7 @@ struct GlobalVisitData
 	TypesTable        types_table;
 	OutStream         out;
 	CXFile            cxfile;
-	usz               anon_fns_counter;
+	sz               anon_fns_counter;
 	WriteState        write_state;
 
 	bitstruct : char
@@ -247,7 +247,7 @@ struct FieldsVisitData
 	CFields           fields;
 	Allocator         allocator;
 	GlobalVisitData*  g;
-	usz               current;
+	sz               current;
 }
 
 

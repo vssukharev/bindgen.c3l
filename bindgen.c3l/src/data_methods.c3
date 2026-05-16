@@ -23,8 +23,8 @@ macro void CFields.init(
   &self, 
   Allocator alloc)
 {
-  $foreach $member : CFields.membersof:
-    self.$eval($member.nameof).init(alloc);
+  $foreach $member : CFields::members:
+    self.$eval($member.name).init(alloc);
   $endforeach
 }
 
@@ -35,9 +35,9 @@ macro void CFields.init(
 *>
 macro CFields.@foreach(
   &self; 
-  @body(CFieldKind* kind, usz index))
+  @body(CFieldKind* kind, sz index))
 {
-  usz[CFieldKind.values.len] counters;
+  sz[CFieldKind::values.len] counters;
 
   foreach (i, &k : self.kinds) {
     @body(k, counters[k.ordinal]);
@@ -53,8 +53,8 @@ macro void C3Fields.init(
   &self, 
   Allocator alloc)
 {
-  $foreach $member : C3Fields.membersof:
-    self.$eval($member.nameof).init(alloc);
+  $foreach $member : C3Fields::members:
+    self.$eval($member.name).init(alloc);
   $endforeach
 }
 
@@ -65,9 +65,9 @@ macro void C3Fields.init(
 *>
 macro C3Fields.@foreach(
   &self; 
-  @body(C3FieldKind* kind, usz index))
+  @body(C3FieldKind* kind, sz index))
 {
-  usz[C3FieldKind.values.len] counters;
+  sz[C3FieldKind::values.len] counters;
 
   foreach (i, &k : self.kinds)
   {
@@ -103,16 +103,16 @@ macro void CTypeTokens.free(&self)
  Iterates through CTypeTokens in reversed order,
  returning the kind and index of a name string.
  If token is represented with const string,
- sets index to usz.max.
+ sets index to sz.max.
 *>
 macro CTypeTokens.@foreach(
   &self; 
-  @body(CTypeTokenKind kind, usz str_index))
+  @body(CTypeTokenKind kind, sz str_index))
 {
-  usz str_counter;
-  usz str_len = self.strs.len();
+  sz str_counter;
+  sz str_len = self.strs.len();
   foreach_r (k : self.kinds) {
-    usz str_index = usz.max;
+    sz str_index = sz::max;
     switch (k) {
       case NAME:
       case SIZED_ARRAY:
@@ -156,23 +156,23 @@ macro void CTypeTokens.push(
  Information about how the specific attribute is printed,
  must be contained in str @tag of the field.
 *>
-fn usz? WriteAttrs.to_format(
+fn sz? WriteAttrs.to_format(
   &self, 
   Formatter* format) 
   @dynamic
 {
-  usz? acc;
+  sz? acc;
 
-  $foreach $f : WriteAttrs.membersof:
-    assert( $f.has_tagof("attr") );
-    String $attr = $f.tagof("attr");
+  $foreach $f : WriteAttrs::members:
+    assert( $f.has_tag("attr") );
+    String $attr = $f.get_tag("attr");
 
-    $switch $f.typeid:
-      $case String:
+    $switch $f.type.kind:
+      $case String::kind:
         if ($f.get(*self) != "") {
           acc += format.printf(" %s(%s)", $attr, $f.get(*self));
         }
-      $case bool:
+      $case bool::kind:
         if ($f.get(*self)) {
           acc += format.printf(" %s", $attr);
         }
@@ -206,11 +206,11 @@ module std::core::array;
 
 <*
  Returns true if predicate returns true at least one time. Returns false otherwise.
- @require $kindof(arr) == SLICE ||| $kindof(arr) == ARRAY       : "Array must be either slice or array"
- @require $kindof(predicate) == FUNC                              : "Predicate must be a function"
- @require $typeof(predicate).returns == bool.typeid                 : "Predicate must return bool"
- @require $typeof(predicate).paramsof.len == 1                      : "Predicate must have one parameter"
- @require $typeof(predicate).paramsof[0].type == $typeof(arr).inner : "Predicate must have parameter of inner array type"
+ @require $Typeof(arr)::kind == SLICE ||| $kindof(arr) == ARRAY       : "Array must be either slice or array"
+ @require $Typeof(predicate)::kind == FUNC                              : "Predicate must be a function"
+ @require $Typeof(predicate)::returns == bool                 : "Predicate must return bool"
+ @require $Typeof(predicate)::params.len == 1                      : "Predicate must have one parameter"
+ @require $Typeof(predicate)::params[0].type == $Typeof(arr)::inner : "Predicate must have parameter of inner array type"
 *>
 macro has(arr, predicate)
 {

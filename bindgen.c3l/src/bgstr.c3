@@ -3,7 +3,7 @@ module bgimpl;
 import bgimpl::err;
 import std::collections::list;
 import std::collections::map;
-import std::ascii;
+import std::core::ascii;
 
 
 alias ListString = List{String};
@@ -153,7 +153,7 @@ fn String camelToPascal(
   @export("bgstr_camel_to_pascal")
 {
   String res = str.copy(alloc);
-  usz i;
+  sz i;
   while (i < str.len && str[i] == '_') ++i;
   if (i < str.len) res[i] = str[i].to_upper();
   return res;
@@ -193,7 +193,7 @@ fn String pascalToCamel(
   @export("bgstr_pascal_to_camel")
 {
   String res = str.copy(alloc);
-  usz i;
+  sz i;
   while (i < str.len && str[i] == '_') ++i;
   if (i < str.len) res[i] = str[i].to_lower();
   return res;
@@ -273,18 +273,18 @@ fn ListString parseSnakeCase(
   tokens.init(alloc, str.len / 2);
 
   // Treat possible beginning '_'
-  usz first = 0;
+  sz first = 0;
   while (first < str.len && str[first] == '_') ++first;
   if (first > 0) tokens.push(str[0..first-1]);
 
   // Treat possible closing '_' 
-  usz last = str.len - 1;
+  sz last = str.len - 1;
   while (last > 0 && str[last] == '_') --last;
 
   // Treat the rest [first..last]
-  for (usz i = first; i <= last;) {
+  for (sz i = first; i <= last;) {
     while (i <= last && str[i] == '_') ++i;
-    usz begin = i;
+    sz begin = i;
     while (i <= last && str[i] != '_') ++i;
     tokens.push(str[begin..i-1]);
   }
@@ -324,17 +324,17 @@ fn ListString parseCamelCase(
   tokens.init(alloc, str.len / 2);
 
   // Erase possible beginning '_'
-  isz first = 0;
+  sz first = 0;
   while (first < str.len && str[first] == '_') ++first;
   if (first > 0) tokens.push(str[0..first-1]);
 
   // Erase possible closing '_' 
-  isz last = str.len - 1;
+  sz last = str.len - 1;
   while (last >= 0 && str[last] == '_') --last;
 
   // Treat the rest [first..last]
-  for (usz i = first; i <= last;) {
-    usz begin = i++;
+  for (sz i = first; i <= last;) {
+    sz begin = i++;
 
     // Handle several upper cases and digits in a row
     bool is_prev_digit = false;
@@ -465,7 +465,7 @@ macro String convertToSnakeOrScreaming(
   ListString* tokens, 
   bool $to_snake) 
 {
-  usz size = 0;
+  sz size = 0;
   foreach (t : tokens) {
     size += t.len;
 
@@ -476,11 +476,11 @@ macro String convertToSnakeOrScreaming(
   --size;
 
   // If last token is '_', we do not insert '_' after prelast token
-  usz last_token_index = tokens.len() - ((*tokens)[^1][0] == '_' ? 2 : 1); 
+  sz last_token_index = tokens.len() - ((*tokens)[^1][0] == '_' ? 2 : 1); 
 
   String res = (String)alloc::alloc_array(alloc, char, size);
   
-  usz last = 0;
+  sz last = 0;
   foreach (i, t : tokens) {
     res[last:t.len] = t[..];
 
@@ -515,7 +515,7 @@ macro String convertToCamelOrPascal(
   ListString* tokens, 
   bool $to_camel) 
 {
-  usz size = 0;
+  sz size = 0;
   foreach (t : tokens) {
     size += t.len;
   }
@@ -526,11 +526,11 @@ macro String convertToCamelOrPascal(
     bool has_underscore = (*tokens)[0][0] == '_';
   $endif
 
-  usz last = 0;
+  sz last = 0;
   foreach (i, t : *tokens) {
     res[last:t.len] = t[..];
     
-    usz offset = 1;
+    sz offset = 1;
     $if $to_camel:
       if (i == (has_underscore ? 1 : 0)) offset = 0;
     $endif
@@ -545,7 +545,7 @@ macro String convertToCamelOrPascal(
       res[last] = res[last].to_upper();
     $endif
 
-    for (usz j = last + offset; j < last + t.len; ++j) {
+    for (sz j = last + offset; j < last + t.len; ++j) {
       res[j] = res[j].to_lower();
     }
 

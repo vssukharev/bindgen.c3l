@@ -154,14 +154,14 @@ fn CXSourceRange getTrueCursorExtent(
  their quantity. Does not skip attributes, macro expansions,
  etc.
 *>
-fn usz getTopChildrenNumber(
+fn sz getTopChildrenNumber(
 	CXCursor cursor)
 {
-	usz qty;
+	sz qty;
 
 	clang::visitChildren(cursor, 
 		fn (CXCursor cursor, CXCursor parent, CXClientData client_data) {
-		usz* qty = (usz*) client_data;
+		sz* qty = (sz*) client_data;
 		++*qty;
 		return CHILD_VISIT_CONTINUE;
 		}, (CXClientData) &qty

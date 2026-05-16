@@ -39,22 +39,15 @@ fn void? translateHeader(
 	if (opts.out_name != "") @pool() {
 		err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out_file");
 
-		Path out_path = { 
-		.path_string = opts.out_name,
-		.env = path::DEFAULT_ENV,
-		};
+		Path out_path = path::tnew(opts.out_name)!;
 
 		if (path::is_dir(out_path)) {
-		err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
-		return bg::INVALID_ARGUMENTS~;
+			err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
+			return bg::INVALID_ARGUMENTS~;
 		}
 
 		// If there is no parent, we are in root
-		Path out_parent = out_path.parent() ?? {
-		.path_string = "/",
-		.env = path::DEFAULT_ENV,
-		};
-
+		Path out_parent = out_path.parent() ?? path::tnew(string::tformat("%s", path::PREFERRED_SEPARATOR))!;
 		// Create missing directories on the path
 		path::mkdir(out_parent, recursive: true)!!;
 
@@ -93,7 +86,7 @@ fn void? translateHeader(
 	defer clang::disposeTranslationUnit(tu);
 
 	// Print diagnostics
-	usz severe_count = runDiagnostics(tu, header_name, DIAGNOSTIC_ERROR);
+	sz severe_count = runDiagnostics(tu, header_name, DIAGNOSTIC_ERROR);
 	if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR~;
 
 	GlobalVisitData visit_data = {
@@ -141,7 +134,7 @@ fn void? translateHeader(
 	@param ignore_file_not_found : "Whether to ignore file not found error in diagnostics"
 	@return                        "Number of severe diagnostics"
 *>
-fn usz runDiagnostics(
+fn sz runDiagnostics(
 	CXTranslationUnit tu,
 	String header_name,
 	CXDiagnosticSeverity min_severity,
@@ -149,7 +142,7 @@ fn usz runDiagnostics(
 	@inline
 {
 	CUInt diagnostics_count = clang::getNumDiagnostics(tu);
-	usz severe_count;
+	sz severe_count;
 	for (CUInt i; i < diagnostics_count; ++i) {
 		CXDiagnostic diag = clang::getDiagnostic(tu, i); 
 		defer clang::disposeDiagnostic(diag);

@@ -1,5 +1,5 @@
 import bindgen;
-import std::ascii, std::io;
+import std::core::ascii, std::io;
 
 fn void main(String[] args)
 {
@@ -19,10 +19,10 @@ fn void main(String[] args)
 		.type = &trans_type,
 		.variable = &trans_var,
 		.func = fn String(String str, Allocator alloc) =>
-			str.strip("clang_").pascal_to_camel(alloc),
+			str.strip_prefix("clang_").pascal_to_camel(alloc),
 		.constant = &trans_const,
 		.enum_field = fn String(String str, Allocator alloc) =>
-			str.strip("CX").camel_to_screaming(alloc),
+			str.strip_prefix("CX").pascal_to_screaming(alloc),
 		.func_macro = fn String(String str, Allocator alloc) => 
 			"".copy(alloc),
 	};

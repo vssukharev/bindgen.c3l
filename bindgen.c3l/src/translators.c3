@@ -23,7 +23,7 @@ import bgimpl,
 	Global variable or const declaration
 	@require clang::getCursorKind(cursor) == CURSOR_VAR_DECL
 *>
-fn usz? varDecl(
+fn sz? varDecl(
 	GlobalVisitData* vd,
 	CXCursor cursor)
 	@maydiscard 
@@ -78,7 +78,7 @@ fn usz? varDecl(
 	Global constant declaration
 	@require clang::getCursorKind(cursor) == CURSOR_VAR_DECL
 *>
-fn usz? constDecl(
+fn sz? constDecl(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard => @pool()
@@ -130,7 +130,7 @@ fn usz? constDecl(
 	Enum declaration and all underlying constants
 	@require clang::getCursorKind(cursor) == CURSOR_ENUM_DECL
 *>
-fn usz? enumDecl(
+fn sz? enumDecl(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard => @pool() 
@@ -177,7 +177,7 @@ fn usz? enumDecl(
 	}
 
 	WriteAttrs attrs;
-	usz? acc;
+	sz? acc;
 	if (clang::cursor_isAnonymous(cursor)) {
 		CXType base = misc::getBaseType(enum_type);
 		vd.types_table[base] = under_type_str;
@@ -207,7 +207,7 @@ fn usz? enumDecl(
 	Function delcaration
 	@require clang::getCursorKind(cursor) == CURSOR_FUNCTION_DECL
 *>
-fn usz? func(
+fn sz? func(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard => @pool()
@@ -264,7 +264,7 @@ fn usz? func(
 	Macro definition
 	@require clang::getCursorKind(cursor) == CURSOR_MACRO_DEFINITION
 *>
-fn usz? macroDef(
+fn sz? macroDef(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard
@@ -278,7 +278,7 @@ fn usz? macroDef(
 <*
 	Functional macro definition
 *>
-fn usz? funcMacroDef(
+fn sz? funcMacroDef(
 	GlobalVisitData* vd,
 	CXCursor cursor)
 	@maydiscard => @pool()
@@ -336,7 +336,7 @@ fn usz? funcMacroDef(
 <*
  Constant macro definition
 *>
-fn usz? constMacroDef(
+fn sz? constMacroDef(
 	GlobalVisitData* vd, 
 	CXCursor cursor) @maydiscard => @pool()
 {
@@ -377,7 +377,7 @@ fn usz? constMacroDef(
 	Typedef declaration
 	@require clang::getCursorKind(cursor) == CURSOR_TYPEDEF_DECL
 *>
-fn usz? typedefDecl(
+fn sz? typedefDecl(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard => @pool()
@@ -428,7 +428,7 @@ fn usz? typedefDecl(
 	Structure declaration
 	@require clang::getCursorKind(cursor) == CURSOR_STRUCT_DECL
 *>
-fn usz? structDecl(
+fn sz? structDecl(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard
@@ -441,7 +441,7 @@ fn usz? structDecl(
 	Union declaration
 	@require  clang::getCursorKind(cursor) == CURSOR_UNION_DECL 
 *>
-fn usz? unionDecl(
+fn sz? unionDecl(
 	GlobalVisitData* vd, 
 	CXCursor cursor) 
 	@maydiscard
@@ -453,7 +453,7 @@ fn usz? unionDecl(
 <*
 	Both struct and union declaration helper macro
 *>
-macro usz? recordDecl(
+macro sz? recordDecl(
 	GlobalVisitData* vd,
 	CXCursor cursor, 
 	bool $is_union)
@@ -510,7 +510,7 @@ macro usz? recordDecl(
 	// If no fields are defined, rec_type is incomplete.
 	// Then we write it as typedef to void and wrap into
 	// module if needed
-	usz fields_len = misc::getTopChildrenNumber(cursor);
+	sz fields_len = misc::getTopChildrenNumber(cursor);
 	if (fields_len == 0)  {
 		valgen::moduleWrap(vd, orig_rec_name);
 		return wter::typedefDistinct(vd.out, &vd.write_state, rec_name, "void", attrs);
@@ -557,7 +557,7 @@ macro usz? recordDecl(
 <*
  	Pointer to function type (not top-level declaration)
 *>
-fn usz? pfnType(
+fn sz? pfnType(
 	GlobalVisitData* vd, 
 	String name,
 	CXType type, 

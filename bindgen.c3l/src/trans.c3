@@ -89,7 +89,7 @@ fn String? ctype(
 
 	// We will never check NAME for previous kind
 	CTypeTokenKind prev_kind = NAME;
-	tokens.@foreach(;CTypeTokenKind kind, usz str_index) {
+	tokens.@foreach(;CTypeTokenKind kind, sz str_index) {
 		String str = tparse::convertCTypeTokenToC3(kind, tokens.strs.array_view(), str_index);
 
 		switch (kind) {
@@ -179,7 +179,7 @@ fn String? tokensUnderCursor(
 	// Token number to start iterating from. 
 	// It's needed as sometimes cursor name can be also tokenized, 
 	// e.g. when tokenizing a macro, first token is it's name.
-	usz start_from = kind == CURSOR_MACRO_DEFINITION ? 1 : 0;
+	sz start_from = kind == CURSOR_MACRO_DEFINITION ? 1 : 0;
 	if (tokens_len <= start_from) return trans::EMPTY_MACRO_VAL~;
 
 	DString res;
@@ -202,8 +202,8 @@ fn String? tokensUnderCursor(
 		// 1. Constant (macro)
 		// 2. Functional macro
 		case TOKEN_IDENTIFIER:
-			usz i = token - tokens_ptr;
-			if (i < tokens_len - 1) {
+			sz i = token - tokens_ptr;
+			if (i < (sz)tokens_len - 1) {
 			CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
 			defer clang::disposeString(token_spell_2);
 			String token_str_2 = misc::convStr(token_spell_2);
@@ -286,7 +286,7 @@ fn String? basicType(
     case "void":          return "void";
     case "_Bool":         return "bool";
     case "ptrdiff_t":     return "isz";
-    case "size_t":        return "usz";
+    case "size_t":        return "sz";
 
     case "char":          return "CChar";
     case "short":         return "CShort";

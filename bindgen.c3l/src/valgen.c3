@@ -5,21 +5,21 @@ import bindgen::bg,
 
 
 <*
- Applies fun to a name for value generation.
- If function is null, returns the default value
- of return type.
- @require $typeof(fun) == BGGenFn ||| $typeof(fun) == BGModuleWrapFn
+	Applies fun to a name for value generation.
+	If function is null, returns the default value
+	of return type.
+	@require $Typeof(fun) == BGGenFn ||| $Typeof(fun) == BGModuleWrapFn
 *>
 macro apply(
-  Allocator alloc, 
-  String name,  
-  fun)
+	Allocator alloc, 
+	String name,  
+	fun)
 {
-  var $RetType = $typefrom($typeof(fun).returns);
-  if (fun == null) return ($RetType){};
+	var $RetType = $Typefrom($Typeof(fun)::returns);
+	if (fun == null) return ($RetType){};
 
-  $RetType res = fun(name, alloc);
-  return res;
+	$RetType res = fun(name, alloc);
+	return res;
 }
 
 
@@ -29,13 +29,13 @@ macro apply(
  See WriteAttrs docs for more info.
 *>
 fn WriteAttrs getWriteAttrs(
-  Allocator alloc,
-  String name, 
-  BGGenCallbacks gen_fns)
+	Allocator alloc,
+	String name, 
+	BGGenCallbacks gen_fns)
 {
-  return {
-    .if_condition = valgen::apply(alloc, name, gen_fns.if_condition),
-  };
+	return {
+		.if_condition = valgen::apply(alloc, name, gen_fns.if_condition),
+	};
 }
 
 

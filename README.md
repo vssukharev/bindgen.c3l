@@ -99,7 +99,7 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
-- Comment support
+- Comments: convert attributes
 - Fix multiple definitions for macros
 - Inline definition of records and enums inside of function parameters
 - Allow user to write any attributes on an entity based on WriteAttrs
