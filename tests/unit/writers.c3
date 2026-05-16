@@ -174,7 +174,7 @@ fn void test_enum_decl()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\ntypedef En = inline int;\n";
+    const EXPECTED = "\nconstdef En : int {\n\n}\n";
 
     enumDecl(&out, &state, {}, "En", "int");
 
@@ -184,7 +184,7 @@ fn void test_enum_decl()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\ntypedef En @private = inline int;\n";
+    const EXPECTED = "\nconstdef En @private : int {\n\n}\n";
 
     WriteAttrs attrs = { .private = true };
     enumDecl(&out, &state, {}, "En", "int", "", attrs);
@@ -201,7 +201,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nfn char* f()\n@extern(\"F\");\n";
+    const EXPECTED = "\nextern fn char* f()\n@cname(\"F\");\n";
 
     func(&out, &state, {}, "char*", "F", "f");
 
@@ -211,7 +211,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nfn char** some_func(\n  int b,\n  double)\n@extern(\"SomeFunc\") @private;\n";
+    const EXPECTED = "\nextern fn char** some_func(\n  int b,\n  double)\n@cname(\"SomeFunc\") @private;\n";
 
     VarDecl[] params = { {"int", "b"}, {"double", ""} };
     WriteAttrs attrs = { .private = true };
