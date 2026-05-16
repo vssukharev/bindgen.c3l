@@ -176,7 +176,7 @@ fn void test_enum_decl()
     defer @reset(out, state);
     const EXPECTED = "\ntypedef En = inline int;\n";
 
-    enumDecl(&out, &state, "En", "int");
+    enumDecl(&out, &state, {}, "En", "int");
 
     assert( state.kind == ENUM );
     assert( out.str_view() == EXPECTED );
@@ -187,7 +187,7 @@ fn void test_enum_decl()
     const EXPECTED = "\ntypedef En @private = inline int;\n";
 
     WriteAttrs attrs = { .private = true };
-    enumDecl(&out, &state, "En", "int", attrs);
+    enumDecl(&out, &state, {}, "En", "int", "", attrs);
 
     assert( out.str_view() == EXPECTED );
   }
@@ -215,7 +215,7 @@ fn void test_func()
 
     VarDecl[] params = { {"int", "b"}, {"double", ""} };
     WriteAttrs attrs = { .private = true };
-    func(&out, &state, params, "char**", "SomeFunc", "some_func", attrs);
+    func(&out, &state, params, "char**", "SomeFunc", "some_func", "", attrs);
 
     io::printfn("<%s>", out);
     assert( out.str_view() == EXPECTED );
