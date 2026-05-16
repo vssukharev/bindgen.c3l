@@ -3,7 +3,7 @@ module bgtest;
 import bgimpl,
        clang,
        std::io,
-       std::collections::elastic_array,
+       std::collections::fixedlist,
        std::collections::list;
 
 
@@ -27,19 +27,19 @@ fn CXCursor[]? parse(
   Allocator alloc, 
   char[] code,
   ZString[] extra_args = {},
-  CXDiagnosticSeverity min_severity = clang::DIAGNOSTIC_ERROR,
+  CXDiagnosticSeverity min_severity = DIAGNOSTIC_ERROR,
   bool quiet = false)
   => @pool()
 {
   const PARSE_FLAGS = 
-    clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD |
-    clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES |
-    clang::TRANSLATION_UNIT_KEEP_GOING;
+    CXTranslationUnit_Flags.TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD |
+    CXTranslationUnit_Flags.TRANSLATION_UNIT_SKIP_FUNCTION_BODIES |
+    CXTranslationUnit_Flags.TRANSLATION_UNIT_KEEP_GOING;
 
   // Create temp header
   Path tmp = path::temp_directory(tmem)!!;
   tmp = tmp.tappend(HEADER_NAME)!!;
-  file::save(tmp.str_view(), code)!!;
+  file::save(tmp, code)!!;
 
   // Get args
   List{ZString} args_list;
@@ -53,7 +53,7 @@ fn CXCursor[]? parse(
   // Parse file
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
-  CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp.str_view(), args.ptr, args.len, null, 0, PARSE_FLAGS);
+  CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp, args.ptr, args.len, null, 0, (CUInt)PARSE_FLAGS);
   
   // Check the parse result
   if (tu == null) return PARSE_FAILURE~;
@@ -99,14 +99,14 @@ fn CXCursor[]? parse(
     // If cursor_file is null, it might be a macro included by a compiler
     CXFile cursor_file;
     clang::getExpansionLocation(clang::getCursorLocation(cursor), &cursor_file, null, null, null);
-    if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
+    if (cursor_file == null) return CHILD_VISIT_CONTINUE;
 
     // Skip macro expansions
-    if (clang::getCursorKind(cursor) == clang::CURSOR_MACRO_EXPANSION) return clang::CHILD_VISIT_CONTINUE;
+    if (clang::getCursorKind(cursor) == CURSOR_MACRO_EXPANSION) return CHILD_VISIT_CONTINUE;
 
     List{CXCursor}* cursors = (List{CXCursor}*) client;
     cursors.push(cursor);
-    return clang::CHILD_VISIT_CONTINUE;
+    return CHILD_VISIT_CONTINUE;
   }, (CXClientData) &cursors);
 
   return cursors.to_array(alloc);
@@ -121,10 +121,10 @@ fn CXType[] get_types(
   CXCursor[] cursors) 
   @inline
 {
-  CXType[] res = allocator::alloc_array(alloc, CXType, cursors.len);
+  CXType[] res = alloc::alloc_array(alloc, CXType, cursors.len);
   foreach (i, c : cursors) {
     switch (clang::getCursorKind(c)) {
-      case clang::CURSOR_TYPEDEF_DECL:
+      case CURSOR_TYPEDEF_DECL:
         res[i] = clang::getTypedefDeclUnderlyingType(c);
 
       default:
@@ -169,5 +169,5 @@ fn void cleanup() @local @finalizer
 }
 
 
-ElasticArray{CXTranslationUnit, TUS_CAPACITY} translation_units @local;
+FixedList{CXTranslationUnit, TUS_CAPACITY} translation_units @local;
 
