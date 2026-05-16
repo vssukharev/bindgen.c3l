@@ -154,7 +154,7 @@ fn CXSourceRange getTrueCursorExtent(
  their quantity. Does not skip attributes, macro expansions,
  etc.
 *>
-fn usz getTopChildrenNumber(
+fn sz getTopChildrenNumber(
   CXCursor cursor)
 {
 	sz qty;
