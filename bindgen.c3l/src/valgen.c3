@@ -8,14 +8,14 @@ import bindgen::bg,
  Applies fun to a name for value generation.
  If function is null, returns the default value
  of return type.
- @require $typeof(fun) == BGGenFn ||| $typeof(fun) == BGModuleWrapFn
+ @require $Typeof(fun) == BGGenFn ||| $Typeof(fun) == BGModuleWrapFn
 *>
 macro apply(
   Allocator alloc, 
   String name,  
   fun)
 {
-  var $RetType = $typefrom($typeof(fun).returns);
+  var $RetType = $Typefrom($Typeof(fun)::returns);
   if (fun == null) return ($RetType){};
 
   $RetType res = fun(name, alloc);
