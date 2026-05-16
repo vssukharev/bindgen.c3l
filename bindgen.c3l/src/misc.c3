@@ -29,55 +29,55 @@ fn String getCursorDoc(CXCursor cursor, Allocator alloc, int indent = 0) {
 }
 
 fn String cleanupDoc(Allocator alloc, String raw_doc, int indent_level = 0) => @pool() {
-    if (raw_doc.len == 0) return "";
+  if (raw_doc.len == 0) return "";
 
-    DString clean;
-    clean.tinit();
+  DString clean;
+  clean.tinit();
 
 	DString indent_builder;
-    indent_builder.tinit();
-    for (int i = 0; i < indent_level; i++) {
-        indent_builder.append("\t");
-    }
-    String indent = indent_builder.str_view();
-    
-    // Split the raw comment into lines
-    String[] lines = raw_doc.split(tmem, "\n");
+  indent_builder.tinit();
+  for (int i = 0; i < indent_level; i++) {
+      indent_builder.append("  ");
+  }
+  String indent = indent_builder.str_view();
+  
+  // Split the raw comment into lines
+  String[] lines = raw_doc.split(tmem, "\n");
     
 	clean.append(indent);
-    clean.append("<*\n");
+  clean.append("<*\n");
     
-    foreach (line : lines) {
-        String trimmed = line.trim();
-        
-        // Remove comment start, end, and leading asterisks
-        if (trimmed.starts_with("/**")) { 
-			trimmed = trimmed[3..]; 
-		}
-        else if (trimmed.starts_with("/*")) {
-			trimmed = trimmed[2..];
-		}
-        if (trimmed.ends_with("*/")) { 
-			trimmed = trimmed[..trimmed.len - 2];
-		}
-        
-        // Strip the leading '*' if it exists (standard Doxygen style)
-        trimmed = trimmed.trim();
-        if (trimmed.starts_with("*")) {
-            trimmed = trimmed[1..].trim();
-        }
+  foreach (line : lines) {
+    String trimmed = line.trim();
+    
+    // Remove comment start, end, and leading asterisks
+    if (trimmed.starts_with("/**")) { 
+      trimmed = trimmed[3..]; 
+    }
+    else if (trimmed.starts_with("/*")) {
+      trimmed = trimmed[2..];
+    }
+    if (trimmed.ends_with("*/")) { 
+      trimmed = trimmed[..trimmed.len - 2];
+    }
+      
+    // Strip the leading '*' if it exists (standard Doxygen style)
+    trimmed = trimmed.trim();
+    if (trimmed.starts_with("*")) {
+      trimmed = trimmed[1..].trim();
+    }
 
-        if (trimmed.len > 0) {
-			clean.append(indent);
-            clean.append("\t"); // Indent for style
-            clean.append(trimmed);
-            clean.append("\n");
-        }
+    if (trimmed.len > 0) {
+    clean.append(indent);
+      clean.append("  "); // Indent for style
+      clean.append(trimmed);
+      clean.append("\n");
     }
+  }
     
 	clean.append(indent);
-    clean.append("*>");
-    return clean.copy_str(alloc);
+  clean.append("*>");
+  return clean.copy_str(alloc);
 }
 
 <*
