@@ -3,15 +3,15 @@ module bgimpl::check;
 import bindgen::bg;
 
 <*
- Applies fun to s, returning false
- if fun is null.
+	Applies fun to s, returning false
+	if fun is null.
 *>
 fn bool apply(
-  String s, 
-  BGCheckFn fun) 
-  @inline
+	String s, 
+	BGCheckFn fun) 
+	@inline
 {
-  if (fun == null) return false;
-  return fun(s);
+	if (fun == null) return false;
+	return fun(s);
 }
 

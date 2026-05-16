@@ -11,6 +11,7 @@ fn void main(String[] args)
 		.module_name = "clang",
 		.imports = { "libc" },
 		.skip_errors = false,
+		.generate_docs = true,
 		.include_file = &include_file,
 	};
 
@@ -33,7 +34,7 @@ fn String trans_type(String str, Allocator alloc)
 {
 	switch (str)
 	{
-		case "time_t": return "Time_t".copy(alloc);
+		case "const char*": return "ZString".copy(alloc);
 	}
 
 	return str.copy(alloc);

@@ -110,7 +110,12 @@ fn CXChildVisitResult enumField(
 	CLongLong enum_value = clang::getEnumConstantDeclValue(cursor);
 	String value_str = string::format(vd.allocator, "%d", enum_value);
 
-	vd.fields.push({ trans_name_str, value_str });
+	String docs;
+	if (vd.g.use_docs) {
+		docs = misc::getCursorDoc(cursor, mem, 1);
+	}
+
+	vd.fields.push({ trans_name_str, value_str, docs });
 
 	return CHILD_VISIT_CONTINUE;
 }
@@ -125,7 +130,6 @@ fn CXChildVisitResult enumDecl(
   CXCursor parent, 
   CXClientData client_data)
 {
-	log::info("enumDecl - %s", clang::getCursorKind(cursor));
 	if (clang::getCursorKind(cursor) != CURSOR_ENUM_DECL) {
     	return CHILD_VISIT_CONTINUE;
   	}
@@ -184,161 +188,160 @@ fn CXChildVisitResult typedefDecl(
 
 
 <*
- Function parameters
- Translate them and push to visit data
+	Function parameters
+	Translate them and push to visit data
 *>
 fn CXChildVisitResult func(
-  CXCursor cursor, 
-  CXCursor parent, 
-  CXClientData client_data)
+	CXCursor cursor, 
+	CXCursor parent, 
+	CXClientData client_data)
 {
-  // The visitor can also encounter non-paremeters in a function.
-  // For example, it may be attributes, etc.
-  if (clang::getCursorKind(cursor) != CURSOR_PARM_DECL) {
-    return CHILD_VISIT_CONTINUE;
-  }
+	// The visitor can also encounter non-paremeters in a function.
+	// For example, it may be attributes, etc.
+	if (clang::getCursorKind(cursor) != CURSOR_PARM_DECL) {
+		return CHILD_VISIT_CONTINUE;
+	}
 
-  FuncVisitData* vd = (FuncVisitData*) client_data;
+	FuncVisitData* vd = (FuncVisitData*) client_data;
 
-  CXString name_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(name_spell);
-  String name_str = misc::convStr(name_spell); 
+	CXString name_spell = clang::getCursorSpelling(cursor);
+	defer clang::disposeString(name_spell);
+	String name_str = misc::convStr(name_spell); 
 
-  CXType type = clang::getCursorType(cursor);
-  CXString type_spell = clang::getTypeSpelling(type);
-  defer clang::disposeString(type_spell);
-  String type_str = misc::convStr(type_spell);
+	CXType type = clang::getCursorType(cursor);
+	CXString type_spell = clang::getTypeSpelling(type);
+	defer clang::disposeString(type_spell);
+	String type_str = misc::convStr(type_spell);
 
-  // Make parameter empty if it's ignored
-  String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator) ?? "";
- 
-  String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g, is_func_param: true);
-  if (catch trans_type_str)
-  {
-    CXString parent_spell = clang::getCursorSpelling(parent);
-    defer clang::disposeString(parent_spell);
-    String parent_str = misc::convStr(parent_spell);
+	// Make parameter empty if it's ignored
+	String trans_name_str = trans::apply(name_str, vd.g.trans_fns.variable, vd.allocator) ?? "";
+	
+	String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g, is_func_param: true);
+	if (catch trans_type_str)
+	{
+		CXString parent_spell = clang::getCursorSpelling(parent);
+		defer clang::disposeString(parent_spell);
+		String parent_str = misc::convStr(parent_spell);
 
-    err::warn(vd.g.no_verbose, "Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
-    return CHILD_VISIT_BREAK;
-  }
+		err::warn(vd.g.no_verbose, "Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
+		return CHILD_VISIT_BREAK;
+	}
 
-  vd.params.push({trans_type_str, trans_name_str});
+	vd.params.push({trans_type_str, trans_name_str});
 
-  return CHILD_VISIT_CONTINUE;
+	return CHILD_VISIT_CONTINUE;
 }
 
 
 <*
- Fields of either struct or union.
- If a field declares a type, translates
- it and write to global output.
+	Fields of either struct or union.
+	If a field declares a type, translates
+	it and write to global output.
 *>
 fn CXChildVisitResult fields(
-  CXCursor cursor, 
-  CXCursor parent, 
-  CXClientData client_data)
-  => @pool()
+	CXCursor cursor, 
+	CXCursor parent, 
+	CXClientData client_data) => @pool()
 {
-  // TODO: cope with incomplete types!!!
-  FieldsVisitData* vd = (FieldsVisitData*) client_data;
+	// TODO: cope with incomplete types!!!
+	FieldsVisitData* vd = (FieldsVisitData*) client_data;
 
-  CXString field_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(field_spell);
-  String field_name = misc::convStr(field_spell);
+	CXString field_spell = clang::getCursorSpelling(cursor);
+	defer clang::disposeString(field_spell);
+	String field_name = misc::convStr(field_spell);
 
-  String? trans_field_name = trans::apply(field_name, vd.g.trans_fns.variable, vd.allocator);
-  if (catch trans_field_name) {
-    err::warn(vd.g.no_verbose, "Field (variable) '%s' is ignored", field_name);
-    return CHILD_VISIT_BREAK;
-  }
+	String? trans_field_name = trans::apply(field_name, vd.g.trans_fns.variable, vd.allocator);
+	if (catch trans_field_name) {
+		err::warn(vd.g.no_verbose, "Field (variable) '%s' is ignored", field_name);
+		return CHILD_VISIT_BREAK;
+	}
 
-  CXType type = clang::getCanonicalType(clang::getCursorType(cursor));
-  CXType prev_type = clang::getCursorType(vd.prev_inline);
+	CXType type = clang::getCanonicalType(clang::getCursorType(cursor));
+	CXType prev_type = clang::getCursorType(vd.prev_inline);
 
-  if (!clang::cursor_isNull(vd.prev_inline) && clang::equalTypes(type, prev_type)) {
-    switch (tparse::getCFieldKind(vd.prev_inline)) {
-      case STRUCT:
-        vd.fields.structs[^1].name = trans_field_name;
-      case UNION:
-        vd.fields.unions[^1].name = trans_field_name;
-      default:
-        unreachable();
-    }
+	if (!clang::cursor_isNull(vd.prev_inline) && clang::equalTypes(type, prev_type)) {
+		switch (tparse::getCFieldKind(vd.prev_inline)) {
+		case STRUCT:
+			vd.fields.structs[^1].name = trans_field_name;
+		case UNION:
+			vd.fields.unions[^1].name = trans_field_name;
+		default:
+			unreachable();
+		}
 
-    vd.prev_inline = clang::getNullCursor();
-    return CHILD_VISIT_CONTINUE;
-  }
+		vd.prev_inline = clang::getNullCursor();
+		return CHILD_VISIT_CONTINUE;
+	}
 
-  CFieldKind kind = tparse::getCFieldKind(cursor);
+	CFieldKind kind = tparse::getCFieldKind(cursor);
 
-  if (kind == NORMAL || kind == BIT) {
-    String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g);
-    if (catch trans_type_str) {
-      CXString type_spell = clang::getTypeSpelling(type);
-      defer clang::disposeString(type_spell);
-      String type_str = misc::convStr(type_spell);
+	if (kind == NORMAL || kind == BIT) {
+		String? trans_type_str = trans::ctypeWithPFN(cursor, vd.g);
+		if (catch trans_type_str) {
+		CXString type_spell = clang::getTypeSpelling(type);
+		defer clang::disposeString(type_spell);
+		String type_str = misc::convStr(type_spell);
 
-      CXString parent_spell = clang::getCursorSpelling(parent);
-      defer clang::disposeString(parent_spell);
-      String parent_str = misc::convStr(parent_spell);
+		CXString parent_spell = clang::getCursorSpelling(parent);
+		defer clang::disposeString(parent_spell);
+		String parent_str = misc::convStr(parent_spell);
 
-      err::warn(vd.g.no_verbose, "Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
-      return CHILD_VISIT_BREAK;
-    }
+		err::warn(vd.g.no_verbose, "Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
+		return CHILD_VISIT_BREAK;
+		}
 
-    switch (kind) {
-      case NORMAL:
-        vd.fields.norm.push({trans_type_str, trans_field_name});
-        vd.fields.kinds.push(NORMAL);
-      case BIT:
-        CInt width = clang::getFieldDeclBitWidth(cursor);
-        vd.fields.bit.push({trans_type_str, trans_field_name, (usz)width});
-        vd.fields.kinds.push(BIT);
-      default: 
-        unreachable();
-    }
-  } else if (kind == ENUM) {
-    ttor::enumDecl(vd.g, cursor);
-  } else {
-    // We have two different behaviours depending on whether a record
-    // is anonymous or not. In first case, we create anonymous record 
-    // as well; in second one, we regularly translate a record and 
-    // write it globally
-    if (clang::cursor_isAnonymous(cursor)) {
-      vd.prev_inline = cursor;
-      FieldsVisitData vd_inner = {
-        .g = vd.g,
-        .allocator = vd.allocator,
-        .prev_inline = clang::getNullCursor(),
-      };
+		switch (kind) {
+		case NORMAL:
+			vd.fields.norm.push({trans_type_str, trans_field_name});
+			vd.fields.kinds.push(NORMAL);
+		case BIT:
+			CInt width = clang::getFieldDeclBitWidth(cursor);
+			vd.fields.bit.push({trans_type_str, trans_field_name, (usz)width});
+			vd.fields.kinds.push(BIT);
+		default: 
+			unreachable();
+		}
+	} else if (kind == ENUM) {
+		ttor::enumDecl(vd.g, cursor);
+	} else {
+		// We have two different behaviours depending on whether a record
+		// is anonymous or not. In first case, we create anonymous record 
+		// as well; in second one, we regularly translate a record and 
+		// write it globally
+		if (clang::cursor_isAnonymous(cursor)) {
+		vd.prev_inline = cursor;
+		FieldsVisitData vd_inner = {
+			.g = vd.g,
+			.allocator = vd.allocator,
+			.prev_inline = clang::getNullCursor(),
+		};
 
-      vd_inner.fields.init(vd_inner.allocator);
-      if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_inner) != 0) return CHILD_VISIT_BREAK;
+		vd_inner.fields.init(vd_inner.allocator);
+		if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_inner) != 0) return CHILD_VISIT_BREAK;
 
-      switch (kind) {
-        case STRUCT:
-          vd.fields.structs.push({"", vd_inner.fields});
-          vd.fields.kinds.push(STRUCT);
-        case UNION:
-          vd.fields.unions.push({"", vd_inner.fields});
-          vd.fields.kinds.push(UNION);
-        default: 
-          unreachable();
-      }
-    } else {
-      switch (kind) {
-        case STRUCT:
-          ttor::structDecl(vd.g, cursor);
-        case UNION:
-          ttor::unionDecl(vd.g, cursor);
-        default:
-          unreachable();
-      }
-    }
-  }
+		switch (kind) {
+			case STRUCT:
+			vd.fields.structs.push({"", vd_inner.fields});
+			vd.fields.kinds.push(STRUCT);
+			case UNION:
+			vd.fields.unions.push({"", vd_inner.fields});
+			vd.fields.kinds.push(UNION);
+			default: 
+			unreachable();
+		}
+		} else {
+		switch (kind) {
+			case STRUCT:
+			ttor::structDecl(vd.g, cursor);
+			case UNION:
+			ttor::unionDecl(vd.g, cursor);
+			default:
+			unreachable();
+		}
+		}
+	}
 
-  return CHILD_VISIT_CONTINUE;
+	return CHILD_VISIT_CONTINUE;
 }
 
 
