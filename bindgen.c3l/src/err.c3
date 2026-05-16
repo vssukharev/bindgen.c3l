@@ -11,9 +11,9 @@ import clang, std::io;
 macro void log(
   String str = "", 
   ..., 
-  usz indent = 0) 
+  sz indent = 0) 
 {
-  for (usz i; i < indent; ++i) {
+  for (sz i; i < indent; ++i) {
     io::eprintf("  ");
   }
   io::eprintf("%s[%s]%s : ", Ansi.GREEN, $$FUNC, Ansi.RESET);
@@ -46,7 +46,7 @@ macro void warn(
 {
   if (!no_verbose) {
     io::eprintf("%sWarning%s : ", Ansi.YELLOW, Ansi.RESET);
-    io::eprintfn(str, $vasplat);
+    io::eprintfn(str, ...$vaarg);
   }
 }
 
@@ -62,7 +62,7 @@ macro void info(
 {
   if (!no_verbose) {
     io::eprintf("%sInfo%s : ", Ansi.GREEN, Ansi.RESET);
-    io::eprintfn(str, $vasplat);
+    io::eprintfn(str, ...$vaarg);
   }
 } 
 
@@ -76,7 +76,7 @@ macro void erro(
   ...) 
 {
   io::eprintf("%sError%s : ", Ansi.RED, Ansi.RESET);
-  io::eprintfn(str, $vasplat);
+  io::eprintfn(str, ...$vaarg);
 }
 
 
@@ -92,7 +92,7 @@ macro void diag(
   ...)
 {
   io::eprintf("%sError at %s:%d:%d%s : ", Ansi.RED, file, line, col, Ansi.RESET);
-  io::eprintfn(str, $vasplat);
+  io::eprintfn(str, ...$vaarg);
 }
 
 
