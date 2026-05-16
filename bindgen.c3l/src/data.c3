@@ -98,6 +98,12 @@ struct VarDecl
   String name;
 }
 
+struct EnumField 
+{
+  String name;
+  String init;
+  String docs;
+}
 
 <*
  Represents bit fields meaning:
