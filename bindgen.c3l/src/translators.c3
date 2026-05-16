@@ -21,9 +21,9 @@ import bgimpl,
 
 <*
  Global variable or const declaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_VAR_DECL
 *>
-fn usz? varDecl(
+fn sz? varDecl(
   GlobalVisitData* vd,
   CXCursor cursor)
   @maydiscard 
@@ -278,7 +278,7 @@ fn sz? macroDef(
 <*
  Functional macro definition
 *>
-fn usz? funcMacroDef(
+fn sz? funcMacroDef(
   GlobalVisitData* vd,
   CXCursor cursor)
   @maydiscard => @pool()
@@ -336,7 +336,7 @@ fn usz? funcMacroDef(
 <*
  Constant macro definition
 *>
-fn usz? constMacroDef(
+fn sz? constMacroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
   @maydiscard => @pool()
@@ -376,7 +376,7 @@ fn usz? constMacroDef(
 
 <*
  Typedef declaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_TYPEDEF_DECL
 *>
 fn sz? typedefDecl(
   GlobalVisitData* vd, 
