@@ -79,7 +79,7 @@ fn void test_is_type_incomplete()
   CXCursor[] cursors = bgtest::parse(tmem, SUITE_TRUE)!!;
   CXType[] types = bgtest::get_types(tmem, cursors);
   foreach (t : types) {
-    CXType base = t.kind == clang::TYPE_POINTER ? clang::getPointeeType(t) : t;
+    CXType base = t.kind == TYPE_POINTER ? clang::getPointeeType(t) : t;
     assert( isTypeIncomplete(base) );
   }
 
@@ -115,7 +115,7 @@ fn void test_get_true_cursor_extent()
 
   usz i;
   CXCursor[] cursors = bgtest::parse(tmem, SUITE)!!;
-  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursors[0]);
+  CXTranslationUnit tu = clang::cursor_getTranslationUnit(cursors[0]);
   foreach (c : cursors) {
     CXToken* tokens_ptr; uint tokens_len;
     clang::tokenize(tu, getTrueCursorExtent(c), &tokens_ptr, &tokens_len);
