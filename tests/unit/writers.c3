@@ -159,7 +159,7 @@ fn void test_var_decl()
 
     state.kind = ENUM;
     WriteAttrs attrs = { .private = true };
-    varDecl(&out, &state, "int", "name", "", attrs);
+    varDecl(&out, &state, "int", "name", "", "", attrs);
 
     assert( out.str_view() == EXPECTED );
   }
