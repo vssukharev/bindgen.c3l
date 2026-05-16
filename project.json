@@ -10,6 +10,11 @@
       "sources" : [ "examples/sandbox.c3" ],
     },
 
+    "clang": {
+      "type": "executable",
+      "sources": ["examples/clang.c3"]
+    },
+
     "dummy" : {
       "type" : "executable",
       "sources" : [ "examples/dummy.c3" ],
