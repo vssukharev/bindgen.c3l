@@ -17,14 +17,14 @@ fn String convStr(CXString s) @inline => clang::getCString(s).str_view();
 
 
 fn String getCursorDoc(CXCursor cursor, Allocator alloc, int indent = 0) {
-    CXString raw = clang::cursor_getRawCommentText(cursor);
-    
-    if (raw.data == null) {
-        return ""; 
-    }
+  CXString raw = clang::cursor_getRawCommentText(cursor);
+  
+  if (raw.data == null) {
+      return ""; 
+  }
 
-    defer clang::disposeString(raw);
-    String conv_str = misc::convStr(raw).copy(alloc); 
+  defer clang::disposeString(raw);
+  String conv_str = misc::convStr(raw).copy(alloc); 
 	return cleanupDoc(alloc, conv_str, indent);
 }
 
