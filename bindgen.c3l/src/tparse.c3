@@ -51,17 +51,17 @@ fn CTypeTokens getTypeTokens(
 
   while LOOP: (true) {
     switch (type.kind) {
-      case clang::TYPE_POINTER: 
+      case TYPE_POINTER: 
         tokens.push(POINTER);
         type = clang::getPointeeType(type);
 
-      case clang::TYPE_CONSTANT_ARRAY:
+      case TYPE_CONSTANT_ARRAY:
         CLongLong size = clang::getArraySize(type);
         String str = string::format(tmem, "[%d]", size);
         tokens.push(SIZED_ARRAY, str);
         type = clang::getElementType(type);
 
-      case clang::TYPE_INCOMPLETE_ARRAY:
+      case TYPE_INCOMPLETE_ARRAY:
         tokens.push(UNSIZED_ARRAY);
         type = clang::getElementType(type);
 
@@ -193,11 +193,11 @@ fn CFieldKind getCFieldKind(
   CFieldKind kind;
 
   switch (clang::getCursorKind(cursor)) {
-    case clang::CURSOR_STRUCT_DECL: 
+    case CURSOR_STRUCT_DECL: 
       kind = STRUCT;
-    case clang::CURSOR_UNION_DECL: 
+    case CURSOR_UNION_DECL: 
       kind = UNION;
-    case clang::CURSOR_ENUM_DECL:
+    case CURSOR_ENUM_DECL:
       kind = ENUM;
     default: 
       if (clang::getFieldDeclBitWidth(cursor) == -1) {

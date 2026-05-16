@@ -82,7 +82,7 @@ fn String? ctype(
   // is that clang::getCanonicalType() practically
   // erases the difference between alias and type itself,
   // so we apply it under the following conditions
-  if (clang::isAnonymous_Cursor(clang::getTypeDeclaration(base_type))) {
+  if (clang::cursor_isAnonymous(clang::getTypeDeclaration(base_type))) {
     base_type = clang::getCanonicalType(base_type);
   }
 
@@ -161,7 +161,7 @@ fn String? tokensUnderCursor(
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
 
-  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+  CXTranslationUnit tu = clang::cursor_getTranslationUnit(cursor);
   CXSourceRange sr = misc::getTrueCursorExtent(cursor);
 
   CXToken* tokens_ptr; uint tokens_len;
@@ -173,7 +173,7 @@ fn String? tokensUnderCursor(
   // Token number to start iterating from. 
   // It's needed as sometimes cursor name can be also tokenized, 
   // e.g. when tokenizing a macro, first token is it's name.
-  usz start_from = kind == clang::CURSOR_MACRO_DEFINITION ? 1 : 0;
+  usz start_from = kind == CURSOR_MACRO_DEFINITION ? 1 : 0;
   if (tokens_len <= start_from) return trans::EMPTY_MACRO_VAL~;
 
   DString res;
@@ -195,7 +195,7 @@ fn String? tokensUnderCursor(
       // Assume that identifier is one of:
       // 1. Constant (macro)
       // 2. Functional macro
-      case clang::TOKEN_IDENTIFIER:
+      case TOKEN_IDENTIFIER:
         usz i = token - tokens_ptr;
         if (i < tokens_len - 1) {
           CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
@@ -214,12 +214,12 @@ fn String? tokensUnderCursor(
           res.append(trans::apply(token_str, tfns.constant, tmem))!;
         }
 
-      case clang::TOKEN_LITERAL:
+      case TOKEN_LITERAL:
         res.append(trans::literal(tmem, token_str));
 
-      case clang::TOKEN_KEYWORD:
-      case clang::TOKEN_PUNCTUATION:
-      case clang::TOKEN_COMMENT:
+      case TOKEN_KEYWORD:
+      case TOKEN_PUNCTUATION:
+      case TOKEN_COMMENT:
         res.append(token_str);
     }
   };

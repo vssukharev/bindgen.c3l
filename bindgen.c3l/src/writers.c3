@@ -177,14 +177,27 @@ fn usz? varDecl(
 fn usz? enumDecl(
   OutStream out,
   WriteState* state,
+  EnumField[] fields,
   String name,
   String type,
   WriteAttrs attribs = {})
   @maydiscard
 {
-  state.kind = ENUM;
+	state.kind = ENUM;
 
-  return io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
+	usz? acc;
+
+	acc += io::fprintfn(out, "\nconstdef %s%s : %s {", name, attribs, type);
+
+	foreach (i, p : fields)  {
+		acc += io::fprintf(out, INDENT+++"%s =", p.name);
+		acc += io::fprintf(out, " %s", p.init);
+		if (i < fields.len - 1) acc += io::fprintn(out, ",");
+  	}
+
+	acc += io::fprintfn(out, "\n}");
+
+	return acc;
 }
 
 
@@ -211,7 +224,7 @@ fn usz? func(
 
   usz? acc;
 
-  acc += io::fprintf(out, "\nfn %s %s(", return_type, name);
+  acc += io::fprintf(out, "\nextern fn %s %s(", return_type, name);
   if (params.len > 0) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params)  {
@@ -221,7 +234,7 @@ fn usz? func(
     }
     if (i < params.len - 1) acc += io::fprintn(out, ",");
   }
-  acc += io::fprintfn(out, ")\n@extern(\"%s\")%s;", original_name, attribs);
+  acc += io::fprintfn(out, ")\n@cname(\"%s\")%s;", original_name, attribs);
 
   return acc;
 }

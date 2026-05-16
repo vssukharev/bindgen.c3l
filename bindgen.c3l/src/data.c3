@@ -98,6 +98,11 @@ struct VarDecl
   String name;
 }
 
+struct EnumField 
+{
+	String name;
+	String init;
+}
 
 <*
  Represents bit fields meaning:
@@ -272,6 +277,8 @@ struct ConstVisitData
 struct EnumVisitData
 {
   GlobalVisitData*  g;
+  List{EnumField}   fields;
+  Allocator         allocator;
   String            enum_name;
   bool              is_unsigned;
 }

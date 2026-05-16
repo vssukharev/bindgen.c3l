@@ -478,7 +478,7 @@ macro String convertToSnakeOrScreaming(
   // If last token is '_', we do not insert '_' after prelast token
   usz last_token_index = tokens.len() - ((*tokens)[^1][0] == '_' ? 2 : 1); 
 
-  String res = (String) allocator::alloc_array(alloc, char, size);
+  String res = (String)alloc::alloc_array(alloc, char, size);
   
   usz last = 0;
   foreach (i, t : tokens) {
@@ -520,7 +520,7 @@ macro String convertToCamelOrPascal(
     size += t.len;
   }
 
-  String res = (String) allocator::alloc_array(alloc, char, size);
+  String res = (String)alloc::alloc_array(alloc, char, size);
   
   $if $to_camel:
     bool has_underscore = (*tokens)[0][0] == '_';

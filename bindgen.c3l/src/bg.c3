@@ -61,7 +61,7 @@ fn void? translateHeader(
     out = file::open(opts.out_name, "w")!;
   };
 
-  defer (void) out.close();
+  defer (void)out.close();
 
   // Check callbacks
   if (trans_callbacks.func == null) err::warn(opts.no_verbose, "Function translation will not be performed as function pointer is null");
@@ -88,12 +88,12 @@ fn void? translateHeader(
   }
 
   CXTranslationUnit tu;
-  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString) header_name, cargs.ptr, cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, (uint)bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
   checkCode(code)!;
   defer clang::disposeTranslationUnit(tu);
 
   // Print diagnostics
-  usz severe_count = runDiagnostics(tu, header_name, clang::DIAGNOSTIC_ERROR);
+  usz severe_count = runDiagnostics(tu, header_name, DIAGNOSTIC_ERROR);
   if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR~;
 
   GlobalVisitData visit_data = {
@@ -181,23 +181,23 @@ fn void? checkCode(
   CXErrorCode code)
 {
   switch (code) {
-    case clang::ERROR_SUCCESS: 
+    case ERROR_SUCCESS: 
       break;
-    case clang::ERROR_FAILURE:
-    case clang::ERROR_AST_READ_ERROR:
+    case ERROR_FAILURE:
+    case ERROR_AST_READ_ERROR:
       return bg::CLANG_PARSE_ERROR~;
-    case clang::ERROR_CRASHED:
+    case ERROR_CRASHED:
       return bg::CLANG_CRASH~;
-    case clang::ERROR_INVALID_ARGUMENTS:
+    case ERROR_INVALID_ARGUMENTS:
       return bg::INVALID_ARGUMENTS~;
   }
 }
 
 
-const TRANSLATION_UNIT_PARSE_FLAGS =
-    clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
-  | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
-  | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
-  | clang::TRANSLATION_UNIT_KEEP_GOING;
+const CXTranslationUnit_Flags TRANSLATION_UNIT_PARSE_FLAGS =
+    CXTranslationUnit_Flags.TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
+  | CXTranslationUnit_Flags.TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
+  | CXTranslationUnit_Flags.TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
+  | CXTranslationUnit_Flags.TRANSLATION_UNIT_KEEP_GOING;
 
 

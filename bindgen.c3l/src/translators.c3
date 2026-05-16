@@ -21,7 +21,7 @@ import bgimpl,
 
 <*
  Global variable or const declaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_VAR_DECL
 *>
 fn usz? varDecl(
   GlobalVisitData* vd,
@@ -72,7 +72,7 @@ fn usz? varDecl(
 
 <*
  Global constant declaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_VAR_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_VAR_DECL
 *>
 fn usz? constDecl(
   GlobalVisitData* vd, 
@@ -124,7 +124,7 @@ fn usz? constDecl(
 
 <*
  Enum declaration and all underlying constants
- @require clang::getCursorKind(cursor) == clang::CURSOR_ENUM_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_ENUM_DECL
 *>
 fn usz? enumDecl(
   GlobalVisitData* vd, 
@@ -153,15 +153,16 @@ fn usz? enumDecl(
   }
 
   EnumVisitData vd_enum = {
-    .g = vd
+    .g = vd,
+	.allocator = mem,
   };
 
   switch (under_type.kind) {
-    case clang::TYPE_UCHAR:
-    case clang::TYPE_USHORT: 
-    case clang::TYPE_UINT:      
-    case clang::TYPE_ULONG:
-    case clang::TYPE_ULONGLONG: 
+    case TYPE_UCHAR:
+    case TYPE_USHORT: 
+    case TYPE_UINT:      
+    case TYPE_ULONG:
+    case TYPE_ULONGLONG: 
       vd_enum.is_unsigned = true;
     default:
       vd_enum.is_unsigned = false;
@@ -169,7 +170,7 @@ fn usz? enumDecl(
 
   WriteAttrs attrs;
   usz? acc;
-  if (clang::isAnonymous_Cursor(cursor)) {
+  if (clang::cursor_isAnonymous(cursor)) {
     CXType base = misc::getBaseType(enum_type);
     vd.types_table[base] = under_type_str;
 
@@ -181,21 +182,22 @@ fn usz? enumDecl(
       return 0;
     }
 
+  	if (clang::visitChildren(cursor, &vtor::enumField, (CXClientData)&vd_enum) != 0) return 0;
+
     valgen::moduleWrap(vd, orig_enum_name);
     attrs = valgen::getWriteAttrs(tmem, orig_enum_name, vd.gen_fns);
-    acc = wter::enumDecl(vd.out, &vd.write_state, tmp, under_type_str);
+    acc = wter::enumDecl(vd.out, &vd.write_state, vd_enum.fields.array_view(), tmp, under_type_str);
     
     vd_enum.enum_name = tmp;
   }
 
-  clang::visitChildren(cursor, &vtor::enumDecl, (CXClientData) &vd_enum);
   return acc;
 }
 
 
 <*
  Function delcaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_FUNCTION_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_FUNCTION_DECL
 *>
 fn usz? func(
   GlobalVisitData* vd, 
@@ -248,14 +250,14 @@ fn usz? func(
 
 <*
  Macro definition
- @require clang::getCursorKind(cursor) == clang::CURSOR_MACRO_DEFINITION
+ @require clang::getCursorKind(cursor) == CURSOR_MACRO_DEFINITION
 *>
 fn usz? macroDef(
   GlobalVisitData* vd, 
   CXCursor cursor) 
   @maydiscard
 {
-  return clang::isMacroFunctionLike_Cursor(cursor) ? 
+  return clang::cursor_isMacroFunctionLike(cursor) ? 
     ttor::funcMacroDef(vd, cursor) :
     ttor::constMacroDef(vd, cursor) @inline;
 }
@@ -287,7 +289,7 @@ fn usz? funcMacroDef(
   List{String} params;
   params.tinit();
 
-  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+  CXTranslationUnit tu = clang::cursor_getTranslationUnit(cursor);
   CXSourceRange sr = misc::getTrueCursorExtent(cursor); // We don't need to do getTrueCursorExtent as bug is not occured under macro declaration
   
   CXToken* tokens_ptr; uint tokens_len;
@@ -362,7 +364,7 @@ fn usz? constMacroDef(
 
 <*
  Typedef declaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_TYPEDEF_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_TYPEDEF_DECL
 *>
 fn usz? typedefDecl(
   GlobalVisitData* vd, 
@@ -413,7 +415,7 @@ fn usz? typedefDecl(
 
 <*
  Structure declaration
- @require clang::getCursorKind(cursor) == clang::CURSOR_STRUCT_DECL
+ @require clang::getCursorKind(cursor) == CURSOR_STRUCT_DECL
 *>
 fn usz? structDecl(
   GlobalVisitData* vd, 
@@ -426,7 +428,7 @@ fn usz? structDecl(
 
 <*
  Union declaration
- @require  clang::getCursorKind(cursor) == clang::CURSOR_UNION_DECL 
+ @require  clang::getCursorKind(cursor) == CURSOR_UNION_DECL 
 *>
 fn usz? unionDecl(
   GlobalVisitData* vd, 
@@ -471,7 +473,7 @@ macro usz? recordDecl(
     return 0;
   }
  
-  if (clang::isAnonymous_Cursor(cursor)) {
+  if (clang::cursor_isAnonymous(cursor)) {
     CXSourceLocation cursor_loc = clang::getCursorLocation(cursor);
     CUInt line, col;
     CXFile file;
