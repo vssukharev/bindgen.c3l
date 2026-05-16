@@ -82,7 +82,7 @@ fn String? ctype(
   // is that clang::getCanonicalType() practically
   // erases the difference between alias and type itself,
   // so we apply it under the following conditions
-  if (clang::isAnonymous_Cursor(clang::getTypeDeclaration(base_type))) {
+  if (clang::cursor_isAnonymous(clang::getTypeDeclaration(base_type))) {
     base_type = clang::getCanonicalType(base_type);
   }
 
@@ -91,7 +91,7 @@ fn String? ctype(
 
   // We will never check NAME for previous kind
   CTypeTokenKind prev_kind = NAME;
-  tokens.@foreach(;CTypeTokenKind kind, usz str_index) {
+  tokens.@foreach(;CTypeTokenKind kind, sz str_index) {
     String str = tparse::convertCTypeTokenToC3(kind, tokens.strs.array_view(), str_index);
 
     switch (kind) {
