@@ -76,6 +76,7 @@ For better user experience there is additional API for string transformations, w
 
 There are several examples located in `examples` directory. To check them out, run the following command in root directory of the repository:
 
+- LibClang bindings: `c3c run clang -- ./build/clang.c3i`
 - Sandbox to try out library: `c3c run sandbox` - it will write to stdout
 - My dummy: `c3c run dummy -- ./build/dummy.c3i` or `c3c run dummy` - it will print output to stdout
 - Vulkan: `c3c run vulkan -- ./build/vulkan.c3i`
@@ -98,6 +99,7 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
+- Comments: convert attributes
 - Fix multiple definitions for macros
 - Inline definition of records and enums inside of function parameters
 - Allow user to write any attributes on an entity based on WriteAttrs
