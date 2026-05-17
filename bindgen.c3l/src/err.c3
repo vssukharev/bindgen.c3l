@@ -17,7 +17,7 @@ macro void log(
     io::eprintf("  ");
   }
   io::eprintf("%s[%s]%s : ", Ansi.GREEN, $$FUNC, Ansi.RESET);
-  io::eprintfn(str, $vasplat);
+  io::eprintfn(str, ...$vaarg);
 } 
 
 
@@ -31,7 +31,7 @@ macro void flog(
   ...) 
 {
   io::fprintf(out, "// [%s] : ", $$FUNC)!!;
-  io::fprintfn(out, str, $vasplat)!!;
+  io::fprintfn(out, str, ...$vaarg)!!;
 } 
 
 
