@@ -98,12 +98,6 @@ struct VarDecl
   String name;
 }
 
-struct EnumField 
-{
-  String name;
-  String init;
-  String docs;
-}
 
 <*
  Represents bit fields meaning:
@@ -113,7 +107,7 @@ struct CBitField
 {
   String  type;
   String  name;
-  sz     width;
+  usz     width;
 }
 
 
@@ -170,8 +164,8 @@ struct C3BitstructField
 {
   String  type;
   String  name;
-  sz     from;
-  sz     to;
+  usz     from;
+  usz     to;
 }
 
 
@@ -215,13 +209,12 @@ struct GlobalVisitData
   TypesTable        types_table;
   OutStream         out;
   CXFile            cxfile;
-  sz               anon_fns_counter;
+  usz               anon_fns_counter;
   WriteState        write_state;
 
   bitstruct : char
   {
-    bool no_verbose;
-    bool use_docs;          
+    bool            no_verbose;
   }
 }
 
@@ -247,7 +240,7 @@ struct FieldsVisitData
   CFields           fields;
   Allocator         allocator;
   GlobalVisitData*  g;
-  sz               current;
+  usz               current;
 }
 
 
@@ -279,8 +272,6 @@ struct ConstVisitData
 struct EnumVisitData
 {
   GlobalVisitData*  g;
-  List{EnumField}   fields;
-  Allocator         allocator;
   String            enum_name;
   bool              is_unsigned;
 }

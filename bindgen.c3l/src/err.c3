@@ -11,13 +11,13 @@ import clang, std::io;
 macro void log(
   String str = "", 
   ..., 
-  sz indent = 0) 
+  usz indent = 0) 
 {
-  for (sz i; i < indent; ++i) {
+  for (usz i; i < indent; ++i) {
     io::eprintf("  ");
   }
   io::eprintf("%s[%s]%s : ", Ansi.GREEN, $$FUNC, Ansi.RESET);
-  io::eprintfn(str, ...$vaarg);
+  io::eprintfn(str, $vasplat);
 } 
 
 
@@ -31,7 +31,7 @@ macro void flog(
   ...) 
 {
   io::fprintf(out, "// [%s] : ", $$FUNC)!!;
-  io::fprintfn(out, str, ...$vaarg)!!;
+  io::fprintfn(out, str, $vasplat)!!;
 } 
 
 
@@ -46,7 +46,7 @@ macro void warn(
 {
   if (!no_verbose) {
     io::eprintf("%sWarning%s : ", Ansi.YELLOW, Ansi.RESET);
-    io::eprintfn(str, ...$vaarg);
+    io::eprintfn(str, $vasplat);
   }
 }
 
@@ -62,7 +62,7 @@ macro void info(
 {
   if (!no_verbose) {
     io::eprintf("%sInfo%s : ", Ansi.GREEN, Ansi.RESET);
-    io::eprintfn(str, ...$vaarg);
+    io::eprintfn(str, $vasplat);
   }
 } 
 
@@ -76,7 +76,7 @@ macro void erro(
   ...) 
 {
   io::eprintf("%sError%s : ", Ansi.RED, Ansi.RESET);
-  io::eprintfn(str, ...$vaarg);
+  io::eprintfn(str, $vasplat);
 }
 
 
@@ -92,7 +92,7 @@ macro void diag(
   ...)
 {
   io::eprintf("%sError at %s:%d:%d%s : ", Ansi.RED, file, line, col, Ansi.RESET);
-  io::eprintfn(str, ...$vaarg);
+  io::eprintfn(str, $vasplat);
 }
 
 
