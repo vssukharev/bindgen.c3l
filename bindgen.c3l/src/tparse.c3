@@ -171,8 +171,9 @@ fn C3Fields? getC3Fields(
   res.init(alloc);
 
   // usz::max means we're not in segment
+  const NO_SEGMENT = sz::max;
   sz bit_widths_acc;
-  sz bit_segment_start = sz::max;
+  sz bit_segment_start = NO_SEGMENT;
 
   List{C3BitstructField} bit_fields;
   bit_fields.init(alloc);
@@ -188,7 +189,7 @@ fn C3Fields? getC3Fields(
 
       case BIT:
         CBitField cfield = cfs.bit[index];
-        if (bit_segment_start == usz::max) bit_segment_start = index;
+        if (bit_segment_start == NO_SEGMENT) bit_segment_start = index;
 
         bit_fields.push({
           .type = cfield.type, 
@@ -216,7 +217,7 @@ fn C3Fields? getC3Fields(
       }
 
       // Finish bit range and reset things if needed
-      if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != sz::max) {
+      if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != NO_SEGMENT) {
 
       res.kinds.push(BITSTRUCT);
       switch (bit_widths_acc) {
@@ -251,7 +252,7 @@ fn C3Fields? getC3Fields(
 
       bit_fields = {};
       bit_fields.init(alloc);
-      bit_segment_start = sz::max;
+      bit_segment_start = NO_SEGMENT;
     }
   };
 

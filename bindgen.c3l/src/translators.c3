@@ -576,7 +576,7 @@ fn sz? pfnType(
   vd_func.params.tinit(4);
   
   // isTypePFN also accepts a bare `T (...)` function type, which has no pointee
-  CXType fn_type = type.kind == clang::TYPE_POINTER ? clang::getPointeeType(type) : type;
+  CXType fn_type = type.kind == TYPE_POINTER ? clang::getPointeeType(type) : type;
   CXType ret_type = clang::getResultType(fn_type);
   String? trans_ret_type_str = trans::ctype(ret_type, vd);
 

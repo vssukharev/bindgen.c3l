@@ -53,8 +53,8 @@ fn void main() {
 ### Running tests
 
 There are two types of tests:
-1. Function tests - testing separate API parts. Run through `c3c run test-runner`.
-2. Unit tests - testing library implementation parts. Run through `c3c test unit`.
+1. Unit tests - testing library implementation parts. Command `c3c test unit`.
+2. Stress tests - testing on 10+ header-only libs char-by-char. Command `c3c test stress`
 
 ## API
 

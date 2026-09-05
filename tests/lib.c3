@@ -53,7 +53,7 @@ fn CXCursor[]? parse(
   // Parse file
   CXIndex index = clang::createIndex(0, 0);
   defer clang::disposeIndex(index);
-  CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp, args.ptr, args.len, null, 0, PARSE_FLAGS);
+  CXTranslationUnit tu = clang::parseTranslationUnit(index, (ZString)tmp, args.ptr, args.len, null, 0, (CUInt)PARSE_FLAGS);
   
   // Check the parse result
   if (tu == null) return PARSE_FAILURE~;

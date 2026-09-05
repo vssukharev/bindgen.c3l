@@ -37,7 +37,7 @@ macro CFields.@foreach(
   &self; 
   @body(CFieldKind* kind, sz index))
 {
-  usz[CFieldKind::len] counters;
+  sz[CFieldKind::len] counters;
 
   foreach (i, &k : self.kinds) {
     @body(k, counters[k.ordinal]);
@@ -67,7 +67,7 @@ macro C3Fields.@foreach(
   &self; 
   @body(C3FieldKind* kind, sz index))
 {
-  usz[C3FieldKind::len] counters;
+  sz[C3FieldKind::len] counters;
 
   foreach (i, &k : self.kinds)
   {
@@ -109,10 +109,10 @@ macro CTypeTokens.@foreach(
   &self; 
   @body(CTypeTokenKind kind, sz str_index))
 {
-  usz str_counter;
-  usz str_len = (usz)self.strs.size;
+  sz str_counter;
+  sz str_len = (sz)self.strs.size;
   foreach_r (k : self.kinds) {
-    usz str_index = usz::max;
+    sz str_index = sz::max;
     switch (k) {
       case NAME:
       case SIZED_ARRAY:

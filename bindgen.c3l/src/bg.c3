@@ -47,7 +47,7 @@ fn void? translateHeader(
     Path out_path = path::new(tmem, opts.out_name)!;
 
     // If there is no parent, we are in root
-    Path out_parent = out_path.parent() ?? path::new(tmem, path::PREFERRED_SEPARATOR)!;
+    Path out_parent = out_path.parent() ?? path::new(tmem, "/")!;
 
     // Create missing directories on the path
     path::mkdir(out_parent, recursive: true)!;

@@ -40,19 +40,15 @@
       "sources" : [ "examples/mlir.c3" ],
     },
 
-    "stress" : {
-      "type" : "executable",
-      "sources" : [ "examples/stress.c3" ],
-    },
 
-    "test-runner" : {
-      "type" : "executable",
-      "sources" : [ "tests/bgtest_runner.c3" ],
+    "stress" : {
+      "type" : "test",
+      "sources" : [ "tests/stress.c3" ],
     },
 
     "unit" : {
       "type" : "test",
-      "sources" : [ "tests/bgtest_lib.c3", "tests/unit/**" ],
+      "sources" : [ "tests/lib.c3", "tests/unit/**" ],
     },
   },
 }

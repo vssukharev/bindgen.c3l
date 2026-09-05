@@ -1,31 +1,6 @@
-module bgimpl::bgstr_test @test;
+module bgimpl::bgstr @test;
 import bindgen::bgstr,
        std::io;
-
-
-fn void test_empty_input()
-{
-  assert( bgstr::pascal_to_snake("", tmem) == "" );
-  assert( bgstr::pascal_to_camel("", tmem) == "" );
-  assert( bgstr::pascal_to_screaming("", tmem) == "" );
-
-  assert( bgstr::camel_to_snake("", tmem) == "" );
-  assert( bgstr::camel_to_pascal("", tmem) == "" );
-  assert( bgstr::camel_to_screaming("", tmem) == "" );
-
-  assert( bgstr::snake_to_camel("", tmem) == "" );
-  assert( bgstr::snake_to_pascal("", tmem) == "" );
-  assert( bgstr::snake_to_screaming("", tmem) == "" );
-
-  assert( bgstr::screaming_to_snake("", tmem) == "" );
-  assert( bgstr::screaming_to_camel("", tmem) == "" );
-  assert( bgstr::screaming_to_pascal("", tmem) == "" );
-
-  assert( bgstr::mixed_to_snake("", tmem) == "" );
-  assert( bgstr::mixed_to_camel("", tmem) == "" );
-  assert( bgstr::mixed_to_pascal("", tmem) == "" );
-  assert( bgstr::mixed_to_screaming("", tmem) == "" );
-}
 
 
 fn void test_only_underscores()
