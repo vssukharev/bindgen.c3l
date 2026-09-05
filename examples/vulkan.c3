@@ -1,6 +1,6 @@
 
 import bindgen;
-import std::ascii, std::io;
+import std::core, std::io;
 
 String[] defines = {
 	"-DVK_ENABLE_BETA_EXTENSIONS",
@@ -29,7 +29,7 @@ fn void main(String[] args)
   	BGTransCallbacks trans_cbs = {
 		// Strip 'vk' from functions
 		.func = fn String(String str, Allocator alloc) =>
-			str.strip("vk").camel_to_snake(alloc),
+			str.strip_prefix("vk").camel_to_snake(alloc),
 		.type = &valType,
 		// There is a small conflict with variable called 'module'
 		.variable = fn String(String str, Allocator alloc) =>
@@ -50,7 +50,7 @@ fn void main(String[] args)
 fn String trans_const(String name, Allocator alloc) {
 	if (name == "VKAPI_CALL") return "";
 	if (name == "VKAPI_PTR") return "";
-	return name.strip("VK_").snake_to_screaming(alloc);
+	return name.strip_prefix("VK_").snake_to_screaming(alloc);
 }
 
 fn String val_const(String name, Allocator alloc) {
@@ -161,7 +161,7 @@ fn String transFuncMacro(String name, Allocator alloc) {
       return "";
   }
 
-  return name.strip("VK_").screaming_to_snake(alloc);
+  return name.strip_prefix("VK_").screaming_to_snake(alloc);
 }
 
 // #include a file only in case it's full path contains 'vulkan/'

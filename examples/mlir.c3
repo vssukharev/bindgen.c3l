@@ -1,6 +1,6 @@
 
 import bindgen;
-import std::ascii, std::io;
+import std::core, std::io;
 
 fn void main(String[] args)
 {
@@ -18,7 +18,7 @@ fn void main(String[] args)
 
   BGTransCallbacks transfns = {
     .func = fn (name, alloc) {
-      return name.strip("mlir").camel_to_snake(alloc);
+      return name.strip_prefix("mlir").camel_to_snake(alloc);
     },
 
     .constant = fn (name, alloc) {
@@ -27,7 +27,7 @@ fn void main(String[] args)
           return "";
       }
       if (is_screaming(name)) return name;
-      return name.strip("Mlir").pascal_to_screaming(alloc);
+      return name.strip_prefix("Mlir").pascal_to_screaming(alloc);
     },
 
     .func_macro = fn (name, alloc) {
@@ -47,7 +47,7 @@ fn void main(String[] args)
     },
 
     .type = fn (name, alloc) {
-      return name.strip("Mlir").prepend(alloc, "MLIR");
+      return name.strip_prefix("Mlir").prepend(alloc, "MLIR");
     }
   };
 

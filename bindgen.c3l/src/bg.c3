@@ -39,21 +39,14 @@ fn void? translateHeader(
   if (opts.out_name != "") @pool() {
     err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out_file");
 
-    Path out_path = { 
-      .path_string = opts.out_name,
-      .env = path::DEFAULT_ENV,
-    };
+    Path out_path = path::new(tmem, opts.out_name)!;
 
     if (path::is_dir(out_path)) {
       err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
       return bg::INVALID_ARGUMENTS~;
     }
 
-    // If there is no parent, we are in root
-    Path out_parent = out_path.parent() ?? {
-      .path_string = "/",
-      .env = path::DEFAULT_ENV,
-    };
+    Path out_parent = out_path.parent() ?? path::new(tmem, "/")!;
 
     // Create missing directories on the path
     path::mkdir(out_parent, recursive: true)!!;
@@ -73,6 +66,7 @@ fn void? translateHeader(
   // Get command args for clang
   ZString[]? cargs = user::getParseCommandArgs(tmem, opts.clang_args);
   if (catch exc = cargs) {
+     io::eprintfn("CAUGHT FAULT: %s", exc);
     if (exc == process::FAILED_TO_START_PROCESS) {
       err::erro("Could not run 'clang' in order to find libc headers. Please, install clang");
     }

@@ -141,7 +141,7 @@ fn CXType[] get_types(
 macro String show(obj)
 {
   CXString str;
-  $switch $typeof(obj):
+  $switch $Typeof(obj):
     $case CXType:
       str = clang::getTypeSpelling(obj);
     $case CXCursor:

@@ -47,34 +47,34 @@ fn void? includeLibcToArgs(
   List{ZString}* res) 
   => @pool()
 {
-  SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
+  Process proc = process::spawn({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
   proc.join()!; // join the process to close stdin of clang
   defer proc.destroy();
   File in = proc.stderr();
 
   bool found;
-  while (!found) {
-    if (in.read_byte()! == '\n') {
-      char[14] buffer;
-      in.read(buffer[..])!;
-      if (buffer[..] == "#include <...>") {
-        while(in.read_byte()! != '\n') {}; // read till '\n'
-        found = true;
+  while (try line_check = io::treadline(&in)) {
+      if (line_check.starts_with("#include <...>")) {
+          found = true;
+          break;
       }
-    }
   }
 
-  while (try first_c = in.read_byte() && first_c == ' ') {
-    DString path_dstr;
-    path_dstr.tinit();
+  while (try line = io::treadline(&in)) {
+      line = line.trim();
 
-    path_dstr.append("-I");
-    while (try c = in.read_byte() && c != '\n') {
-      path_dstr.append(c);
-    }
+      if (line == "End of search list.") {
+          break;
+      }
 
-    // Append all possible headers
-    res.push(path_dstr.copy_zstr(alloc));
+      if (line != "") {
+          DString path;
+          path.tinit();
+          path.append("-I");
+          path.append(line);
+          res.push(path.copy_zstr(alloc));
+      }
   }
+
 }
 

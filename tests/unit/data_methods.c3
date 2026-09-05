@@ -4,7 +4,7 @@ import std::io;
 
 
 <*
- @require WriteAttrs.membersof.len == 2 : "Test is out of date"
+ @require WriteAttrs.members.len == 2 : "Test is out of date"
 *>
 fn void test_WriteAttrs_to_format()
 {

@@ -197,7 +197,7 @@ fn String? tokensUnderCursor(
       // 2. Functional macro
       case clang::TOKEN_IDENTIFIER:
         usz i = token - tokens_ptr;
-        if (i < tokens_len - 1) {
+        if (i < (usz)tokens_len - 1) {
           CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
           defer clang::disposeString(token_spell_2);
           String token_str_2 = misc::convStr(token_spell_2);

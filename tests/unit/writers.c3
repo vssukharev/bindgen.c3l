@@ -201,7 +201,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nfn char* f()\n@extern(\"F\");\n";
+    const EXPECTED = "\nfn char* f()\n@cname(\"F\");\n";
 
     func(&out, &state, {}, "char*", "F", "f");
 
@@ -211,7 +211,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nfn char** some_func(\n  int b,\n  double)\n@extern(\"SomeFunc\") @private;\n";
+    const EXPECTED = "\nfn char** some_func(\n  int b,\n  double)\n@cname(\"SomeFunc\") @private;\n";
 
     VarDecl[] params = { {"int", "b"}, {"double", ""} };
     WriteAttrs attrs = { .private = true };
