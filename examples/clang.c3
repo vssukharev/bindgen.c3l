@@ -27,7 +27,7 @@ fn void main(String[] args)
 			"".copy(alloc),
 	};
 
-	bg::translate_header("./examples/clang-c/clang.h", opts, trans_fns)!!;
+	bg::translate_header("./examples/headers/clang-c/clang.h", opts, trans_fns)!!;
 }
 
 fn String trans_type(String str, Allocator alloc) {

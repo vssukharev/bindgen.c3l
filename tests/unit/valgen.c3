@@ -66,7 +66,7 @@ fn void test_module_wrap()
   assert( out.str_view() == EXPECTED_2 );
   out.clear();
 
-  const EXPECTED_3 = "\nmodule hello @if(true);\nimport vulkan;\nimport opengl;\n";
+  const EXPECTED_3 = "\nmodule hello @feat(true);\nimport vulkan;\nimport opengl;\n";
   vd.gen_fns.module_wrap = fn (name, alloc) => { 
     .if_condition = "true",
     .imports = " vulkan ; opengl ",

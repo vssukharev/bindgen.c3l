@@ -111,41 +111,6 @@ fn CXChildVisitResult enumField(
 }
 
 <*
- Enum constants
- Translates each enum constant and writes 
- them to global output.
-*>
-fn CXChildVisitResult enumDecl(
-  CXCursor cursor, 
-  CXCursor parent, 
-  CXClientData client_data)
-{
-  if (clang::getCursorKind(cursor) != CURSOR_ENUM_DECL) {
-    return CHILD_VISIT_CONTINUE;
-  }
-
-  EnumVisitData* vd = (EnumVisitData*)client_data;
-
-  CXString cursor_spell = clang::getCursorSpelling(cursor);
-  defer clang::disposeString(cursor_spell);
-  String cursor_str = misc::convStr(cursor_spell);
-
-  String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, tmem);
-  if (catch trans_cursor_str) {
-    err::warn(vd.g.no_verbose, "Enum constant '%s' is ignored", cursor_str);
-    return CHILD_VISIT_CONTINUE;
-  }
-
-  vd.fields.tinit();
-
-  clang::visitChildren(cursor, &enumField, (CXClientData)&vd);
-
-  WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.g.gen_fns);
-  return CHILD_VISIT_CONTINUE;
-}
-
-
-<*
  Typedef underlying type
  If it's underlying type is incomplete, cache it as "void".
 *>

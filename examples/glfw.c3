@@ -1,6 +1,6 @@
 
 import bindgen;
-import std::ascii, std::io;
+import std::core::ascii, std::io;
 
 
 fn void main(String[] args)
@@ -16,14 +16,14 @@ fn void main(String[] args)
 
   BGTransCallbacks trans_fns = {
     .func = fn String(String str, Allocator alloc) =>
-      str.strip("glfw").pascal_to_camel(alloc),
+      str.strip_prefix("glfw").pascal_to_camel(alloc),
 
     .variable = &bgstr::camel_to_snake,
 
     .constant = fn String(String str, Allocator alloc) =>
       str == "APIENTRY" ? "" :
       str == "GLAPIENTRY" ? "" : // ignore APIENTRY
-      str.strip("GLFW_").copy(alloc),
+      str.strip_prefix("GLFW_").copy(alloc),
   };
 
   BGGenCallbacks gen_fns = {

@@ -126,7 +126,7 @@ fn void test_const_decl()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "const NAME @if(true) = 2.0f;\n";
+    const EXPECTED = "const NAME @feat(true) = 2.0f;\n";
 
     state.kind = CONST;
     WriteAttrs attrs = { .if_condition = "true" };
@@ -270,7 +270,7 @@ fn void test_module_head()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nmodule a @if(COND);\n";
+    const EXPECTED = "\nmodule a @feat(COND);\n";
 
     WriteAttrs attrs = { .if_condition = "COND" };
     moduleHead(&out, &state, "a", attrs);

@@ -3,7 +3,6 @@ module bgimpl;
 import bgimpl::err;
 import std::collections::list;
 import std::collections::map;
-import std::core::ascii;
 
 
 alias ListString = List{String};
@@ -290,7 +289,7 @@ fn ListString parseSnakeCase(
   }
 
   // Push closing '_'
-  if (last >= first && last < str.len - 1) {
+  if (last >= first && last < (sz)str.len - 1) {
     tokens.push(str[last+1..str.len-1]);
   }
 
@@ -376,7 +375,7 @@ fn ListString parseCamelCase(
 
   // Push closing '_' if 'last' and 'first'
   // don't intersect
-  if (last >= first && last < str.len - 1) {
+  if (last >= first && last < (sz)str.len - 1) {
     tokens.push(str[last+1..str.len-1]);
   }
 
@@ -466,6 +465,7 @@ macro String convertToSnakeOrScreaming(
   bool $to_snake) 
 {
   sz size = 0;
+
   foreach (t : tokens) {
     size += t.len;
 
@@ -473,10 +473,11 @@ macro String convertToSnakeOrScreaming(
     if (!has_underscore) size += 1;
   }
   // Substract one because of the last '_', which is not inserted
-  --size;
+  String last_token = (*tokens)[^1];
+  if (last_token[0] != '_' && last_token[^1] != '_') --size;
 
   // If last token is '_', we do not insert '_' after prelast token
-  sz last_token_index = tokens.len() - ((*tokens)[^1][0] == '_' ? 2 : 1); 
+  sz last_token_index = tokens.size - (last_token[0] == '_' ? 2 : 1);
 
   String res = (String)alloc::alloc_array(alloc, char, size);
   
@@ -493,7 +494,7 @@ macro String convertToSnakeOrScreaming(
     }
 
     bool has_underscore = t[0] == '_' || t[^1] == '_';
-    if (!has_underscore && i != last_token_index) {
+    if (!has_underscore && (sz)i != last_token_index) {
       res[last+t.len] = '_';
       ++last;
     }

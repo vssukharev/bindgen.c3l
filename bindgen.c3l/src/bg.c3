@@ -39,17 +39,18 @@ fn void? translateHeader(
   if (opts.out_name != "") @pool() {
     err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out_file");
 
-    Path out_path = path::tnew(opts.out_name)!;
-
-    if (path::is_dir(out_path)) {
+    if (file::is_dir(opts.out_name)) {
       err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
       return bg::INVALID_ARGUMENTS~;
     }
 
+    Path out_path = path::new(tmem, opts.out_name)!;
+
     // If there is no parent, we are in root
-    Path out_parent = out_path.parent() ?? path::tnew(string::tformat("%s", path::PREFERRED_SEPARATOR))!;
+    Path out_parent = out_path.parent() ?? path::new(tmem, path::PREFERRED_SEPARATOR)!;
+
     // Create missing directories on the path
-    path::mkdir(out_parent, recursive: true)!!;
+    path::mkdir(out_parent, recursive: true)!;
 
     out = file::open(opts.out_name, "w")!;
   };
@@ -156,8 +157,8 @@ fn sz runDiagnostics(
     String diag_str = misc::convStr(diag_spell);
 
     if (clang::getDiagnosticSeverity(diag) >= min_severity) {
-      // Do not count if some file is not found and we don't ignore it
-      if (ignore_file_not_found && diag_str.ends_with("file not found")) {
+      // Do not count a missing file: binding a header in isolation causes it
+      if (!(ignore_file_not_found && diag_str.ends_with("file not found"))) {
         ++severe_count;
       }
       err::diag(header_name, line, col, diag_str);

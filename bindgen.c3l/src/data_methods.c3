@@ -37,7 +37,7 @@ macro CFields.@foreach(
   &self; 
   @body(CFieldKind* kind, sz index))
 {
-  sz[CFieldKind::values.len] counters;
+  usz[CFieldKind::len] counters;
 
   foreach (i, &k : self.kinds) {
     @body(k, counters[k.ordinal]);
@@ -67,7 +67,7 @@ macro C3Fields.@foreach(
   &self; 
   @body(C3FieldKind* kind, sz index))
 {
-  sz[C3FieldKind::values.len] counters;
+  usz[C3FieldKind::len] counters;
 
   foreach (i, &k : self.kinds)
   {
@@ -103,16 +103,16 @@ macro void CTypeTokens.free(&self)
  Iterates through CTypeTokens in reversed order,
  returning the kind and index of a name string.
  If token is represented with const string,
- sets index to usz.max.
+ sets index to usz::max.
 *>
 macro CTypeTokens.@foreach(
   &self; 
   @body(CTypeTokenKind kind, sz str_index))
 {
-  sz str_counter;
-  sz str_len = self.strs.len();
+  usz str_counter;
+  usz str_len = (usz)self.strs.size;
   foreach_r (k : self.kinds) {
-    sz str_index = sz::max;
+    usz str_index = usz::max;
     switch (k) {
       case NAME:
       case SIZED_ARRAY:
@@ -164,15 +164,16 @@ fn sz? WriteAttrs.to_format(
   sz? acc;
 
   $foreach $f : WriteAttrs::members:
-    assert( $f.has_tag("attr") );
+    $assert $f.has_tag("attr") : "every WriteAttrs field must carry an \"attr\" tag";
     String $attr = $f.get_tag("attr");
 
-    $switch $f.type.kind:
-      $case String::kind:
+    var $Type = $Typeof(self.$f);
+    $switch $Type:
+      $case String:
         if (self.$f != "") {
           acc += format.printf(" %s(%s)", $attr, self.$f);
         }
-      $case bool::kind:
+      $case bool:
         if (self.$f) {
           acc += format.printf(" %s", $attr);
         }
@@ -206,11 +207,11 @@ module std::core::array;
 
 <*
  Returns true if predicate returns true at least one time. Returns false otherwise.
- @require $Typeof(arr)::kind == SLICE ||| $kindof(arr) == ARRAY       : "Array must be either slice or array"
- @require $Typeof(predicate)::kind == FUNC                              : "Predicate must be a function"
- @require $Typeof(predicate)::returns == bool                 : "Predicate must return bool"
- @require $Typeof(predicate)::params.len == 1                      : "Predicate must have one parameter"
- @require $Typeof(predicate)::params[0].type == $Typeof(arr)::inner : "Predicate must have parameter of inner array type"
+ The predicate's parameter type is checked by the `predicate(e)` call itself.
+ @require $Typeof(arr)::kind == SLICE ||| $Typeof(arr)::kind == ARRAY : "Array must be either slice or array"
+ @require $Typeof(predicate)::kind == FUNC                            : "Predicate must be a function"
+ @require $Typeof(predicate)::returns == bool                         : "Predicate must return bool"
+ @require $Typeof(predicate)::params.len == 1                         : "Predicate must have one parameter"
 *>
 macro has(arr, predicate)
 {

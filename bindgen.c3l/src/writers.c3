@@ -428,15 +428,15 @@ fn sz? fields(
     {
       case NORMAL:
         acc += printIndent(out, indent_level);
-        acc += io::fprintfn(out, "%s %s;", fields.norm[index].type, fields.norm[index].name);
+        acc += io::fprintfn(out, "%s %s;", fields.norm[(sz)index].type, fields.norm[(sz)index].name);
 
       case BITSTRUCT:
         state.kind = BITSTRUCT;
 
         acc += printIndent(out, indent_level);
-        acc += io::fprintfn(out, "bitstruct : %s {", fields.bit[index].under_type)!;
+        acc += io::fprintfn(out, "bitstruct : %s {", fields.bit[(sz)index].under_type)!;
 
-        foreach (C3BitstructField bitf : fields.bit[index].fields)
+        foreach (C3BitstructField bitf : fields.bit[(sz)index].fields)
         {
           acc += printIndent(out, indent_level + 1);
           acc += io::fprintfn(out, "%s %s : %s..%s;", bitf.type, bitf.name, bitf.from, bitf.to)!;
@@ -446,10 +446,10 @@ fn sz? fields(
         acc += io::fprintfn(out, "}")!;
 
       case STRUCT:
-        acc += wter::structDecl(out, state, fields.structs[index].name, &fields.structs[index].fields, indent_level);
+        acc += wter::structDecl(out, state, fields.structs[(sz)index].name, &fields.structs[(sz)index].fields, indent_level);
 
       case UNION:
-        acc += wter::unionDecl(out, state, fields.unions[index].name, &fields.unions[index].fields, indent_level);
+        acc += wter::unionDecl(out, state, fields.unions[(sz)index].name, &fields.unions[(sz)index].fields, indent_level);
         
       default: unreachable();
     }

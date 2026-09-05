@@ -1,6 +1,6 @@
 
 import bindgen;
-import std::ascii, std::io;
+import std::core::ascii, std::io;
 
 fn void main(String[] args) 
 {

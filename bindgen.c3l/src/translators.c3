@@ -183,6 +183,7 @@ fn sz? enumDecl(
     vd.types_table[base] = under_type_str;
 
     vd_enum.enum_name = under_type_str;
+    vd_enum.is_anonymous = true;
   } else {
     String? tmp = trans::ctype(enum_type, vd);
     if (catch tmp) {
@@ -538,7 +539,7 @@ macro sz? recordDecl(
     return 0;
   }
 
-  if (c3_fields.bit.len() > 0) {
+  if (c3_fields.bit.size > 0) {
     $if $is_union:
       err::warn(vd.no_verbose, "Bit fields encountered within union '%s'!", orig_rec_name);
     $else
@@ -574,7 +575,9 @@ fn sz? pfnType(
 
   vd_func.params.tinit(4);
   
-  CXType ret_type = clang::getResultType(clang::getPointeeType(type));
+  // isTypePFN also accepts a bare `T (...)` function type, which has no pointee
+  CXType fn_type = type.kind == clang::TYPE_POINTER ? clang::getPointeeType(type) : type;
+  CXType ret_type = clang::getResultType(fn_type);
   String? trans_ret_type_str = trans::ctype(ret_type, vd);
 
   if (catch trans_ret_type_str) {
