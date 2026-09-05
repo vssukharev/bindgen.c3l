@@ -33,7 +33,7 @@ fn usz? typedefAlias(
   state.kind = ALIAS;
 
   usz? acc;
-  acc += io::fprintfn(out, "\nalias %s%s = %s;", name, attribs, underlying_name);
+  acc += (usz)io::fprintfn(out, "\nalias %s%s = %s;", name, attribs, underlying_name);
   return acc;
 }
 
@@ -56,7 +56,7 @@ fn usz? typedefDistinct(
   state.kind = TYPEDEF;
 
   usz? acc;
-  acc += io::fprintfn(out, "\ntypedef %s%s = %s;", name, attribs, underlying_name);
+  acc += (usz)io::fprintfn(out, "\ntypedef %s%s = %s;", name, attribs, underlying_name);
   return acc;
 }
 
@@ -82,19 +82,19 @@ fn usz? typedefFunc(
 
   usz? acc;
   
-  acc += io::fprintf(out, "\nalias %s%s = fn %s(", name, attribs, return_type);
+  acc += (usz)io::fprintf(out, "\nalias %s%s = fn %s(", name, attribs, return_type);
   
-  if (params.len > 0) acc += io::fprintf(out, "\n");
+  if (params.len > 0) acc += (usz)io::fprintf(out, "\n");
 
   foreach (i, p : params) {
-    acc += io::fprintf(out, INDENT+++"%s", p.type);
+    acc += (usz)io::fprintf(out, INDENT+++"%s", p.type);
     if (p.name) {
-      acc += io::fprintf(out, " %s", p.name);
+      acc += (usz)io::fprintf(out, " %s", p.name);
     }
-    if (i < params.len - 1) acc += io::fprintn(out, ",");
+    if (i < params.len - 1) acc += (usz)io::fprintn(out, ",");
   }
 
-  acc += io::fprintn(out, ");");
+  acc += (usz)io::fprintn(out, ");");
   
   return acc;
 }
@@ -124,12 +124,12 @@ fn usz? constDecl(
 
   usz? acc;
 
-  if (prev_kind != CONST && prev_kind != ENUM) acc += io::fprintf(out, "\n");
+  if (prev_kind != CONST && prev_kind != ENUM) acc += (usz)io::fprintf(out, "\n");
 
   if (type == "") {
-    acc += io::fprintfn(out, "const %s%s = %s;", name, attribs, value);
+    acc += (usz)io::fprintfn(out, "const %s%s = (%s)%s;", name, attribs, name, value);
   } else {
-    acc += io::fprintfn(out, "const %s %s%s = %s;", type, name, attribs, value);
+    acc += (usz)io::fprintfn(out, "const %s %s%s = (%s)%s;", type, name, attribs, name, value);
   }
 
   return acc;
@@ -158,9 +158,9 @@ fn usz? varDecl(
   usz? acc;
 
   if (value == "") {
-    acc += io::fprintfn(out, "\n%s %s%s;", type, name, attribs);
+    acc += (usz)io::fprintfn(out, "\n%s %s%s;", type, name, attribs);
   } else {
-    acc += io::fprintfn(out, "\n%s %s%s = %s;", type, name, attribs, value);
+    acc += (usz)io::fprintfn(out, "\n%s %s%s = %s;", type, name, attribs, value);
   }
 
   return acc;
@@ -184,7 +184,7 @@ fn usz? enumDecl(
 {
   state.kind = ENUM;
 
-  return io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
+  return (usz)io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
 }
 
 
@@ -211,17 +211,17 @@ fn usz? func(
 
   usz? acc;
 
-  acc += io::fprintf(out, "\nfn %s %s(", return_type, name);
-  if (params.len > 0) acc += io::fprintf(out, "\n");
+  acc += (usz)io::fprintf(out, "\nfn %s %s(", return_type, name);
+  if (params.len > 0) acc += (usz)io::fprintf(out, "\n");
 
   foreach (i, p : params)  {
-    acc += io::fprintf(out, INDENT+++"%s", p.type);
+    acc += (usz)io::fprintf(out, INDENT+++"%s", p.type);
     if (p.name) {
-      acc += io::fprintf(out, " %s", p.name);
+      acc += (usz)io::fprintf(out, " %s", p.name);
     }
-    if (i < params.len - 1) acc += io::fprintn(out, ",");
+    if (i < params.len - 1) acc += (usz)io::fprintn(out, ",");
   }
-  acc += io::fprintfn(out, ")\n@extern(\"%s\")%s;", original_name, attribs);
+  acc += (usz)io::fprintfn(out, ")\n@cname(\"%s\")%s;", original_name, attribs);
 
   return acc;
 }
@@ -248,18 +248,18 @@ fn usz? funcMacro(
 
   usz? acc;
 
-  acc += io::fprintf(out, "\nmacro @%s(", name);
+  acc += (usz)io::fprintf(out, "\nmacro @%s(", name);
   foreach (i, p : params) {
-    acc += io::fprintf(out, "#%s", p);
-    if (i < params.len - 1) acc += io::fprint(out, ", ");
+    acc += (usz)io::fprintf(out, "#%s", p);
+    if (i < params.len - 1) acc += (usz)io::fprint(out, ", ");
   }
-  acc += io::fprintf(out, ")%s {", attribs);
+  acc += (usz)io::fprintf(out, ")%s {", attribs);
   
   if (body != "") {
-    acc += io::fprintfn(out, "\n"+++INDENT+++"%s", body);
+    acc += (usz)io::fprintfn(out, "\n"+++INDENT+++"%s", body);
   }
 
-  acc += io::fprintfn(out, "}");
+  acc += (usz)io::fprintfn(out, "}");
 
   return acc;
 }
@@ -280,7 +280,7 @@ fn usz? moduleHead(
 {
   state.kind = MODULE;
 
-  return io::fprintfn(out, "\nmodule %s%s;", module_name, attribs);
+  return (usz)io::fprintfn(out, "\nmodule %s%s;", module_name, attribs);
 }
 
 
@@ -298,7 +298,7 @@ fn usz? importModule(
 {
   state.kind = IMPORT;
 
-  return io::fprintfn(out, "import %s;", import_module);
+  return (usz)io::fprintfn(out, "import %s;", import_module);
 }
 
 
@@ -323,18 +323,18 @@ fn usz? structDecl(
 
   acc += printIndent(out, indent_level);
   
-  if (indent_level == 0) acc += io::fprintf(out, "\n");
+  if (indent_level == 0) acc += (usz)io::fprintf(out, "\n");
 
   if (name == "") {
-    acc += io::fprintfn(out, "struct {");
+    acc += (usz)io::fprintfn(out, "struct {");
   } else {
-    acc += io::fprintfn(out, "struct %s%s {", name, attribs);
+    acc += (usz)io::fprintfn(out, "struct %s%s {", name, attribs);
   }
 
-  acc += wter::fields(out, state, fields, indent_level + 1);
+  acc += (usz)wter::fields(out, state, fields, indent_level + 1);
 
-  acc += printIndent(out, indent_level);
-  acc += io::fprintfn(out, "}");
+  acc += (usz)printIndent(out, indent_level);
+  acc += (usz)io::fprintfn(out, "}");
   
   return acc;
 }
@@ -358,18 +358,18 @@ fn usz? unionDecl(
 
   acc += printIndent(out, indent_level);
 
-  if (indent_level == 0) acc += io::fprintf(out, "\n");
+  if (indent_level == 0) acc += (usz)io::fprintf(out, "\n");
 
   if (name == "") {
-    acc += io::fprintfn(out, "union {");
+    acc += (usz)io::fprintfn(out, "union {");
   } else {
-    acc += io::fprintfn(out, "union %s%s {", name, attribs);
+    acc += (usz)io::fprintfn(out, "union %s%s {", name, attribs);
   }
 
-  acc += wter::fields(out, state, fields, indent_level + 1);
+  acc += (usz)wter::fields(out, state, fields, indent_level + 1);
 
-  acc += printIndent(out, indent_level);
-  acc += io::fprintfn(out, "}");
+  acc += (usz)printIndent(out, indent_level);
+  acc += (usz)io::fprintfn(out, "}");
   
   return acc;
 }
@@ -393,28 +393,28 @@ fn usz? fields(
     {
       case NORMAL:
         acc += printIndent(out, indent_level);
-        acc += io::fprintfn(out, "%s %s;", fields.norm[index].type, fields.norm[index].name);
+        acc += (usz)io::fprintfn(out, "%s %s;", fields.norm[(sz)index].type, fields.norm[(sz)index].name);
 
       case BITSTRUCT:
         state.kind = BITSTRUCT;
 
         acc += printIndent(out, indent_level);
-        acc += io::fprintfn(out, "bitstruct : %s {", fields.bit[index].under_type)!;
+        acc += (usz)io::fprintfn(out, "bitstruct : %s {", fields.bit[(sz)index].under_type)!;
 
-        foreach (C3BitstructField bitf : fields.bit[index].fields)
+        foreach (C3BitstructField bitf : fields.bit[(sz)index].fields)
         {
           acc += printIndent(out, indent_level + 1);
-          acc += io::fprintfn(out, "%s %s : %s..%s;", bitf.type, bitf.name, bitf.from, bitf.to)!;
+          acc += (usz)io::fprintfn(out, "%s %s : %s..%s;", bitf.type, bitf.name, bitf.from, bitf.to)!;
         }
 
         acc += printIndent(out, indent_level);
-        acc += io::fprintfn(out, "}")!;
+        acc += (usz)io::fprintfn(out, "}")!;
 
       case STRUCT:
-        acc += wter::structDecl(out, state, fields.structs[index].name, &fields.structs[index].fields, indent_level);
+        acc += wter::structDecl(out, state, fields.structs[(sz)index].name, &fields.structs[(sz)index].fields, indent_level);
 
       case UNION:
-        acc += wter::unionDecl(out, state, fields.unions[index].name, &fields.unions[index].fields, indent_level);
+        acc += wter::unionDecl(out, state, fields.unions[(sz)index].name, &fields.unions[(sz)index].fields, indent_level);
         
       default: unreachable();
     }
@@ -432,7 +432,7 @@ fn usz? printIndent(
   usz indent_level = 1)
 {
   usz? acc;
-  for (usz i; i < indent_level; ++i) acc += io::fprintf(out, INDENT);
+  for (usz i; i < indent_level; ++i) acc += (usz)io::fprintf(out, INDENT);
   return acc;
 }
 

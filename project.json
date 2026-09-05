@@ -35,6 +35,11 @@
       "sources" : [ "examples/mlir.c3" ],
     },
 
+    "nuklear" : {
+      "type" : "executable",
+      "sources" : [ "examples/nuklear.c3" ],
+    },
+
     "test-runner" : {
       "type" : "executable",
       "sources" : [ "tests/bgtest_runner.c3" ],
