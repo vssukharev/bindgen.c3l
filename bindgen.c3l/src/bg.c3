@@ -156,8 +156,8 @@ fn usz runDiagnostics(
     String diag_str = misc::convStr(diag_spell);
 
     if (clang::getDiagnosticSeverity(diag) >= min_severity) {
-      // Do not count if some file is not found and we don't ignore it
-      if (ignore_file_not_found && diag_str.ends_with("file not found")) {
+      // Do not count a missing file: binding a header in isolation causes it
+      if (!(ignore_file_not_found && diag_str.ends_with("file not found"))) {
         ++severe_count;
       }
       err::diag(header_name, line, col, diag_str);
