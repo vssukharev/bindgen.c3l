@@ -1,0 +1,30 @@
+# Header-only C libraries used to stress the generator.
+# Fetched by tests/stress/run.sh; not vendored.
+#
+# Format: <url> [extra clang args...]
+https://raw.githubusercontent.com/nothings/stb/master/stb_image.h
+https://raw.githubusercontent.com/nothings/stb/master/stb_image_write.h
+https://raw.githubusercontent.com/nothings/stb/master/stb_truetype.h
+https://raw.githubusercontent.com/nothings/stb/master/stb_ds.h
+https://raw.githubusercontent.com/nothings/stb/master/stb_sprintf.h
+https://raw.githubusercontent.com/nothings/stb/master/stb_rect_pack.h
+https://raw.githubusercontent.com/nothings/stb/master/stb_perlin.h
+https://raw.githubusercontent.com/DaveGamble/cJSON/master/cJSON.h
+https://raw.githubusercontent.com/sheredom/json.h/master/json.h
+https://raw.githubusercontent.com/zserge/jsmn/master/jsmn.h
+https://raw.githubusercontent.com/RandyGaul/cute_headers/master/cute_sound.h
+# cute_tiled relies on C++ implicit struct tags (bare cute_tiled_chunk_t).
+https://raw.githubusercontent.com/RandyGaul/cute_headers/master/cute_tiled.h -x c++
+https://raw.githubusercontent.com/erkkah/tigr/master/tigr.h
+
+# sokol. sokol_glue.h is deliberately absent: it requires sokol_gfx.h to be
+# included first, which the one-header-at-a-time harness cannot express.
+https://raw.githubusercontent.com/floooh/sokol/master/sokol_gfx.h
+https://raw.githubusercontent.com/floooh/sokol/master/sokol_app.h
+https://raw.githubusercontent.com/floooh/sokol/master/sokol_audio.h
+https://raw.githubusercontent.com/floooh/sokol/master/sokol_fetch.h
+https://raw.githubusercontent.com/floooh/sokol/master/sokol_time.h
+https://raw.githubusercontent.com/floooh/sokol/master/sokol_log.h
+
+# raylib, also covered by the examples/raylib.c3 target against a vendored copy.
+https://raw.githubusercontent.com/raysan5/raylib/master/src/raylib.h
