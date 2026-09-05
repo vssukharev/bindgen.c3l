@@ -159,7 +159,7 @@ fn void test_var_decl()
 
     state.kind = ENUM;
     WriteAttrs attrs = { .private = true };
-    varDecl(&out, &state, "int", "name", "", "", attrs);
+    varDecl(&out, &state, "int", "name", "", attrs);
 
     assert( out.str_view() == EXPECTED );
   }
@@ -174,9 +174,9 @@ fn void test_enum_decl()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nconstdef En : int {\n\n}\n";
+    const EXPECTED = "\ntypedef En = inline int;\n";
 
-    enumDecl(&out, &state, {}, "En", "int");
+    enumDecl(&out, &state, "En", "int");
 
     assert( state.kind == ENUM );
     assert( out.str_view() == EXPECTED );
@@ -184,10 +184,10 @@ fn void test_enum_decl()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nconstdef En @private : int {\n\n}\n";
+    const EXPECTED = "\ntypedef En @private = inline int;\n";
 
     WriteAttrs attrs = { .private = true };
-    enumDecl(&out, &state, {}, "En", "int", "", attrs);
+    enumDecl(&out, &state, "En", "int", attrs);
 
     assert( out.str_view() == EXPECTED );
   }
@@ -201,7 +201,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nextern fn char* f()\n@cname(\"F\");\n";
+    const EXPECTED = "\nfn char* f()\n@extern(\"F\");\n";
 
     func(&out, &state, {}, "char*", "F", "f");
 
@@ -211,11 +211,11 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nextern fn char** some_func(\n  int b,\n  double)\n@cname(\"SomeFunc\") @private;\n";
+    const EXPECTED = "\nfn char** some_func(\n  int b,\n  double)\n@extern(\"SomeFunc\") @private;\n";
 
     VarDecl[] params = { {"int", "b"}, {"double", ""} };
     WriteAttrs attrs = { .private = true };
-    func(&out, &state, params, "char**", "SomeFunc", "some_func", "", attrs);
+    func(&out, &state, params, "char**", "SomeFunc", "some_func", attrs);
 
     io::printfn("<%s>", out);
     assert( out.str_view() == EXPECTED );

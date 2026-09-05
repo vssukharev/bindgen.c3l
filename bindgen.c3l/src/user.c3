@@ -47,45 +47,34 @@ fn void? includeLibcToArgs(
   List{ZString}* res) 
   => @pool()
 {
-  Process proc = process::spawn({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
+  SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
+  proc.join()!; // join the process to close stdin of clang
   defer proc.destroy();
   File in = proc.stderr();
 
-  bool inside_include_section = false;
-  DString current_line;
-  current_line.tinit();
-
-  while (try c = in.read_byte()) {
-    if (c != '\n') {
-      current_line.append(c);
-      continue;
-    }
-
-    if (!inside_include_section) {
-      if (current_line.str_view().contains("#include <...>")) {
-      inside_include_section = true;
-    }
-
-  } else {
-    // If we are inside the section, lines starting with ' ' are paths
-    if (current_line.str_view().starts_with(" ")) {
-    DString path_flag;
-    path_flag.tinit();
-    path_flag.append("-I");
-    // Append the path, stripping the leading space
-    path_flag.append(current_line.str_view()[1..]); 
-    
-    res.push(path_flag.copy_zstr(alloc));
-    } 
-    else 
-    {
-    break;
+  bool found;
+  while (!found) {
+    if (in.read_byte()! == '\n') {
+      char[14] buffer;
+      in.read(buffer[..])!;
+      if (buffer[..] == "#include <...>") {
+        while(in.read_byte()! != '\n') {}; // read till '\n'
+        found = true;
+      }
     }
   }
 
-  current_line.clear();
-  }
+  while (try first_c = in.read_byte() && first_c == ' ') {
+    DString path_dstr;
+    path_dstr.tinit();
 
-  proc.join()!;
+    path_dstr.append("-I");
+    while (try c = in.read_byte() && c != '\n') {
+      path_dstr.append(c);
+    }
+
+    // Append all possible headers
+    res.push(path_dstr.copy_zstr(alloc));
+  }
 }
 

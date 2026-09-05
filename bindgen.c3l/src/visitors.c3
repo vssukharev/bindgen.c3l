@@ -33,28 +33,28 @@ fn CXChildVisitResult global(
   clang::getExpansionLocation(clang::getCursorLocation(cursor), &cursor_file, null, null, null);
 
   // Ignore null file as it might be a macro included by a compiler
-  if (cursor_file == null) return CHILD_VISIT_CONTINUE;
+  if (cursor_file == null) return clang::CHILD_VISIT_CONTINUE;
 
   // If file is not equal to ours and it's not permitted, skip it
-  if (!clang::file_isEqual(cursor_file, vd.cxfile)) {
+  if (!clang::isEqual_File(cursor_file, vd.cxfile)) {
     CXString file_spell = clang::getFileName(cursor_file);
     defer clang::disposeString(file_spell);
     String file_str = misc::convStr(file_spell);
 
-    if (!check::apply(file_str, vd.include_file)) return CHILD_VISIT_CONTINUE; 
+    if (!check::apply(file_str, vd.include_file)) return clang::CHILD_VISIT_CONTINUE; 
   }
 
   switch (cursor_kind) {
-    case CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
-    case CURSOR_STRUCT_DECL: ttor::structDecl(vd, cursor);
-    case CURSOR_TYPEDEF_DECL: ttor::typedefDecl(vd, cursor);
-    case CURSOR_VAR_DECL: ttor::varDecl(vd, cursor);
-    case CURSOR_ENUM_DECL: ttor::enumDecl(vd, cursor);
-    case CURSOR_MACRO_DEFINITION: ttor::macroDef(vd, cursor);
-    case CURSOR_UNION_DECL: ttor::unionDecl(vd, cursor);
+    case clang::CURSOR_FUNCTION_DECL: ttor::func(vd, cursor);
+    case clang::CURSOR_STRUCT_DECL: ttor::structDecl(vd, cursor);
+    case clang::CURSOR_TYPEDEF_DECL: ttor::typedefDecl(vd, cursor);
+    case clang::CURSOR_VAR_DECL: ttor::varDecl(vd, cursor);
+    case clang::CURSOR_ENUM_DECL: ttor::enumDecl(vd, cursor);
+    case clang::CURSOR_MACRO_DEFINITION: ttor::macroDef(vd, cursor);
+    case clang::CURSOR_UNION_DECL: ttor::unionDecl(vd, cursor);
   }
 
-  return CHILD_VISIT_CONTINUE;
+  return clang::CHILD_VISIT_CONTINUE;
 }
 
 
@@ -71,54 +71,15 @@ fn CXChildVisitResult constDecl(
 
   // When cursor type is a typedef of some other type, one more 
   // child is added to it so skip it
-  if (clang::getCursorKind(cursor) == CURSOR_TYPE_REF) {
-    return CHILD_VISIT_CONTINUE;
+  if (clang::getCursorKind(cursor) == clang::CURSOR_TYPE_REF) {
+    return clang::CHILD_VISIT_CONTINUE;
   }
 
   vd.val = trans::tokensUnderCursor(vd.allocator, cursor, &vd.g.trans_fns) ?? EMPTY_TOKENS;
 
-  if (clang::getCursorKind(cursor) != CURSOR_FIELD_DECL) {
-
-
-
-    return CHILD_VISIT_CONTINUE;
-  }
-
-  return CHILD_VISIT_CONTINUE;
+  return clang::CHILD_VISIT_CONTINUE;
 }
 
-<*
-	visit an enums fields/members
-*>
-fn CXChildVisitResult enumField(
-  CXCursor cursor, 
-  CXCursor parent, 
-  CXClientData client_data)
-{
-	if (clang::getCursorKind(cursor) != CURSOR_ENUM_CONSTANT_DECL) {
-		return CHILD_VISIT_CONTINUE;
-	}
-
-	EnumVisitData* vd = (EnumVisitData*)client_data;
-	
-	CXString name_spell = clang::getCursorSpelling(cursor);
-	defer clang::disposeString(name_spell);
-	String name_str = misc::convStr(name_spell); 
-
-  	String trans_name_str = trans::apply(name_str, vd.g.trans_fns.enum_field, vd.allocator) ?? "";
-
-	CLongLong enum_value = clang::getEnumConstantDeclValue(cursor);
-	String value_str = string::format(vd.allocator, "%d", enum_value);
-
-	String docs;
-	if (vd.g.use_docs) {
-		docs = misc::getCursorDoc(cursor, mem, 1);
-	}
-
-	vd.fields.push({ trans_name_str, value_str, docs });
-
-	return CHILD_VISIT_CONTINUE;
-}
 
 <*
  Enum constants
@@ -130,28 +91,40 @@ fn CXChildVisitResult enumDecl(
   CXCursor parent, 
   CXClientData client_data)
 {
-  if (clang::getCursorKind(cursor) != CURSOR_ENUM_DECL) {
-    return CHILD_VISIT_CONTINUE;
-  }
-
-  EnumVisitData* vd = (EnumVisitData*)client_data;
+  EnumVisitData* vd = (EnumVisitData*) client_data;
 
   CXString cursor_spell = clang::getCursorSpelling(cursor);
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
-
+  
   String? trans_cursor_str = trans::apply(cursor_str, vd.g.trans_fns.constant, tmem);
   if (catch trans_cursor_str) {
     err::warn(vd.g.no_verbose, "Enum constant '%s' is ignored", cursor_str);
-    return CHILD_VISIT_CONTINUE;
+    return clang::CHILD_VISIT_CONTINUE;
+  }
+  
+  ConstVisitData vd_const = {
+    .g = vd.g,
+    .allocator = tmem,
+  };
+
+  clang::visitChildren(cursor, &vtor::constDecl, (CXClientData) &vd_const);
+
+  // If we get empty rhs, evaluate value
+  if (vd_const.val == EMPTY_TOKENS) {
+    if (vd.is_unsigned) {
+      CULongLong ival = clang::getEnumConstantDeclUnsignedValue(cursor);
+      vd_const.val = string::tformat("%s", ival);
+    } else {
+      CLongLong ival = clang::getEnumConstantDeclValue(cursor);
+      vd_const.val = string::tformat("%s", ival);
+    }
   }
 
-  vd.fields.tinit();
-
-  clang::visitChildren(cursor, &enumField, (CXClientData)&vd);
-
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.g.gen_fns);
-  return CHILD_VISIT_CONTINUE;
+  wter::constDecl(vd.g.out, &vd.g.write_state, vd.enum_name, trans_cursor_str, vd_const.val, attrs);
+
+  return clang::CHILD_VISIT_CONTINUE;
 }
 
 
@@ -166,24 +139,19 @@ fn CXChildVisitResult typedefDecl(
 {
   // The visitor can also encounter non-types in a function.
   // For example, it may be attributes, declared structures, etc.
-  if (clang::getCursorKind(cursor) != CURSOR_TYPE_REF) {
-  return CHILD_VISIT_CONTINUE;
+  if (clang::getCursorKind(cursor) != clang::CURSOR_TYPE_REF) {
+    return clang::CHILD_VISIT_CONTINUE;
   }
 
   TypedefVisitData* vd = (TypedefVisitData*) client_data;
-
-  CXCursor ref_cursor = clang::getCursorReferenced(cursor);
-  bool has_definition = clang::isCursorDefinition(ref_cursor) != 0;
-  bool is_layout_incomplete = clang::type_getSizeOf(vd.under_type) == -2;
-
-  vd.is_incomplete = !has_definition || is_layout_incomplete;
+  vd.is_incomplete = !clang::isCursorDefinition(cursor) && misc::isTypeIncomplete(vd.under_type);
 
   if (vd.is_incomplete) {
     CXType key = misc::getBaseType(vd.under_type);
     vd.g.types_table[key] = "void";
   }
 
-  return CHILD_VISIT_BREAK;
+  return clang::CHILD_VISIT_BREAK;
 }
 
 
@@ -198,8 +166,8 @@ fn CXChildVisitResult func(
 {
   // The visitor can also encounter non-paremeters in a function.
   // For example, it may be attributes, etc.
-  if (clang::getCursorKind(cursor) != CURSOR_PARM_DECL) {
-    return CHILD_VISIT_CONTINUE;
+  if (clang::getCursorKind(cursor) != clang::CURSOR_PARM_DECL) {
+    return clang::CHILD_VISIT_CONTINUE;
   }
 
   FuncVisitData* vd = (FuncVisitData*) client_data;
@@ -224,12 +192,12 @@ fn CXChildVisitResult func(
     String parent_str = misc::convStr(parent_spell);
 
     err::warn(vd.g.no_verbose, "Can't translate function '%s' as it's parameter type '%s' is ignored", parent_str, type_str);
-    return CHILD_VISIT_BREAK;
+    return clang::CHILD_VISIT_BREAK;
   }
 
   vd.params.push({trans_type_str, trans_name_str});
 
-  return CHILD_VISIT_CONTINUE;
+  return clang::CHILD_VISIT_CONTINUE;
 }
 
 
@@ -254,13 +222,13 @@ fn CXChildVisitResult fields(
   String? trans_field_name = trans::apply(field_name, vd.g.trans_fns.variable, vd.allocator);
   if (catch trans_field_name) {
     err::warn(vd.g.no_verbose, "Field (variable) '%s' is ignored", field_name);
-    return CHILD_VISIT_BREAK;
+    return clang::CHILD_VISIT_BREAK;
   }
 
   CXType type = clang::getCanonicalType(clang::getCursorType(cursor));
   CXType prev_type = clang::getCursorType(vd.prev_inline);
 
-  if (!clang::cursor_isNull(vd.prev_inline) && clang::equalTypes(type, prev_type)) {
+  if (!clang::isNull_Cursor(vd.prev_inline) && clang::equalTypes(type, prev_type)) {
     switch (tparse::getCFieldKind(vd.prev_inline)) {
       case STRUCT:
         vd.fields.structs[^1].name = trans_field_name;
@@ -271,7 +239,7 @@ fn CXChildVisitResult fields(
     }
 
     vd.prev_inline = clang::getNullCursor();
-    return CHILD_VISIT_CONTINUE;
+    return clang::CHILD_VISIT_CONTINUE;
   }
 
   CFieldKind kind = tparse::getCFieldKind(cursor);
@@ -287,8 +255,8 @@ fn CXChildVisitResult fields(
       defer clang::disposeString(parent_spell);
       String parent_str = misc::convStr(parent_spell);
 
-    err::warn(vd.g.no_verbose, "Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
-    return CHILD_VISIT_BREAK;
+      err::warn(vd.g.no_verbose, "Can't translate struct/union '%s' as it's field type '%s' is ignored", parent_str, type_str);
+      return clang::CHILD_VISIT_BREAK;
     }
 
     switch (kind) {
@@ -309,40 +277,40 @@ fn CXChildVisitResult fields(
     // is anonymous or not. In first case, we create anonymous record 
     // as well; in second one, we regularly translate a record and 
     // write it globally
-    if (clang::cursor_isAnonymous(cursor)) {
-    vd.prev_inline = cursor;
-    FieldsVisitData vd_inner = {
-      .g = vd.g,
-      .allocator = vd.allocator,
-      .prev_inline = clang::getNullCursor(),
-    };
+    if (clang::isAnonymous_Cursor(cursor)) {
+      vd.prev_inline = cursor;
+      FieldsVisitData vd_inner = {
+        .g = vd.g,
+        .allocator = vd.allocator,
+        .prev_inline = clang::getNullCursor(),
+      };
 
-    vd_inner.fields.init(vd_inner.allocator);
-    if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_inner) != 0) return CHILD_VISIT_BREAK;
+      vd_inner.fields.init(vd_inner.allocator);
+      if (clang::visitChildren(cursor, &vtor::fields, (CXClientData) &vd_inner) != 0) return clang::CHILD_VISIT_BREAK;
 
-    switch (kind) {
-    case STRUCT:
-      vd.fields.structs.push({"", vd_inner.fields});
-      vd.fields.kinds.push(STRUCT);
-    case UNION:
-      vd.fields.unions.push({"", vd_inner.fields});
-      vd.fields.kinds.push(UNION);
-    default: 
-      unreachable();
-    }
+      switch (kind) {
+        case STRUCT:
+          vd.fields.structs.push({"", vd_inner.fields});
+          vd.fields.kinds.push(STRUCT);
+        case UNION:
+          vd.fields.unions.push({"", vd_inner.fields});
+          vd.fields.kinds.push(UNION);
+        default: 
+          unreachable();
+      }
     } else {
-    switch (kind) {
-    case STRUCT:
-      ttor::structDecl(vd.g, cursor);
-    case UNION:
-      ttor::unionDecl(vd.g, cursor);
-    default:
-      unreachable();
-    }
+      switch (kind) {
+        case STRUCT:
+          ttor::structDecl(vd.g, cursor);
+        case UNION:
+          ttor::unionDecl(vd.g, cursor);
+        default:
+          unreachable();
+      }
     }
   }
 
-  return CHILD_VISIT_CONTINUE;
+  return clang::CHILD_VISIT_CONTINUE;
 }
 
 

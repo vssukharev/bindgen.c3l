@@ -82,7 +82,7 @@ fn String? ctype(
   // is that clang::getCanonicalType() practically
   // erases the difference between alias and type itself,
   // so we apply it under the following conditions
-  if (clang::cursor_isAnonymous(clang::getTypeDeclaration(base_type))) {
+  if (clang::isAnonymous_Cursor(clang::getTypeDeclaration(base_type))) {
     base_type = clang::getCanonicalType(base_type);
   }
 
@@ -91,7 +91,7 @@ fn String? ctype(
 
   // We will never check NAME for previous kind
   CTypeTokenKind prev_kind = NAME;
-  tokens.@foreach(;CTypeTokenKind kind, sz str_index) {
+  tokens.@foreach(;CTypeTokenKind kind, usz str_index) {
     String str = tparse::convertCTypeTokenToC3(kind, tokens.strs.array_view(), str_index);
 
     switch (kind) {
@@ -161,7 +161,7 @@ fn String? tokensUnderCursor(
   defer clang::disposeString(cursor_spell);
   String cursor_str = misc::convStr(cursor_spell);
 
-  CXTranslationUnit tu = clang::cursor_getTranslationUnit(cursor);
+  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
   CXSourceRange sr = misc::getTrueCursorExtent(cursor);
 
   CXToken* tokens_ptr; uint tokens_len;
@@ -173,7 +173,7 @@ fn String? tokensUnderCursor(
   // Token number to start iterating from. 
   // It's needed as sometimes cursor name can be also tokenized, 
   // e.g. when tokenizing a macro, first token is it's name.
-  sz start_from = kind == CURSOR_MACRO_DEFINITION ? 1 : 0;
+  usz start_from = kind == clang::CURSOR_MACRO_DEFINITION ? 1 : 0;
   if (tokens_len <= start_from) return trans::EMPTY_MACRO_VAL~;
 
   DString res;
@@ -195,32 +195,32 @@ fn String? tokensUnderCursor(
       // Assume that identifier is one of:
       // 1. Constant (macro)
       // 2. Functional macro
-    case TOKEN_IDENTIFIER:
-      sz i = token - tokens_ptr;
-      if (i < (sz)tokens_len - 1) {
-      CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
-      defer clang::disposeString(token_spell_2);
-      String token_str_2 = misc::convStr(token_spell_2);
-      if (token_str_2 == "(") {
-        is_func_macro = true;
-        is_in_func_macro = true;
-      }
-      }
+      case clang::TOKEN_IDENTIFIER:
+        usz i = token - tokens_ptr;
+        if (i < tokens_len - 1) {
+          CXString token_spell_2 = clang::getTokenSpelling(tu, tokens_ptr[i + 1]);
+          defer clang::disposeString(token_spell_2);
+          String token_str_2 = misc::convStr(token_spell_2);
+          if (token_str_2 == "(") {
+            is_func_macro = true;
+            is_in_func_macro = true;
+          }
+        }
 
-      if (is_func_macro) {
-      res.append("@");
-      res.append(trans::apply(token_str, tfns.func_macro)!);
-      } else {
-      res.append(trans::apply(token_str, tfns.constant, tmem))!;
-      }
+        if (is_func_macro) {
+          res.append("@");
+          res.append(trans::apply(token_str, tfns.func_macro)!);
+        } else {
+          res.append(trans::apply(token_str, tfns.constant, tmem))!;
+        }
 
-    case TOKEN_LITERAL:
-      res.append(trans::literal(tmem, token_str));
+      case clang::TOKEN_LITERAL:
+        res.append(trans::literal(tmem, token_str));
 
-    case TOKEN_KEYWORD:
-    case TOKEN_PUNCTUATION:
-    case TOKEN_COMMENT:
-      res.append(token_str);
+      case clang::TOKEN_KEYWORD:
+      case clang::TOKEN_PUNCTUATION:
+      case clang::TOKEN_COMMENT:
+        res.append(token_str);
     }
   };
 
@@ -280,7 +280,7 @@ fn String? basicType(
   switch (type) {
     case "void":          return "void";
     case "_Bool":         return "bool";
-    case "ptrdiff_t":     return "sz";
+    case "ptrdiff_t":     return "isz";
     case "size_t":        return "usz";
 
     case "char":          return "CChar";

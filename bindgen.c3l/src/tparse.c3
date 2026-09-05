@@ -21,7 +21,7 @@ faultdef INVALID_BITFIELDS;
 fn String convertCTypeTokenToC3(
   CTypeTokenKind kind,
   String[] strs,
-  sz str_index)
+  usz str_index)
   @inline
 {
   switch (kind) {
@@ -51,17 +51,17 @@ fn CTypeTokens getTypeTokens(
 
   while LOOP: (true) {
     switch (type.kind) {
-      case TYPE_POINTER: 
+      case clang::TYPE_POINTER: 
         tokens.push(POINTER);
         type = clang::getPointeeType(type);
 
-      case TYPE_CONSTANT_ARRAY:
+      case clang::TYPE_CONSTANT_ARRAY:
         CLongLong size = clang::getArraySize(type);
         String str = string::format(tmem, "[%d]", size);
         tokens.push(SIZED_ARRAY, str);
         type = clang::getElementType(type);
 
-      case TYPE_INCOMPLETE_ARRAY:
+      case clang::TYPE_INCOMPLETE_ARRAY:
         tokens.push(UNSIZED_ARRAY);
         type = clang::getElementType(type);
 
@@ -70,7 +70,7 @@ fn CTypeTokens getTypeTokens(
         defer clang::disposeString(type_spell);
         String type_str = misc::convStr(type_spell);
 
-        type_str = type_str.strip_prefix("const ").strip_prefix("struct ").strip_prefix("enum ").strip_prefix("union ");
+        type_str = type_str.strip("const ").strip("struct ").strip("enum ").strip("union ");
         tokens.push(NAME, type_str.copy(tmem));
         break LOOP;
     }
@@ -98,13 +98,13 @@ fn C3Fields? getC3Fields(
   C3Fields res;
   res.init(alloc);
 
-  // sz.max means we're not in segment
-  sz bit_widths_acc;
-  sz bit_segment_start = sz::max;
+  // usz.max means we're not in segment
+  usz bit_widths_acc;
+  usz bit_segment_start = usz.max;
   List{C3BitstructField} bit_fields;
   bit_fields.init(alloc);
 
-  cfs.@foreach(; CFieldKind* kind, sz index) {
+  cfs.@foreach(; CFieldKind* kind, usz index) {
     switch (*kind) {
       // TODO: do it without pushes with plain copy 
       // as res.norm practically equals to cfs.norm
@@ -115,7 +115,7 @@ fn C3Fields? getC3Fields(
 
       case BIT:
         CBitField cfield = cfs.bit[index];
-        if (bit_segment_start == sz::max) bit_segment_start = index;
+        if (bit_segment_start == usz.max) bit_segment_start = index;
         bit_fields.push({
           .type = cfield.type, 
           .name = cfield.name, 
@@ -142,7 +142,7 @@ fn C3Fields? getC3Fields(
       }
 
     // Finish bit range and reset things if needed
-    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != sz::max) {
+    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != usz.max) {
       res.kinds.push(BITSTRUCT);
       switch (bit_widths_acc) {
         case 1..8:
@@ -176,7 +176,7 @@ fn C3Fields? getC3Fields(
 
       bit_fields = {};
       bit_fields.init(alloc);
-      bit_segment_start = sz::max;
+      bit_segment_start = usz.max;
     }
   };
 
@@ -193,11 +193,11 @@ fn CFieldKind getCFieldKind(
   CFieldKind kind;
 
   switch (clang::getCursorKind(cursor)) {
-    case CURSOR_STRUCT_DECL: 
+    case clang::CURSOR_STRUCT_DECL: 
       kind = STRUCT;
-    case CURSOR_UNION_DECL: 
+    case clang::CURSOR_UNION_DECL: 
       kind = UNION;
-    case CURSOR_ENUM_DECL:
+    case clang::CURSOR_ENUM_DECL:
       kind = ENUM;
     default: 
       if (clang::getFieldDeclBitWidth(cursor) == -1) {
