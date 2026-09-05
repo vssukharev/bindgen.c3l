@@ -273,24 +273,24 @@ fn ListString parseSnakeCase(
   tokens.init(alloc, str.len / 2);
 
   // Treat possible beginning '_'
-  usz first = 0;
+  sz first = 0;
   while (first < str.len && str[first] == '_') ++first;
   if (first > 0) tokens.push(str[0..first-1]);
 
   // Treat possible closing '_' 
-  usz last = str.len - 1;
-  while (last > 0 && str[last] == '_') --last;
+  sz last = (sz)str.len - 1;
+  while (last >= 0 && str[last] == '_') --last;
 
   // Treat the rest [first..last]
-  for (usz i = (usz)first; i <= (usz)last;) {
-    while (i <= (usz)last && str[i] == '_') ++i;
-    usz begin = i;
-    while (i <= (usz)last && str[i] != '_') ++i;
+  for (sz i = first; i <= last;) {
+    while (i <= last && str[i] == '_') ++i;
+    sz begin = i;
+    while (i <= last && str[i] != '_') ++i;
     tokens.push(str[begin..i-1]);
   }
 
   // Push closing '_'
-  if (last >= first && last < str.len - 1) {
+  if (last >= first && last < (sz)str.len - 1) {
     tokens.push(str[last+1..str.len-1]);
   }
 
@@ -324,23 +324,23 @@ fn ListString parseCamelCase(
   tokens.init(alloc, str.len / 2);
 
   // Erase possible beginning '_'
-  int first = 0;
+  sz first = 0;
   while (first < str.len && str[first] == '_') ++first;
   if (first > 0) tokens.push(str[0..first-1]);
 
   // Erase possible closing '_' 
-  int last = str.len - 1;
+  sz last = (sz)str.len - 1;
   while (last >= 0 && str[last] == '_') --last;
 
   // Treat the rest [first..last]
-  for (usz i = (usz)first; i <= (usz)last;) {
-    usz begin = i++;
+  for (sz i = first; i <= last;) {
+    sz begin = i++;
 
     // Handle several upper cases and digits in a row
     bool is_prev_digit = false;
     if (str[begin].is_upper()) {
-      while (i <= (usz)last && str[i].is_upper()) ++i;
-      while (i <= (usz)last && ( str[i].is_digit() || str[i] == '_' )) {
+      while (i <= last && str[i].is_upper()) ++i;
+      while (i <= last && ( str[i].is_digit() || str[i] == '_' )) {
         is_prev_digit = true;
         ++i;
       }
@@ -354,7 +354,7 @@ fn ListString parseCamelCase(
     // 1. first - prelast capital
     // 2. last capital - the rest
     // Example: LLVMHello -> [LLVM, Hello]
-    if (i <= (usz)last && i > begin + 1) { 
+    if (i <= last && i > begin + 1) { 
       if (!is_prev_digit) --i;
       tokens.push(str[begin..i-1]);
       begin = i;
@@ -364,19 +364,19 @@ fn ListString parseCamelCase(
     // as upper case and digits might follow it, like in ARM64MESA
     if (!is_prev_digit) {
       // Handle lower case
-      while (i <= (usz)last && ( str[i].is_lower() || str[i] == '_' )) ++i;
+      while (i <= last && ( str[i].is_lower() || str[i] == '_' )) ++i;
       if (i > begin) tokens.push(str[begin..i-1]);
 
       // Handle digits
       begin = i;
-      while (i <= (usz)last && str[i].is_digit()) ++i;
+      while (i <= last && str[i].is_digit()) ++i;
       if (i > begin) tokens.push(str[begin..i-1]);
     }
   }
 
   // Push closing '_' if 'last' and 'first'
   // don't intersect
-  if (last >= first && last < str.len - 1) {
+  if (last >= first && last < (sz)str.len - 1) {
     tokens.push(str[last+1..str.len-1]);
   }
 
@@ -465,6 +465,8 @@ macro String convertToSnakeOrScreaming(
   ListString* tokens, 
   bool $to_snake) 
 {
+  if (!tokens.size) return "";
+
   usz size = 0;
   foreach (t : tokens) {
     size += t.len;
@@ -473,10 +475,11 @@ macro String convertToSnakeOrScreaming(
     if (!has_underscore) size += 1;
   }
   // Substract one because of the last '_', which is not inserted
-  --size;
+  String last_token = (*tokens)[^1];
+  if (last_token[0] != '_' && last_token[^1] != '_') --size;
 
   // If last token is '_', we do not insert '_' after prelast token
-  int last_token_index = (int)((int)tokens.size - ((*tokens)[^1][0] == '_' ? 2 : 1));
+  sz last_token_index = tokens.size - (last_token[0] == '_' ? 2 : 1);
 
   String res = (String) alloc::alloc_array(alloc, char, (sz)size);
   
@@ -493,7 +496,7 @@ macro String convertToSnakeOrScreaming(
     }
 
     bool has_underscore = t[0] == '_' || t[^1] == '_';
-    if (!has_underscore && i != last_token_index) {
+    if (!has_underscore && (sz)i != last_token_index) {
       res[last+t.len] = '_';
       ++last;
     }
@@ -515,6 +518,8 @@ macro String convertToCamelOrPascal(
   ListString* tokens, 
   bool $to_camel) 
 {
+  if (!tokens.size) return "";
+
   usz size = 0;
   foreach (t : tokens) {
     size += t.len;
