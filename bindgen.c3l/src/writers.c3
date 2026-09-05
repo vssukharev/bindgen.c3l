@@ -22,7 +22,7 @@ const INDENT = "  ";
  @require name            != ""
  @require underlying_name != ""
 *>
-fn usz? typedefAlias(
+fn sz? typedefAlias(
   OutStream out,
   WriteState* state,
   String name,
@@ -32,7 +32,7 @@ fn usz? typedefAlias(
 {
   state.kind = ALIAS;
 
-  usz? acc;
+  sz? acc;
   acc += io::fprintfn(out, "\nalias %s%s = %s;", name, attribs, underlying_name);
   return acc;
 }
@@ -45,7 +45,7 @@ fn usz? typedefAlias(
  @require name            != ""
  @require underlying_name != ""
 *>
-fn usz? typedefDistinct(
+fn sz? typedefDistinct(
   OutStream out,
   WriteState* state,
   String name,
@@ -55,7 +55,7 @@ fn usz? typedefDistinct(
 {
   state.kind = TYPEDEF;
 
-  usz? acc;
+  sz? acc;
   acc += io::fprintfn(out, "\ntypedef %s%s = %s;", name, attribs, underlying_name);
   return acc;
 }
@@ -69,7 +69,7 @@ fn usz? typedefDistinct(
  @require name        != ""
  @require return_type != ""
 *>
-fn usz? typedefFunc(
+fn sz? typedefFunc(
   OutStream out,
   WriteState* state,
   String name,
@@ -80,8 +80,8 @@ fn usz? typedefFunc(
 {
   state.kind = ALIAS;
 
-  usz? acc;
-  
+  sz? acc;
+
   acc += io::fprintf(out, "\nalias %s%s = fn %s(", name, attribs, return_type);
   
   if (params.len > 0) acc += io::fprintf(out, "\n");
@@ -110,7 +110,7 @@ fn usz? typedefFunc(
  @require name  != ""
  @require value != ""
 *>
-fn usz? constDecl(
+fn sz? constDecl(
   OutStream out,
   WriteState* state,
   String type,
@@ -122,7 +122,7 @@ fn usz? constDecl(
   WriteKind prev_kind = state.kind;
   state.kind = CONST;
 
-  usz? acc;
+  sz? acc;
 
   if (prev_kind != CONST && prev_kind != ENUM) acc += io::fprintf(out, "\n");
 
@@ -144,18 +144,24 @@ fn usz? constDecl(
  @require type != ""
  @require name != ""
 *>
-fn usz? varDecl(
+fn sz? varDecl(
   OutStream out,
   WriteState* state,
   String type,
   String name,
   String value,
+  String docs = "",
   WriteAttrs attribs = {})
   @maydiscard
 {
   state.kind = VAR;
 
-  usz? acc;
+  sz? acc;
+
+  if (docs)
+  {
+    acc += io::fprintf(out, "\n%s", docs);
+  }
 
   if (value == "") {
     acc += io::fprintfn(out, "\n%s %s%s;", type, name, attribs);
@@ -174,17 +180,38 @@ fn usz? varDecl(
  @require name != ""
  @require type != ""
 *>
-fn usz? enumDecl(
+fn sz? enumDecl(
   OutStream out,
   WriteState* state,
+  EnumField[] fields,
   String name,
   String type,
+  String docs = "",
   WriteAttrs attribs = {})
   @maydiscard
 {
   state.kind = ENUM;
 
-  return io::fprintfn(out, "\ntypedef %s%s = inline %s;", name, attribs, type);
+  sz? acc;
+  if (docs)
+  {
+    acc += io::fprintf(out, "\n%s", docs);
+  }
+  acc += io::fprintfn(out, "\nconstdef %s%s : %s {", name, attribs, type);
+
+  foreach (i, p : fields)  {
+    if (p.docs != "")
+    {
+      acc += io::fprintfn(out, "\n%s", p.docs);
+    }
+    acc += io::fprintf(out, INDENT+++"%s =", p.name);
+    acc += io::fprintf(out, " %s", p.init);
+    if (i < fields.len - 1) acc += io::fprintn(out, ",");
+    }
+
+  acc += io::fprintfn(out, "\n}");
+
+  return acc;
 }
 
 
@@ -197,21 +224,27 @@ fn usz? enumDecl(
  @require original_name != ""
  @require name          != ""
 *>
-fn usz? func(
+fn sz? func(
   OutStream out,
   WriteState* state,
   VarDecl[] params,
   String return_type,
   String original_name,
   String name,
+  String docs = "",
   WriteAttrs attribs = {}) 
   @maydiscard
 {
   state.kind = FUNC;
 
-  usz? acc;
+  sz? acc;
 
-  acc += io::fprintf(out, "\nfn %s %s(", return_type, name);
+  if (docs.len > 0)
+  {
+    acc += io::fprintf(out, "\n%s", docs);
+  }
+
+  acc += io::fprintf(out, "\nextern fn %s %s(", return_type, name);
   if (params.len > 0) acc += io::fprintf(out, "\n");
 
   foreach (i, p : params)  {
@@ -221,7 +254,7 @@ fn usz? func(
     }
     if (i < params.len - 1) acc += io::fprintn(out, ",");
   }
-  acc += io::fprintfn(out, ")\n@extern(\"%s\")%s;", original_name, attribs);
+  acc += io::fprintfn(out, ")\n@cname(\"%s\")%s;", original_name, attribs);
 
   return acc;
 }
@@ -235,7 +268,7 @@ fn usz? func(
  @require !array::has(params, fn bool(String val) => val == "") : "params can't contain empty entries"
  @require name != ""
 *>
-fn usz? funcMacro(
+fn sz? funcMacro(
   OutStream out,
   WriteState* state,
   String[] params,
@@ -246,7 +279,7 @@ fn usz? funcMacro(
 {
   state.kind = MACRO;
 
-  usz? acc;
+  sz? acc;
 
   acc += io::fprintf(out, "\nmacro @%s(", name);
   foreach (i, p : params) {
@@ -271,7 +304,7 @@ fn usz? funcMacro(
  @param [&out]   state : "Sets state.kind to WriteKind.MODULE"
  @require module_name != ""
 *>
-fn usz? moduleHead(
+fn sz? moduleHead(
   OutStream out,
   WriteState* state,
   String module_name,
@@ -290,7 +323,7 @@ fn usz? moduleHead(
  @param [&out]   state : "Sets state.kind to WriteKind.IMPORT"
  @require import_module != ""
 *>
-fn usz? importModule(
+fn sz? importModule(
   OutStream out,
   WriteState* state,
   String import_module)
@@ -308,22 +341,24 @@ fn usz? importModule(
  @param [&in]    fields
  @param [&out]   state  : "Sets state.kind to WriteKind.IMPORT"
 *>
-fn usz? structDecl(
+fn sz? structDecl(
   OutStream out,
   WriteState* state,
   String name,
   C3Fields* fields,
-  usz indent_level = 0,
+  sz indent_level = 0,
+  String docs = "",
   WriteAttrs attribs = {}) 
   @maydiscard
 {
   state.kind = STRUCT;
 
-  usz? acc;
+  sz? acc;
 
   acc += printIndent(out, indent_level);
-  
+
   if (indent_level == 0) acc += io::fprintf(out, "\n");
+  acc += io::fprintfn(out, docs);
 
   if (name == "") {
     acc += io::fprintfn(out, "struct {");
@@ -343,18 +378,18 @@ fn usz? structDecl(
 <*
  Union declaration
 *>
-fn usz? unionDecl(
+fn sz? unionDecl(
   OutStream out,
   WriteState* state,
   String name,
   C3Fields* fields,
-  usz indent_level = 0,
+  sz indent_level = 0,
   WriteAttrs attribs = {}) 
   @maydiscard
 {
   state.kind = UNION;
 
-  usz? acc;
+  sz? acc;
 
   acc += printIndent(out, indent_level);
 
@@ -379,15 +414,15 @@ fn usz? unionDecl(
  Helper function for wter::structDecl and wter::unionDecl,
  which writes record fields
 *>
-fn usz? fields(
+fn sz? fields(
   OutStream out,
   WriteState* state,
   C3Fields* fields,
-  usz indent_level)
+  sz indent_level)
 {
-  usz? acc;
+  sz? acc;
 
-  fields.@foreach(; C3FieldKind* kind, usz index)
+  fields.@foreach(; C3FieldKind* kind, sz index)
   {
     switch (*kind)
     {
@@ -427,12 +462,12 @@ fn usz? fields(
 <*
  Helper printer
 *>
-fn usz? printIndent( 
+fn sz? printIndent( 
   OutStream out, 
-  usz indent_level = 1)
+  sz indent_level = 1)
 {
-  usz? acc;
-  for (usz i; i < indent_level; ++i) acc += io::fprintf(out, INDENT);
+  sz? acc;
+  for (sz i; i < indent_level; ++i) acc += io::fprintf(out, INDENT);
   return acc;
 }
 

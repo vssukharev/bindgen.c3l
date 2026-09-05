@@ -15,17 +15,16 @@ import bgimpl,
 *>
 fn String convStr(CXString s) @inline => clang::getCString(s).str_view();
 
-
 <*
  Detects whether the type is a pointer to function or function
  itself
 *>
 fn bool isTypePFN(CXType type) @inline
 {
-  if (type.kind == clang::TYPE_POINTER) {
-    type = clang::getPointeeType(type);
-  }
-  return type.kind == clang::TYPE_FUNCTION_PROTO || type.kind == clang::TYPE_FUNCTION_NO_PROTO;
+	if (type.kind == TYPE_POINTER) {
+		type = clang::getPointeeType(type);
+	}
+	return type.kind == TYPE_FUNCTION_PROTO || type.kind == TYPE_FUNCTION_NO_PROTO;
 }
 
 <*
@@ -39,8 +38,25 @@ fn bool isCursorForwardDeclared(CXCursor cursor) @inline => !clang::isCursorDefi
  Type is incomplete in case when it can't be used directly, without
  a pointer to it
 *>
-fn bool isTypeIncomplete(CXType type) @inline => clang::getSizeOf_Type(type) == clang::TYPE_LAYOUT_ERROR_INCOMPLETE;
+fn bool isTypeIncomplete(CXType type) @inline 
+{
+	// If layout explicitly says it is incomplete, it is incomplete.
+	if ((CInt)clang::type_getSizeOf(type) == (CInt)CXTypeLayoutError.TYPE_LAYOUT_ERROR_INCOMPLETE) {
+		return true;
+	}
 
+	// check if the declaration declaration lacks a definition
+	CXCursor declaration = clang::getTypeDeclaration(type);
+	CXCursorKind kind = clang::getCursorKind(declaration);
+
+	if (kind == CURSOR_STRUCT_DECL || 
+		kind == CURSOR_UNION_DECL || 
+		kind == CURSOR_ENUM_DECL) {
+		return clang::isCursorDefinition(declaration) == 0;
+	}
+
+	return false;
+}
 
 <*
  getTrueCursorExtent returns a source range for the cursor without
@@ -55,7 +71,7 @@ fn bool isTypeIncomplete(CXType type) @inline => clang::getSizeOf_Type(type) == 
 fn CXSourceRange getTrueCursorExtent(
   CXCursor cursor)
 {
-  CXTranslationUnit tu = clang::getTranslationUnit_Cursor(cursor);
+	CXTranslationUnit tu = clang::cursor_getTranslationUnit(cursor);
   CXSourceRange sr = clang::getCursorExtent(cursor);
   CXSourceLocation sl_begin = clang::getRangeStart(sr);    
   CXSourceLocation sl_end = clang::getRangeEnd(sr);
@@ -73,20 +89,20 @@ fn CXSourceRange getTrueCursorExtent(
  their quantity. Does not skip attributes, macro expansions,
  etc.
 *>
-fn usz getTopChildrenNumber(
+fn sz getTopChildrenNumber(
   CXCursor cursor)
 {
-  usz qty;
+	sz qty;
 
-  clang::visitChildren(cursor, 
-    fn (CXCursor cursor, CXCursor parent, CXClientData client_data) {
-      usz* qty = (usz*) client_data;
-      ++*qty;
-      return clang::CHILD_VISIT_CONTINUE;
-    }, (CXClientData) &qty
-  );
+	clang::visitChildren(cursor, 
+		fn (CXCursor cursor, CXCursor parent, CXClientData client_data) {
+		sz* qty = (sz*) client_data;
+		++*qty;
+		return CHILD_VISIT_CONTINUE;
+		}, (CXClientData) &qty
+	);
 
-  return qty;
+	return qty;
 }
 
 
@@ -99,14 +115,14 @@ fn CXType getBaseType(
 {
   CXType base;
 
-  while LOOP: (true) {
-    switch (type.kind) {
-      case clang::TYPE_POINTER: 
-        type = clang::getPointeeType(type);
+	while LOOP: (true) {
+		switch (type.kind) {
+		case TYPE_POINTER: 
+			type = clang::getPointeeType(type);
 
-      case clang::TYPE_CONSTANT_ARRAY:
-      case clang::TYPE_INCOMPLETE_ARRAY:
-        type = clang::getElementType(type);
+		case TYPE_CONSTANT_ARRAY:
+		case TYPE_INCOMPLETE_ARRAY:
+			type = clang::getElementType(type);
 
       default:
         base = type;

@@ -1,7 +1,7 @@
 <*
  The module consists of functions, which
  perform conversions from clang or user-defined
- structures, representing types, to more 
+ structures, representing types or docs, to more 
  applicable form
 *>
 module bgimpl::tparse;
@@ -12,6 +12,78 @@ import clang,
 
 faultdef INVALID_BITFIELDS;
 
+fn String getCursorDoc(
+  CXCursor cursor, 
+  Allocator alloc, 
+  int indent = 0) 
+{
+  CXString raw = clang::cursor_getRawCommentText(cursor);
+  if (raw.data == null) return ""; 
+  defer clang::disposeString(raw);
+
+  String conv_str = misc::convStr(raw).copy(alloc); 
+	return convertDoc(alloc, conv_str, indent);
+}
+
+<*
+  Fully convert Doxygen-style C docs to C3 ones
+*>
+fn String convertDoc(
+  Allocator alloc, 
+  String raw_doc, 
+  int indent_level = 0) 
+  => @pool() 
+{
+  if (raw_doc.len == 0) return "";
+
+  DString clean;
+  clean.tinit();
+
+	DString indent_builder;
+  indent_builder.tinit();
+  for (int i = 0; i < indent_level; i++) {
+      indent_builder.append("  ");
+  }
+  String indent = indent_builder.str_view();
+  
+  // Split the raw comment into lines
+  String[] lines = raw_doc.split(tmem, "\n");
+    
+	clean.append(indent);
+  clean.append("<*\n");
+    
+  foreach (line : lines) {
+    String trimmed = line.trim();
+    
+    // Remove comment start, end, and leading asterisks
+    if (trimmed.starts_with("/**")) { 
+      trimmed = trimmed[3..]; 
+    }
+    else if (trimmed.starts_with("/*")) {
+      trimmed = trimmed[2..];
+    }
+    if (trimmed.ends_with("*/")) { 
+      trimmed = trimmed[..trimmed.len - 2];
+    }
+      
+    // Strip the leading '*' if it exists (standard Doxygen style)
+    trimmed = trimmed.trim();
+    if (trimmed.starts_with("*")) {
+      trimmed = trimmed[1..].trim();
+    }
+
+    if (trimmed.len > 0) {
+    clean.append(indent);
+      clean.append("  "); // Indent for style
+      clean.append(trimmed);
+      clean.append("\n");
+    }
+  }
+    
+	clean.append(indent);
+  clean.append("*>");
+  return clean.copy_str(alloc);
+}
 
 <*
  Converts token kind to it's representation in C3.
@@ -21,7 +93,7 @@ faultdef INVALID_BITFIELDS;
 fn String convertCTypeTokenToC3(
   CTypeTokenKind kind,
   String[] strs,
-  usz str_index)
+  sz str_index)
   @inline
 {
   switch (kind) {
@@ -51,17 +123,17 @@ fn CTypeTokens getTypeTokens(
 
   while LOOP: (true) {
     switch (type.kind) {
-      case clang::TYPE_POINTER: 
+      case TYPE_POINTER: 
         tokens.push(POINTER);
         type = clang::getPointeeType(type);
 
-      case clang::TYPE_CONSTANT_ARRAY:
+      case TYPE_CONSTANT_ARRAY:
         CLongLong size = clang::getArraySize(type);
         String str = string::format(tmem, "[%d]", size);
         tokens.push(SIZED_ARRAY, str);
         type = clang::getElementType(type);
 
-      case clang::TYPE_INCOMPLETE_ARRAY:
+      case TYPE_INCOMPLETE_ARRAY:
         tokens.push(UNSIZED_ARRAY);
         type = clang::getElementType(type);
 
@@ -70,7 +142,7 @@ fn CTypeTokens getTypeTokens(
         defer clang::disposeString(type_spell);
         String type_str = misc::convStr(type_spell);
 
-        type_str = type_str.strip("const ").strip("struct ").strip("enum ").strip("union ");
+        type_str = type_str.strip_prefix("const ").strip_prefix("struct ").strip_prefix("enum ").strip_prefix("union ");
         tokens.push(NAME, type_str.copy(tmem));
         break LOOP;
     }
@@ -98,13 +170,13 @@ fn C3Fields? getC3Fields(
   C3Fields res;
   res.init(alloc);
 
-  // usz.max means we're not in segment
-  usz bit_widths_acc;
-  usz bit_segment_start = usz.max;
+  // sz.max means we're not in segment
+  sz bit_widths_acc;
+  sz bit_segment_start = sz::max;
   List{C3BitstructField} bit_fields;
   bit_fields.init(alloc);
 
-  cfs.@foreach(; CFieldKind* kind, usz index) {
+  cfs.@foreach(; CFieldKind* kind, sz index) {
     switch (*kind) {
       // TODO: do it without pushes with plain copy 
       // as res.norm practically equals to cfs.norm
@@ -115,7 +187,7 @@ fn C3Fields? getC3Fields(
 
       case BIT:
         CBitField cfield = cfs.bit[index];
-        if (bit_segment_start == usz.max) bit_segment_start = index;
+        if (bit_segment_start == sz::max) bit_segment_start = index;
         bit_fields.push({
           .type = cfield.type, 
           .name = cfield.name, 
@@ -142,7 +214,7 @@ fn C3Fields? getC3Fields(
       }
 
     // Finish bit range and reset things if needed
-    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != usz.max) {
+    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != sz::max) {
       res.kinds.push(BITSTRUCT);
       switch (bit_widths_acc) {
         case 1..8:
@@ -176,7 +248,7 @@ fn C3Fields? getC3Fields(
 
       bit_fields = {};
       bit_fields.init(alloc);
-      bit_segment_start = usz.max;
+      bit_segment_start = sz::max;
     }
   };
 
@@ -193,11 +265,11 @@ fn CFieldKind getCFieldKind(
   CFieldKind kind;
 
   switch (clang::getCursorKind(cursor)) {
-    case clang::CURSOR_STRUCT_DECL: 
+    case CURSOR_STRUCT_DECL: 
       kind = STRUCT;
-    case clang::CURSOR_UNION_DECL: 
+    case CURSOR_UNION_DECL: 
       kind = UNION;
-    case clang::CURSOR_ENUM_DECL:
+    case CURSOR_ENUM_DECL:
       kind = ENUM;
     default: 
       if (clang::getFieldDeclBitWidth(cursor) == -1) {

@@ -39,10 +39,7 @@ fn void? translateHeader(
   if (opts.out_name != "") @pool() {
     err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out_file");
 
-    Path out_path = { 
-      .path_string = opts.out_name,
-      .env = path::DEFAULT_ENV,
-    };
+    Path out_path = path::tnew(opts.out_name)!;
 
     if (path::is_dir(out_path)) {
       err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
@@ -50,11 +47,7 @@ fn void? translateHeader(
     }
 
     // If there is no parent, we are in root
-    Path out_parent = out_path.parent() ?? {
-      .path_string = "/",
-      .env = path::DEFAULT_ENV,
-    };
-
+    Path out_parent = out_path.parent() ?? path::tnew(string::tformat("%s", path::PREFERRED_SEPARATOR))!;
     // Create missing directories on the path
     path::mkdir(out_parent, recursive: true)!!;
 
@@ -88,12 +81,12 @@ fn void? translateHeader(
   }
 
   CXTranslationUnit tu;
-  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString) header_name, cargs.ptr, cargs.len, null, 0, bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
+  CXErrorCode code = clang::parseTranslationUnit2(index, (ZString)header_name, cargs.ptr, cargs.len, null, 0, (uint)bgimpl::TRANSLATION_UNIT_PARSE_FLAGS, &tu);
   checkCode(code)!;
   defer clang::disposeTranslationUnit(tu);
 
   // Print diagnostics
-  usz severe_count = runDiagnostics(tu, header_name, clang::DIAGNOSTIC_ERROR);
+  sz severe_count = runDiagnostics(tu, header_name, DIAGNOSTIC_ERROR);
   if (severe_count > 0 && !opts.skip_errors) return bg::CLANG_PARSE_ERROR~;
 
   GlobalVisitData visit_data = {
@@ -106,8 +99,9 @@ fn void? translateHeader(
     .cxfile = clang::getFile(tu, (ZString)header_name),
 
     .no_verbose = opts.no_verbose,
+    .use_docs = opts.generate_docs
   };
-  
+
   // TODO: also free Strings under types_table
   visit_data.types_table.init(mem);
   defer visit_data.types_table.free();
@@ -140,7 +134,7 @@ fn void? translateHeader(
  @param ignore_file_not_found : "Whether to ignore file not found error in diagnostics"
  @return                        "Number of severe diagnostics"
 *>
-fn usz runDiagnostics(
+fn sz runDiagnostics(
   CXTranslationUnit tu,
   String header_name,
   CXDiagnosticSeverity min_severity,
@@ -148,7 +142,7 @@ fn usz runDiagnostics(
   @inline
 {
   CUInt diagnostics_count = clang::getNumDiagnostics(tu);
-  usz severe_count;
+  sz severe_count;
   for (CUInt i; i < diagnostics_count; ++i) {
     CXDiagnostic diag = clang::getDiagnostic(tu, i); 
     defer clang::disposeDiagnostic(diag);
@@ -181,23 +175,23 @@ fn void? checkCode(
   CXErrorCode code)
 {
   switch (code) {
-    case clang::ERROR_SUCCESS: 
-      break;
-    case clang::ERROR_FAILURE:
-    case clang::ERROR_AST_READ_ERROR:
-      return bg::CLANG_PARSE_ERROR~;
-    case clang::ERROR_CRASHED:
-      return bg::CLANG_CRASH~;
-    case clang::ERROR_INVALID_ARGUMENTS:
-      return bg::INVALID_ARGUMENTS~;
+    case ERROR_SUCCESS: 
+    break;
+    case ERROR_FAILURE:
+    case ERROR_AST_READ_ERROR:
+    return bg::CLANG_PARSE_ERROR~;
+    case ERROR_CRASHED:
+    return bg::CLANG_CRASH~;
+    case ERROR_INVALID_ARGUMENTS:
+    return bg::INVALID_ARGUMENTS~;
   }
 }
 
 
-const TRANSLATION_UNIT_PARSE_FLAGS =
-    clang::TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
-  | clang::TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
-  | clang::TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
-  | clang::TRANSLATION_UNIT_KEEP_GOING;
+const CXTranslationUnit_Flags TRANSLATION_UNIT_PARSE_FLAGS =
+  CXTranslationUnit_Flags.TRANSLATION_UNIT_DETAILED_PREPROCESSING_RECORD
+| CXTranslationUnit_Flags.TRANSLATION_UNIT_IGNORE_NON_ERRORS_FROM_INCLUDED_FILES
+| CXTranslationUnit_Flags.TRANSLATION_UNIT_SKIP_FUNCTION_BODIES
+| CXTranslationUnit_Flags.TRANSLATION_UNIT_KEEP_GOING;
 
 
