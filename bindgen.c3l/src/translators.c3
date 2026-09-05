@@ -32,7 +32,7 @@ fn sz? varDecl(
   CXType type = clang::getCursorType(cursor);
   String docs;
   if (vd.use_docs) {
-    docs = misc::getCursorDoc(cursor, tmem);
+    docs = tparse::getCursorDoc(cursor, tmem);
   }
 
   if (clang::isConstQualifiedType(type)) {
@@ -141,7 +141,7 @@ fn sz? enumDecl(
   String orig_enum_name = misc::convStr(enum_spell);
   String docs;
   if (vd.use_docs) {
-    docs = misc::getCursorDoc(cursor, tmem);
+    docs = tparse::getCursorDoc(cursor, tmem);
   }
 
   if (misc::isCursorForwardDeclared(cursor)) {
@@ -221,7 +221,7 @@ fn sz? func(
 
   String docs;
   if (vd.use_docs) {
-    docs = misc::getCursorDoc(cursor, mem);
+    docs = tparse::getCursorDoc(cursor, mem);
   }
 
   // Translate function parameters and store them into vd_func.params
@@ -466,7 +466,7 @@ macro sz? recordDecl(
   String orig_rec_name = misc::convStr(rec_spell);
   String docs;
   if (vd.use_docs) {
-    docs = misc::getCursorDoc(cursor, tmem);
+    docs = tparse::getCursorDoc(cursor, tmem);
   }
 
   if (misc::isCursorForwardDeclared(cursor)) {

@@ -62,28 +62,24 @@ fn void? includeLibcToArgs(
     }
 
     if (!inside_include_section) {
-      if (current_line.str_view().contains("#include <...>")) {
-      inside_include_section = true;
+      if (current_line.str_view().contains("#include <...>")) inside_include_section = true;
+
+    } else {
+      // If we are inside the section, lines starting with ' ' are paths
+      if (current_line.str_view().starts_with(" ")) {
+        DString path_flag;
+        path_flag.tinit();
+        path_flag.append("-I");
+        // Append the path, stripping the leading space
+        path_flag.append(current_line.str_view()[1..]); 
+        
+        res.push(path_flag.copy_zstr(alloc));
+      } else {
+        break;
+      }
     }
 
-  } else {
-    // If we are inside the section, lines starting with ' ' are paths
-    if (current_line.str_view().starts_with(" ")) {
-    DString path_flag;
-    path_flag.tinit();
-    path_flag.append("-I");
-    // Append the path, stripping the leading space
-    path_flag.append(current_line.str_view()[1..]); 
-    
-    res.push(path_flag.copy_zstr(alloc));
-    } 
-    else 
-    {
-    break;
-    }
-  }
-
-  current_line.clear();
+    current_line.clear();
   }
 
   proc.join()!;

@@ -71,24 +71,14 @@ fn CXChildVisitResult constDecl(
 
   // When cursor type is a typedef of some other type, one more 
   // child is added to it so skip it
-  if (clang::getCursorKind(cursor) == CURSOR_TYPE_REF) {
-    return CHILD_VISIT_CONTINUE;
-  }
+  if (clang::getCursorKind(cursor) == CURSOR_TYPE_REF) return CHILD_VISIT_CONTINUE;
 
   vd.val = trans::tokensUnderCursor(vd.allocator, cursor, &vd.g.trans_fns) ?? EMPTY_TOKENS;
-
-  if (clang::getCursorKind(cursor) != CURSOR_FIELD_DECL) {
-
-
-
-    return CHILD_VISIT_CONTINUE;
-  }
-
   return CHILD_VISIT_CONTINUE;
 }
 
 <*
-	visit an enums fields/members
+	Visit an enum's fields/members
 *>
 fn CXChildVisitResult enumField(
   CXCursor cursor, 
@@ -105,14 +95,14 @@ fn CXChildVisitResult enumField(
 	defer clang::disposeString(name_spell);
 	String name_str = misc::convStr(name_spell); 
 
-  	String trans_name_str = trans::apply(name_str, vd.g.trans_fns.enum_field, vd.allocator) ?? "";
+  String trans_name_str = trans::apply(name_str, vd.g.trans_fns.enum_field, vd.allocator) ?? "";
 
 	CLongLong enum_value = clang::getEnumConstantDeclValue(cursor);
 	String value_str = string::format(vd.allocator, "%d", enum_value);
 
 	String docs;
 	if (vd.g.use_docs) {
-		docs = misc::getCursorDoc(cursor, mem, 1);
+		docs = tparse::getCursorDoc(cursor, mem, 1);
 	}
 
 	vd.fields.push({ trans_name_str, value_str, docs });

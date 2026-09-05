@@ -30,10 +30,8 @@ fn void main(String[] args)
 	bg::translate_header("./examples/clang-c/clang.h", opts, trans_fns)!!;
 }
 
-fn String trans_type(String str, Allocator alloc)
-{
-	switch (str)
-	{
+fn String trans_type(String str, Allocator alloc) {
+	switch (str) {
 		case "const char*": return "ZString".copy(alloc);
 	}
 
@@ -41,13 +39,12 @@ fn String trans_type(String str, Allocator alloc)
 }
 
 fn String trans_var(String str, Allocator alloc) {
-
-	switch (str)
-	{
+	switch (str) {
 		case "Module":
 		case "module": 
 			return "mod".copy(alloc);
-		case "fn": return "func".copy(alloc);
+		case "fn": 
+      return "func".copy(alloc);
 		default: break;
 	}
 
@@ -59,7 +56,6 @@ fn String trans_const(String name, Allocator alloc) {
 	return "".copy(alloc);
 }
 
-fn bool include_file(String name)
-{
+fn bool include_file(String name) {
 	return name.contains("clang");
 }

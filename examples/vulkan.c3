@@ -16,35 +16,35 @@ fn void main(String[] args)
 {  
 	String out = args.len > 1 ? args[1] : "";
 
-  	BGOptions opts_core = {
-		.clang_args = defines,
-		.module_name = "vulkan::vk",
-		.imports = { "std::os::win32" },
-		.out_name = out,
-		.include_file = &includeFile,
-		.skip_errors = true,
-		.no_verbose = false,
-  	}; 
+  BGOptions opts_core = {
+    .clang_args = defines,
+    .module_name = "vulkan::vk",
+    .imports = { "std::os::win32" },
+    .out_name = out,
+    .include_file = &includeFile,
+    .skip_errors = true,
+    .no_verbose = false,
+  }; 
 
-  	BGTransCallbacks trans_cbs = {
-		// Strip 'vk' from functions
-		.func = fn String(String str, Allocator alloc) =>
-			str.strip("vk").camel_to_snake(alloc),
-		.type = &valType,
-		// There is a small conflict with variable called 'module'
-		.variable = fn String(String str, Allocator alloc) =>
-			str == "module" ? "mod" : str.camel_to_snake(alloc),
-		// Strip 'VK_' from constans
-		.constant = &trans_const,
-		.func_macro = &transFuncMacro,
-  	};
+  BGTransCallbacks trans_cbs = {
+    // Strip 'vk' from functions
+    .func = fn String(String str, Allocator alloc) =>
+      str.strip("vk").camel_to_snake(alloc),
+    .type = &valType,
+    // There is a small conflict with variable called 'module'
+    .variable = fn String(String str, Allocator alloc) =>
+      str == "module" ? "mod" : str.camel_to_snake(alloc),
+    // Strip 'VK_' from constans
+    .constant = &trans_const,
+    .func_macro = &transFuncMacro,
+  };
 
 	BGGenCallbacks gen_cbs = {
 		.func_macro = &valFuncMacro,
 		.constant = &val_const,
 	};
 
-  	bg::translate_header("./examples/headers/vulkan/vulkan.h", opts_core, trans_cbs, gen_cbs)!!;
+  bg::translate_header("./examples/headers/vulkan/vulkan.h", opts_core, trans_cbs, gen_cbs)!!;
 }
 
 fn String trans_const(String name, Allocator alloc) {

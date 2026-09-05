@@ -169,11 +169,11 @@ fn sz? WriteAttrs.to_format(
 
     $switch $f.type.kind:
       $case String::kind:
-        if ($f.get(*self) != "") {
-          acc += format.printf(" %s(%s)", $attr, $f.get(*self));
+        if (self.$f != "") {
+          acc += format.printf(" %s(%s)", $attr, self.$f);
         }
       $case bool::kind:
-        if ($f.get(*self)) {
+        if (self.$f) {
           acc += format.printf(" %s", $attr);
         }
       $default:
