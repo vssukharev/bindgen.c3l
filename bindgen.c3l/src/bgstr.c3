@@ -3,7 +3,7 @@ module bgimpl;
 import bgimpl::err;
 import std::collections::list;
 import std::collections::map;
-import std::ascii;
+import std::core::string;
 
 
 alias ListString = List{String};
@@ -282,10 +282,10 @@ fn ListString parseSnakeCase(
   while (last > 0 && str[last] == '_') --last;
 
   // Treat the rest [first..last]
-  for (usz i = first; i <= last;) {
-    while (i <= last && str[i] == '_') ++i;
+  for (usz i = (usz)first; i <= (usz)last;) {
+    while (i <= (usz)last && str[i] == '_') ++i;
     usz begin = i;
-    while (i <= last && str[i] != '_') ++i;
+    while (i <= (usz)last && str[i] != '_') ++i;
     tokens.push(str[begin..i-1]);
   }
 
@@ -324,23 +324,23 @@ fn ListString parseCamelCase(
   tokens.init(alloc, str.len / 2);
 
   // Erase possible beginning '_'
-  isz first = 0;
+  int first = 0;
   while (first < str.len && str[first] == '_') ++first;
   if (first > 0) tokens.push(str[0..first-1]);
 
   // Erase possible closing '_' 
-  isz last = str.len - 1;
+  int last = str.len - 1;
   while (last >= 0 && str[last] == '_') --last;
 
   // Treat the rest [first..last]
-  for (usz i = first; i <= last;) {
+  for (usz i = (usz)first; i <= (usz)last;) {
     usz begin = i++;
 
     // Handle several upper cases and digits in a row
     bool is_prev_digit = false;
     if (str[begin].is_upper()) {
-      while (i <= last && str[i].is_upper()) ++i;
-      while (i <= last && ( str[i].is_digit() || str[i] == '_' )) {
+      while (i <= (usz)last && str[i].is_upper()) ++i;
+      while (i <= (usz)last && ( str[i].is_digit() || str[i] == '_' )) {
         is_prev_digit = true;
         ++i;
       }
@@ -354,7 +354,7 @@ fn ListString parseCamelCase(
     // 1. first - prelast capital
     // 2. last capital - the rest
     // Example: LLVMHello -> [LLVM, Hello]
-    if (i <= last && i > begin + 1) { 
+    if (i <= (usz)last && i > begin + 1) { 
       if (!is_prev_digit) --i;
       tokens.push(str[begin..i-1]);
       begin = i;
@@ -364,12 +364,12 @@ fn ListString parseCamelCase(
     // as upper case and digits might follow it, like in ARM64MESA
     if (!is_prev_digit) {
       // Handle lower case
-      while (i <= last && ( str[i].is_lower() || str[i] == '_' )) ++i;
+      while (i <= (usz)last && ( str[i].is_lower() || str[i] == '_' )) ++i;
       if (i > begin) tokens.push(str[begin..i-1]);
 
       // Handle digits
       begin = i;
-      while (i <= last && str[i].is_digit()) ++i;
+      while (i <= (usz)last && str[i].is_digit()) ++i;
       if (i > begin) tokens.push(str[begin..i-1]);
     }
   }
@@ -476,9 +476,9 @@ macro String convertToSnakeOrScreaming(
   --size;
 
   // If last token is '_', we do not insert '_' after prelast token
-  usz last_token_index = tokens.len() - ((*tokens)[^1][0] == '_' ? 2 : 1); 
+  int last_token_index = (int)((int)tokens.size - ((*tokens)[^1][0] == '_' ? 2 : 1));
 
-  String res = (String) allocator::alloc_array(alloc, char, size);
+  String res = (String) alloc::alloc_array(alloc, char, (sz)size);
   
   usz last = 0;
   foreach (i, t : tokens) {
@@ -520,7 +520,7 @@ macro String convertToCamelOrPascal(
     size += t.len;
   }
 
-  String res = (String) allocator::alloc_array(alloc, char, size);
+  String res = (String) alloc::alloc_array(alloc, char, (sz)size);
   
   $if $to_camel:
     bool has_underscore = (*tokens)[0][0] == '_';

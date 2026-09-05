@@ -47,17 +47,17 @@ fn void? includeLibcToArgs(
   List{ZString}* res) 
   => @pool()
 {
-  SubProcess proc = process::create({ "clang", "-E", "-Wp,-v", "-xc", "-" })!;
-  proc.join()!; // join the process to close stdin of clang
-  defer proc.destroy();
-  File in = proc.stderr();
+  Process proc = process::spawn({ "clang", "-E", "-Wp,-v", "-xc", "-" }, err: process::CAPTURE)!;
+  defer (void)proc.destroy();
+  proc.join()!;
+  File in = file::from_handle(proc.stderr_file);
 
   bool found;
   while (!found) {
     if (in.read_byte()! == '\n') {
       char[14] buffer;
       in.read(buffer[..])!;
-      if (buffer[..] == "#include <...>") {
+      if ((String)buffer[..] == "#include <...>") {
         while(in.read_byte()! != '\n') {}; // read till '\n'
         found = true;
       }

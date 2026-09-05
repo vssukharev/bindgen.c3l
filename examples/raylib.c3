@@ -45,7 +45,7 @@ fn String transConst(String name, Allocator alloc) {
       return "";
 
     default:
-      return name.strip("RAYLIB_").snake_to_screaming(alloc);
+      return name.strip_prefix("RAYLIB_").snake_to_screaming(alloc);
   }
 }
 

@@ -126,7 +126,7 @@ fn void test_const_decl()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "const NAME @if(true) = 2.0f;\n";
+    const EXPECTED = "const NAME @feat(true) = 2.0f;\n";
 
     state.kind = CONST;
     WriteAttrs attrs = { .if_condition = "true" };
@@ -201,7 +201,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nfn char* f()\n@extern(\"F\");\n";
+    const EXPECTED = "\nfn char* f()\n@cname(\"F\");\n";
 
     func(&out, &state, {}, "char*", "F", "f");
 
@@ -211,7 +211,7 @@ fn void test_func()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nfn char** some_func(\n  int b,\n  double)\n@extern(\"SomeFunc\") @private;\n";
+    const EXPECTED = "\nfn char** some_func(\n  int b,\n  double)\n@cname(\"SomeFunc\") @private;\n";
 
     VarDecl[] params = { {"int", "b"}, {"double", ""} };
     WriteAttrs attrs = { .private = true };
@@ -270,7 +270,7 @@ fn void test_module_head()
 
   {
     defer @reset(out, state);
-    const EXPECTED = "\nmodule a @if(COND);\n";
+    const EXPECTED = "\nmodule a @feat(COND);\n";
 
     WriteAttrs attrs = { .if_condition = "COND" };
     moduleHead(&out, &state, "a", attrs);

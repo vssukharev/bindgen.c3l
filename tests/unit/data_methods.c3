@@ -4,7 +4,7 @@ import std::io;
 
 
 <*
- @require WriteAttrs.membersof.len == 2 : "Test is out of date"
+ @require WriteAttrs::members.len == 2 : "Test is out of date"
 *>
 fn void test_WriteAttrs_to_format()
 {
@@ -17,7 +17,7 @@ fn void test_WriteAttrs_to_format()
   assert( out.str_view() == EXPECTED_1 );
   out.clear();
 
-  const EXPECTED_2 = " @if(true)";
+  const EXPECTED_2 = " @feat(true)";
   attrs = {
     .if_condition = "true",
   };
@@ -33,7 +33,7 @@ fn void test_WriteAttrs_to_format()
   assert( out.str_view() == EXPECTED_3 );
   out.clear();
 
-  const EXPECTED_4 = " @if(true) @private";
+  const EXPECTED_4 = " @feat(true) @private";
   attrs = {
     .if_condition = "true",
     .private = true,

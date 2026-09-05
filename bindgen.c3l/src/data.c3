@@ -78,7 +78,7 @@ enum WriteKind
 enum WriteAttrKind : char (String str, bool has_arg)
 {
   PRIVATE { "@private", false },
-  IF      { "@if",      true },
+  FEAT    { "@feat",    true },
 }
 
 
@@ -274,6 +274,7 @@ struct EnumVisitData
   GlobalVisitData*  g;
   String            enum_name;
   bool              is_unsigned;
+  bool              is_anonymous;
 }
 
 
@@ -296,7 +297,7 @@ struct WriteState
 *>
 struct WriteAttrs (Printable)
 {
-  String if_condition @tag("attr", "@if");
+  String if_condition @tag("attr", "@feat");
   bool   private      @tag("attr", "@private");
 }
 

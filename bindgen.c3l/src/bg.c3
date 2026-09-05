@@ -39,24 +39,18 @@ fn void? translateHeader(
   if (opts.out_name != "") @pool() {
     err::warn(opts.no_verbose, "BGOptions.out_name is deprecated in favour of BGOptions.out_file");
 
-    Path out_path = { 
-      .path_string = opts.out_name,
-      .env = path::DEFAULT_ENV,
-    };
-
-    if (path::is_dir(out_path)) {
+    if (file::is_dir(opts.out_name)) {
       err::erro("The output name you've provided is an existing directory. Please provide a name of a file I should write to");
       return bg::INVALID_ARGUMENTS~;
     }
 
+    Path out_path = path::new(tmem, opts.out_name)!;
+
     // If there is no parent, we are in root
-    Path out_parent = out_path.parent() ?? {
-      .path_string = "/",
-      .env = path::DEFAULT_ENV,
-    };
+    Path out_parent = out_path.parent() ?? path::new(tmem, "/")!;
 
     // Create missing directories on the path
-    path::mkdir(out_parent, recursive: true)!!;
+    path::mkdir(out_parent, recursive: true)!;
 
     out = file::open(opts.out_name, "w")!;
   };

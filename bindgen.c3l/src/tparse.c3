@@ -70,7 +70,7 @@ fn CTypeTokens getTypeTokens(
         defer clang::disposeString(type_spell);
         String type_str = misc::convStr(type_spell);
 
-        type_str = type_str.strip("const ").strip("struct ").strip("enum ").strip("union ");
+        type_str = type_str.strip_prefix("const ").strip_prefix("struct ").strip_prefix("enum ").strip_prefix("union ");
         tokens.push(NAME, type_str.copy(tmem));
         break LOOP;
     }
@@ -98,9 +98,9 @@ fn C3Fields? getC3Fields(
   C3Fields res;
   res.init(alloc);
 
-  // usz.max means we're not in segment
+  // usz::max means we're not in segment
   usz bit_widths_acc;
-  usz bit_segment_start = usz.max;
+  usz bit_segment_start = usz::max;
   List{C3BitstructField} bit_fields;
   bit_fields.init(alloc);
 
@@ -111,11 +111,11 @@ fn C3Fields? getC3Fields(
       case NORMAL:
       case ENUM:
         res.kinds.push(NORMAL);
-        res.norm.push(cfs.norm[index]);
+        res.norm.push(cfs.norm[(sz)index]);
 
       case BIT:
-        CBitField cfield = cfs.bit[index];
-        if (bit_segment_start == usz.max) bit_segment_start = index;
+        CBitField cfield = cfs.bit[(sz)index];
+        if (bit_segment_start == usz::max) bit_segment_start = index;
         bit_fields.push({
           .type = cfield.type, 
           .name = cfield.name, 
@@ -126,23 +126,23 @@ fn C3Fields? getC3Fields(
 
       case STRUCT:
         res.kinds.push(STRUCT);
-        C3Fields c3fields = getC3Fields(alloc, cfs.structs[index].fields)!;
+        C3Fields c3fields = getC3Fields(alloc, cfs.structs[(sz)index].fields)!;
         res.structs.push({
-          .name = cfs.structs[index].name, 
+          .name = cfs.structs[(sz)index].name, 
           .fields = c3fields,
         });
 
       case UNION:
         res.kinds.push(UNION);
-        C3Fields c3fields = getC3Fields(alloc, cfs.unions[index].fields)!;
+        C3Fields c3fields = getC3Fields(alloc, cfs.unions[(sz)index].fields)!;
         res.unions.push({
-          .name = cfs.unions[index].name, 
+          .name = cfs.unions[(sz)index].name, 
           .fields = c3fields,
         });
       }
 
     // Finish bit range and reset things if needed
-    if ((*kind != BIT || index == cfs.bit.len() - 1) && bit_segment_start != usz.max) {
+    if ((*kind != BIT || index == (usz)(cfs.bit.size - 1)) && bit_segment_start != usz::max) {
       res.kinds.push(BITSTRUCT);
       switch (bit_widths_acc) {
         case 1..8:
@@ -176,7 +176,7 @@ fn C3Fields? getC3Fields(
 
       bit_fields = {};
       bit_fields.init(alloc);
-      bit_segment_start = usz.max;
+      bit_segment_start = usz::max;
     }
   };
 
