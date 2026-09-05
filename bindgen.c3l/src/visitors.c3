@@ -123,11 +123,9 @@ fn CXChildVisitResult enumDecl(
 
   WriteAttrs attrs = valgen::getWriteAttrs(tmem, cursor_str, vd.g.gen_fns);
 
-  // The enum type is a distinct typedef, so an integer literal needs an
-  // explicit cast to be assignable to it.
-  String val = vd.enum_name != ""
-    ? string::tformat("(%s)%s", vd.enum_name, vd_const.val)
-    : vd_const.val;
+  String val = vd.is_anonymous
+    ? vd_const.val
+    : string::tformat("(%s)%s", vd.enum_name, vd_const.val);
 
   wter::constDecl(vd.g.out, &vd.g.write_state, vd.enum_name, trans_cursor_str, val, attrs);
 

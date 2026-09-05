@@ -174,6 +174,7 @@ fn sz? enumDecl(
     vd.types_table[base] = under_type_str;
 
     vd_enum.enum_name = under_type_str;
+    vd_enum.is_anonymous = true;
   } else {
     String? tmp = trans::ctype(enum_type, vd);
     if (catch tmp) {
