@@ -280,7 +280,7 @@ fn String? basicType(
   switch (type) {
     case "void":          return "void";
     case "_Bool":         return "bool";
-    case "ptrdiff_t":     return "int";
+    case "ptrdiff_t":     return "sz";
     case "size_t":        return "usz";
 
     case "char":          return "CChar";
