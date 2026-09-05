@@ -30,7 +30,7 @@ fn void main(String[] args)
     .module_wrap = fn BGModuleWrap(String str, Allocator alloc) =>
       !bgstr::is_between(str, "glfwGetInstanceProcAddress", "glfwCreateWindowSurface") ? {} :
       {
-        .if_condition = "$defined(env::GLFW_INCLUDE_VULKAN) &&& env::GLFW_INCLUDE_VULKAN",
+        .if_condition = "GLFW_INCLUDE_VULKAN",
         .imports = "vulkan",
       },
   };

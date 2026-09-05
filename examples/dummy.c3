@@ -66,8 +66,8 @@ fn String genConstVal(String name, Allocator alloc) {
 fn String genIfArg(String name, Allocator alloc) {
   switch (name) 
   {
-    case "SOME_MEMBER_1":   return "$defined(env::SOME_PLATFORM_1) &&& env::SOME_PLATFORM_1";
-    case "SOME_MEMBER_2":   return "$defined(env::SOME_PLATFORM_2) &&& env::SOME_PLATFORM_2";
+    case "SOME_MEMBER_1":   return "SOME_PLATFORM_1";
+    case "SOME_MEMBER_2":   return "SOME_PLATFORM_2";
     default:                return "";
   }
 }
@@ -75,8 +75,8 @@ fn String genIfArg(String name, Allocator alloc) {
 fn BGModuleWrap genModuleWrap(String name, Allocator alloc) {
   switch (name) 
   {
-    case "func_platform1":  return { "$defined(env::SOME_PLATFORM_1) &&& env::SOME_PLATFORM_1", "some_platform_1" };
-    case "func_platform2":  return { "$defined(env::SOME_PLATFORM_2) &&& env::SOME_PLATFORM_2", "some_platform_2" };
+    case "func_platform1":  return { "env::SOME_PLATFORM_1", "some_platform_1" };
+    case "func_platform2":  return { "env::SOME_PLATFORM_2", "some_platform_2" };
     default:                return {};
   }
 }
