@@ -90,6 +90,8 @@ struct AlignedBitfields
 
 typedef int MyInt;
 typedef int (*Pfn)(size_t a, ptrdiff_t b);
+// Bare function type, no pointer: legal C, used by stb_sprintf et al.
+typedef int PfnNoPtr(size_t a, ptrdiff_t b);
 
 /// --------------- Functions and macros
 
