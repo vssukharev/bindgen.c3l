@@ -54,7 +54,6 @@ fn void main() {
 
 There are two types of tests:
 1. Unit tests - testing library implementation parts. Command `c3c test unit`.
-2. Stress tests - testing on 10+ header-only libs char-by-char. Command `c3c test stress`
 
 ## API
 
@@ -99,6 +98,7 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 
 ## TODO
 
+- Stress tests - testing on 10+ header-only libs char-by-char. Command `c3c test stress`
 - Comments: convert attributes
 - Fix multiple definitions for macros
 - Inline definition of records and enums inside of function parameters
@@ -106,4 +106,5 @@ Join and contact me in [C3 discord channel](https://discord.com/channels/6503459
 - Improve tokens analyzation in macros translation
 - Multiple translation units support
 - Add kind parameter to if_condition and module_wrap functions: function, structure, member, etc.
+
 
