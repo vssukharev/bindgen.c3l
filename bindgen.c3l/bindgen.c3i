@@ -73,6 +73,7 @@ struct BGOptions
  type       : "Type"
  variable   : "Function parameter or global variable"
  constant   : "Global constant"
+ enum_field : "Also a constant but declared under enum"
  func_maro  : "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
 *>
 struct BGTransCallbacks
@@ -80,8 +81,8 @@ struct BGTransCallbacks
   BGTransFn func;
   BGTransFn type;
   BGTransFn variable;
-  BGTransFn enum_field;
   BGTransFn constant;
+  BGTransFn enum_field;
   BGTransFn func_macro;
 }
 
@@ -303,4 +304,9 @@ macro String String.camel_to_pascal(String str, Allocator alloc) => camel_to_pas
 macro String String.screaming_to_snake(String str, Allocator alloc) => screaming_to_snake(str, alloc);
 macro String String.screaming_to_camel(String str, Allocator alloc) => screaming_to_camel(str, alloc);
 macro String String.screaming_to_pascal(String str, Allocator alloc) => screaming_to_pascal(str, alloc);
+
+macro String String.mixed_to_camel(String str, Allocator alloc) => mixed_to_camel(str, alloc);
+macro String String.mixed_to_screaming(String str, Allocator alloc) => mixed_to_screaming(str, alloc);
+macro String String.mixed_to_snake(String str, Allocator alloc) => mixed_to_snake(str, alloc);
+macro String String.mixed_to_pascal(String str, Allocator alloc) => mixed_to_pascal(str, alloc);
 

@@ -3887,16 +3887,14 @@ enum CX_BinaryOperatorKind {
 
 /**
  * \brief Returns the operator code for the binary operator.
- *
- * @deprecated: use clang_getCursorBinaryOperatorKind instead.
+ * @deprecated ""
  */
 CINDEX_LINKAGE enum CX_BinaryOperatorKind
 clang_Cursor_getBinaryOpcode(CXCursor C);
 
 /**
  * \brief Returns a string containing the spelling of the binary operator.
- *
- * @deprecated: use clang_getBinaryOperatorKindSpelling instead
+ * @deprecated ""
  */
 CINDEX_LINKAGE CXString
 clang_Cursor_getBinaryOpcodeStr(enum CX_BinaryOperatorKind Op);

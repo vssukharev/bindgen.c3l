@@ -7,9 +7,9 @@ fn void main(String[] args)
 
 	BGOptions opts = {
 		.out_name = out,
-		.clang_args = { "-I./examples" },
+		.clang_args = { "-I./examples/headers" },
 		.module_name = "clang",
-		.imports = { "libc" },
+		.imports = { "std::time" },
 		.skip_errors = false,
 		.generate_docs = true,
 		.include_file = &include_file,
@@ -33,6 +33,7 @@ fn void main(String[] args)
 fn String trans_type(String str, Allocator alloc) {
 	switch (str) {
 		case "const char*": return "ZString".copy(alloc);
+    case "time_t":      return "Time".copy(alloc);
 	}
 
 	return str.copy(alloc);
@@ -57,5 +58,5 @@ fn String trans_const(String name, Allocator alloc) {
 }
 
 fn bool include_file(String name) {
-	return name.contains("clang");
+	return name.contains("clang-c");
 }

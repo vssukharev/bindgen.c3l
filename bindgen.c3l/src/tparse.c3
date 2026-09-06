@@ -191,12 +191,17 @@ fn C3Fields? getC3Fields(
         CBitField cfield = cfs.bit[index];
         if (bit_segment_start == NO_SEGMENT) bit_segment_start = index;
 
-        bit_fields.push({
-          .type = cfield.type, 
-          .name = cfield.name, 
-          .from = bit_widths_acc, 
-          .to = bit_widths_acc + cfield.width - 1
-        });
+        // Do not push in case of empty name
+        // it is then considered to be padding
+        if (cfield.name != "") {
+          bit_fields.push({
+            .type = cfield.type, 
+            .name = cfield.name, 
+            .from = bit_widths_acc, 
+            .to = bit_widths_acc + cfield.width - 1
+          });
+        }
+
         bit_widths_acc += cfield.width;
 
       case STRUCT:

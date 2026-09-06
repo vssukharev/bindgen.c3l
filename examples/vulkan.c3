@@ -26,18 +26,18 @@ fn void main(String[] args)
     .no_verbose = false,
   }; 
 
-  	BGTransCallbacks trans_cbs = {
-		// Strip 'vk' from functions
-		.func = fn String(String str, Allocator alloc) =>
-			str.strip_prefix("vk").camel_to_snake(alloc),
-		.type = &valType,
-		// There is a small conflict with variable called 'module'
-		.variable = fn String(String str, Allocator alloc) =>
-			str == "module" ? "mod" : str.camel_to_snake(alloc),
-		// Strip 'VK_' from constans
-		.constant = &trans_const,
-		.func_macro = &transFuncMacro,
-  	};
+  BGTransCallbacks trans_cbs = {
+    // Strip 'vk' from functions
+    .func = fn String(String str, Allocator alloc) =>
+      str.strip_prefix("vk").camel_to_snake(alloc),
+    .type = &valType,
+    // There is a small conflict with variable called 'module'
+    .variable = &trans_var,
+    // Strip 'VK_' from constans
+    .constant = &trans_const,
+    .enum_field = &bgstr::snake_to_screaming,
+    .func_macro = &transFuncMacro,
+  };
 
 	BGGenCallbacks gen_cbs = {
 		.func_macro = &valFuncMacro,
@@ -45,6 +45,14 @@ fn void main(String[] args)
 	};
 
   bg::translate_header("./examples/headers/vulkan/vulkan.h", opts_core, trans_cbs, gen_cbs)!!;
+}
+
+fn String trans_var(String str, Allocator alloc) {
+  switch (str) {
+    case "module": return "mod".copy(alloc);
+    case "sz":     return "sz_".copy(alloc);
+  }
+  return str.camel_to_snake(alloc);
 }
 
 fn String trans_const(String name, Allocator alloc) {

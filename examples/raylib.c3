@@ -9,14 +9,18 @@ fn void main(String[] args)
   BGTransCallbacks trans_fns = {
     .func = &bgstr::pascal_to_camel,
     .type = &bgstr::camel_to_pascal,
+    .enum_field = &bgstr::snake_to_screaming,
+    .constant = &transConst,
+
     // Ignore of name of functional macro is CLITERAL or starts with RL_
     .func_macro = fn String(String str, Allocator alloc) =>
        str == "CLITERAL" || str[:3] == "RL_" ? "" : 
        str.screaming_to_camel(alloc),
+
     // Ignore if a variable called 'alias'
     .variable = fn String(String str, Allocator alloc) =>
       str == "alias" ? "" : str.copy(alloc),
-    .constant = &transConst,
+
   };
 
   BGGenCallbacks gen_fns = {

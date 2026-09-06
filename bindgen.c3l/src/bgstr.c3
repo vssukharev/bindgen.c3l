@@ -44,6 +44,7 @@ fn String snakeToCamel(
   @export("bgstr_snake_to_camel") 
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseSnakeCase(tmem, str);
   return convertToCamel(alloc, &tokens);
 }
@@ -54,6 +55,7 @@ fn String snakeToPascal(
   @export("bgstr_snake_to_pascal") 
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseSnakeCase(tmem, str);
   return convertToPascal(alloc, &tokens);
 }
@@ -124,6 +126,7 @@ fn String camelToSnake(
   @export("bgstr_camel_to_snake")
   => @pool()
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseCamelCase(tmem, str);
   return convertToSnake(alloc, &tokens);
 }
@@ -138,6 +141,7 @@ fn String camelToScreaming(
   @export("bgstr_camel_to_screaming")
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseCamelCase(tmem, str);
   return convertToScreaming(alloc, &tokens);
 }
@@ -152,7 +156,7 @@ fn String camelToPascal(
   @export("bgstr_camel_to_pascal")
 {
   String res = str.copy(alloc);
-  sz i;
+  sz i = 0;
   while (i < str.len && str[i] == '_') ++i;
   if (i < str.len) res[i] = str[i].to_upper();
   return res;
@@ -192,7 +196,7 @@ fn String pascalToCamel(
   @export("bgstr_pascal_to_camel")
 {
   String res = str.copy(alloc);
-  sz i;
+  sz i = 0;
   while (i < str.len && str[i] == '_') ++i;
   if (i < str.len) res[i] = str[i].to_lower();
   return res;
@@ -208,6 +212,7 @@ fn String mixedToCamel(
   @export("bgstr_mixed_to_camel")
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseMixedCase(tmem, str);
   return convertToCamel(alloc, &tokens);
 }
@@ -222,6 +227,7 @@ fn String mixedToSnake(
   @export("bgstr_mixed_to_snake")
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseMixedCase(tmem, str);
   return convertToSnake(alloc, &tokens);
 }
@@ -236,6 +242,7 @@ fn String mixedToScreaming(
   @export("bgstr_mixed_to_screaming")
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseMixedCase(tmem, str);
   return convertToScreaming(alloc, &tokens);  
 }
@@ -250,6 +257,7 @@ fn String mixedToPascal(
   @export("bgstr_mixed_to_pascal")
   => @pool() 
 {
+  if (str == "") return "".copy(alloc);
   ListString tokens = parseMixedCase(tmem, str);
   return convertToPascal(alloc, &tokens);
 }
@@ -472,11 +480,12 @@ macro String convertToSnakeOrScreaming(
     bool has_underscore = t[0] == '_' || t[^1] == '_';
     if (!has_underscore) size += 1;
   }
+
   // Substract one because of the last '_', which is not inserted
-  String last_token = (*tokens)[^1];
-  if (last_token[0] != '_' && last_token[^1] != '_') --size;
+  --size;
 
   // If last token is '_', we do not insert '_' after prelast token
+  String last_token = (*tokens)[^1];
   sz last_token_index = tokens.size - (last_token[0] == '_' ? 2 : 1);
 
   String res = (String)alloc::alloc_array(alloc, char, size);

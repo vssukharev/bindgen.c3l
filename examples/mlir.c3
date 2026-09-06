@@ -1,6 +1,7 @@
 
-import bindgen;
+import bindgen, bgimpl;
 import std::core::ascii, std::io;
+
 
 fn void main(String[] args)
 {
@@ -22,16 +23,23 @@ fn void main(String[] args)
     },
 
     .constant = fn (name, alloc) {
-      switch (true) {
+      switch {
         case name.contains("DEFINE_C_API_STRUCT"):
+          return "";
+      }
+
+      switch (name) {
+        case "MLIR_CAPI_EXPORTED":
           return "";
       }
       if (is_screaming(name)) return name;
       return name.strip_prefix("Mlir").pascal_to_screaming(alloc);
     },
 
+    .enum_field = &bgstr::pascal_to_screaming,
+
     .func_macro = fn (name, alloc) {
-      switch (true) {
+      switch {
         case name.contains("DECLARE_CAPI_DIALECT_REGISTRATION"):
         case name.contains("DEFINE_C_API_STRUCT"):
           return "";
