@@ -183,7 +183,7 @@ fn sz? varDecl(
 fn sz? enumDecl(
   OutStream out,
   WriteState* state,
-  EnumField[] fields,
+  BGEnumField[] fields,
   String name,
   String type,
   String docs = "",

@@ -80,7 +80,7 @@ There are several examples located in `examples` directory. To check them out, r
 - My dummy: `c3c run dummy -- ./build/dummy.c3i` or `c3c run dummy` - it will print output to stdout
 - Vulkan: `c3c run vulkan -- ./build/vulkan.c3i`
 - GLFW: `c3c run glfw -- ./build/glfw.c3i`
-- Raylib: `c3c run raylib -- ./build/raylib.c3i`
+- Raylib: `c3c run raylib -- ./build/raylib.c3i` - also demonstrates `BGTransCallbacks.enum_fields` for bulk enum field post-processing
 
 ## Bit fields translation warning
 

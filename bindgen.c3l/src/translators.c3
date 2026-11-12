@@ -193,6 +193,10 @@ fn sz? enumDecl(
 
     if (clang::visitChildren(cursor, &vtor::enumField, (CXClientData)&vd_enum) != 0) return 0;
 
+    if (vd.trans_fns.enum_fields) {
+      vd.trans_fns.enum_fields(vd_enum.fields.array_view(), vd_enum.allocator);
+    }
+
     valgen::moduleWrap(vd, orig_enum_name);
     attrs = valgen::getWriteAttrs(tmem, orig_enum_name, vd.gen_fns);
     acc = wter::enumDecl(vd.out, &vd.write_state, vd_enum.fields.array_view(), tmp, under_type_str, docs);
