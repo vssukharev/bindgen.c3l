@@ -69,21 +69,24 @@ struct BGOptions
  which will be called when translating the corresponding 
  C entity. For instance, 'func' is invoked when we translate functions.
 
- func       : "Function"
- type       : "Type"
- variable   : "Function parameter or global variable"
- constant   : "Global constant"
- enum_field : "Also a constant but declared under enum"
- func_maro  : "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
+ func        : "Function"
+ type        : "Type"
+ variable    : "Function parameter or global variable"
+ constant    : "Global constant"
+ enum_field  : "Also a constant but declared under enum"
+ enum_fields : "All fields of an enum at once. Called after every field has been translated by 'enum_field',"
+               "so the fields can be modified in place, for example to strip a common prefix from all field names"
+ func_maro   : "Functional macro. Note: you should not prepend '@' before macro name as it will be performed automatically"
 *>
 struct BGTransCallbacks
 {
-  BGTransFn func;
-  BGTransFn type;
-  BGTransFn variable;
-  BGTransFn constant;
-  BGTransFn enum_field;
-  BGTransFn func_macro;
+  BGTransFn       func;
+  BGTransFn       type;
+  BGTransFn       variable;
+  BGTransFn       constant;
+  BGTransFn       enum_field;
+  BGEnumFieldsFn  enum_fields;
+  BGTransFn       func_macro;
 }
 
 
@@ -208,6 +211,32 @@ struct BGGenCallbacks
  @return  "Translated string, allocated via 'allocator', or empty string to skip the translation of a name (ignore it)"
 *>
 alias BGTransFn = fn String(String name, Allocator alloc);
+
+
+<*
+ Represents a single field of an enum.
+
+ name : "Translated field name"
+ init : "Field initializer"
+ docs : "Field documentation"
+*>
+struct BGEnumField
+{
+  String name;
+  String init;
+  String docs;
+}
+
+
+<*
+ Called once per named enum after all of its fields have been translated individually.
+ Allows inspecting and modifying all fields at once, for example to strip
+ a common prefix from every field name.
+
+ fields : "All fields of the enum. May be modified in place"
+ alloc  : "Allocator for new strings. Each allocation should be performed with that specific allocator"
+*>
+alias BGEnumFieldsFn = fn void(BGEnumField[] fields, Allocator alloc);
 
 
 <*

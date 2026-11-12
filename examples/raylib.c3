@@ -10,6 +10,7 @@ fn void main(String[] args)
     .func = &bgstr::pascal_to_camel,
     .type = &bgstr::camel_to_pascal,
     .enum_field = &bgstr::snake_to_screaming,
+    .enum_fields = &stripEnumPrefix,
     .constant = &transConst,
 
     // Ignore of name of functional macro is CLITERAL or starts with RL_
@@ -51,6 +52,50 @@ fn String transConst(String name, Allocator alloc) {
     default:
       return name.strip_prefix("RAYLIB_").snake_to_screaming(alloc);
   }
+}
+
+// Remove the prefix shared by every field of an enum, so for example
+// FLAG_VSYNC_HINT becomes VSYNC_HINT and KEY_A becomes A.
+// This is what the BGTransCallbacks.enum_fields callback is useful for:
+// it receives all already translated enum fields at once.
+fn void stripEnumPrefix(BGEnumField[] fields, Allocator alloc)
+{
+  String prefix;
+  bool has_prefix;
+  foreach (field : fields) {
+    // Ignore fields which were filtered out by enum_field.
+    if (field.name.len == 0) continue;
+
+    if (!has_prefix) {
+      prefix = field.name;
+      has_prefix = true;
+      continue;
+    }
+
+    prefix = commonPrefix(prefix, field.name);
+    if (prefix.len == 0) return;
+  }
+
+  if (!has_prefix) return;
+
+  // Only strip whole identifier parts, not a partial name.
+  sz prefix_len = prefix.len;
+  while (prefix_len > 0 && prefix[prefix_len - 1] != '_') --prefix_len;
+  if (prefix_len == 0) return;
+
+  foreach (i, field : fields) {
+    if (field.name.len > prefix_len) {
+      fields[i].name = field.name[prefix_len..].copy(alloc);
+    }
+  }
+}
+
+fn String commonPrefix(String a, String b)
+{
+  sz len = a.len < b.len ? a.len : b.len;
+  sz i;
+  while (i < len && a[i] == b[i]) ++i;
+  return a[:i];
 }
 
 // There is one problem with automatic raylib bindings generation.
