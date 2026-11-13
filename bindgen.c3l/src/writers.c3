@@ -84,7 +84,7 @@ fn sz? typedefFunc(
 
   acc += io::fprintf(out, "\nalias %s%s = fn %s(", name, attribs, return_type);
   
-  if (params.len > 0) acc += io::fprintf(out, "\n");
+  if (params.len > 0) acc += io::fprint(out, "\n");
 
   foreach (i, p : params) {
     acc += io::fprintf(out, INDENT+++"%s", p.type);
@@ -124,7 +124,7 @@ fn sz? constDecl(
 
   sz? acc;
 
-  if (prev_kind != CONST && prev_kind != ENUM) acc += io::fprintf(out, "\n");
+  if (prev_kind != CONST && prev_kind != ENUM) acc += io::fprint(out, "\n");
 
   if (type == "") {
     acc += io::fprintfn(out, "const %s%s = %s;", name, attribs, value);
@@ -292,7 +292,7 @@ fn sz? funcMacro(
     acc += io::fprintfn(out, "\n"+++INDENT+++"%s", body);
   }
 
-  acc += io::fprintfn(out, "}");
+  acc += io::fprintn(out, "}");
 
   return acc;
 }
@@ -357,11 +357,11 @@ fn sz? structDecl(
 
   acc += printIndent(out, indent_level);
 
-  if (indent_level == 0) acc += io::fprintf(out, "\n");
-  acc += io::fprintfn(out, docs);
+  if (indent_level == 0) acc += io::fprint(out, "\n");
+  acc += io::fprintn(out, docs);
 
   if (name == "") {
-    acc += io::fprintfn(out, "struct {");
+    acc += io::fprintn(out, "struct {");
   } else {
     acc += io::fprintfn(out, "struct %s%s {", name, attribs);
   }
@@ -369,7 +369,7 @@ fn sz? structDecl(
   acc += wter::fields(out, state, fields, indent_level + 1);
 
   acc += printIndent(out, indent_level);
-  acc += io::fprintfn(out, "}");
+  acc += io::fprintn(out, "}");
   
   return acc;
 }
@@ -393,10 +393,10 @@ fn sz? unionDecl(
 
   acc += printIndent(out, indent_level);
 
-  if (indent_level == 0) acc += io::fprintf(out, "\n");
+  if (indent_level == 0) acc += io::fprint(out, "\n");
 
   if (name == "") {
-    acc += io::fprintfn(out, "union {");
+    acc += io::fprintn(out, "union {");
   } else {
     acc += io::fprintfn(out, "union %s%s {", name, attribs);
   }
@@ -404,7 +404,7 @@ fn sz? unionDecl(
   acc += wter::fields(out, state, fields, indent_level + 1);
 
   acc += printIndent(out, indent_level);
-  acc += io::fprintfn(out, "}");
+  acc += io::fprintn(out, "}");
   
   return acc;
 }
@@ -443,7 +443,7 @@ fn sz? fields(
         }
 
         acc += printIndent(out, indent_level);
-        acc += io::fprintfn(out, "}")!;
+        acc += io::fprintn(out, "}")!;
 
       case STRUCT:
         acc += wter::structDecl(out, state, fields.structs[(sz)index].name, &fields.structs[(sz)index].fields, indent_level);
@@ -467,7 +467,7 @@ fn sz? printIndent(
   sz indent_level = 1)
 {
   sz? acc;
-  for (sz i; i < indent_level; ++i) acc += io::fprintf(out, INDENT);
+  for (sz i; i < indent_level; ++i) acc += io::fprint(out, INDENT);
   return acc;
 }
 
